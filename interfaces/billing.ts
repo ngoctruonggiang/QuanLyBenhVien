@@ -63,4 +63,5 @@ export interface CreatePaymentRequest {
   amount: number;
   method: PaymentMethod;
   notes?: string;
+  idempotencyKey?: string;
 }

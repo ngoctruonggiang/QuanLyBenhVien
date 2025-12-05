@@ -5,6 +5,7 @@ import {
   getInvoiceSummary,
   cancelInvoice,
   getPayments,
+  getInvoicesByPatient,
 } from "@/services/billing.service";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -35,6 +36,18 @@ export const useInvoiceSummary = () => {
   return useQuery({
     queryKey: ["invoiceSummary"],
     queryFn: getInvoiceSummary,
+  });
+};
+
+export const usePatientInvoices = (patientId: string, status?: string) => {
+  return useQuery({
+    queryKey: ["patientInvoices", patientId, status],
+    queryFn: () => getInvoicesByPatient(patientId),
+    enabled: !!patientId,
+    select: (data) =>
+      status && status !== "ALL"
+        ? data.filter((inv) => inv.status === status)
+        : data,
   });
 };
 

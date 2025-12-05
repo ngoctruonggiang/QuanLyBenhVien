@@ -1,0 +1,493 @@
+{
+  "config": {
+    "configFile": "D:\\1_Hoc_Tap\\HMS_FE\\playwright.config.ts",
+    "rootDir": "D:/1_Hoc_Tap/HMS_FE/tests",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 7
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "test-results/results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "D:/1_Hoc_Tap/HMS_FE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 7
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/1_Hoc_Tap/HMS_FE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 8,
+    "webServer": {
+      "command": "pnpm dev",
+      "url": "http://localhost:3000",
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [
+    {
+      "title": "e2e\\billing.spec.ts",
+      "file": "e2e/billing.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Billing - Admin",
+          "file": "e2e/billing.spec.ts",
+          "line": 18,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Danh sách hóa đơn hiển thị bộ lọc & bảng",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1225,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-05T16:28:58.439Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e4c62aab4be66f97a738-e77c923bb708e6ec1a89",
+              "file": "e2e/billing.spec.ts",
+              "line": 19,
+              "column": 7
+            },
+            {
+              "title": "Bộ lọc trạng thái hiển thị đủ tùy chọn",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 1365,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('option', { name: /Paid/i })\nExpected: visible\nError: strict mode violation: getByRole('option', { name: /Paid/i }) resolved to 3 elements:\n    1) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_e_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Unpaid' })\n    2) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_f_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Partially Paid' })\n    3) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_g_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Paid', exact: true })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('option', { name: /Paid/i })\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('option', { name: /Paid/i })\nExpected: visible\nError: strict mode violation: getByRole('option', { name: /Paid/i }) resolved to 3 elements:\n    1) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_e_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Unpaid' })\n    2) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_f_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Partially Paid' })\n    3) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_g_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Paid', exact: true })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('option', { name: /Paid/i })\u001b[22m\n\n    at D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts:43:63",
+                        "location": {
+                          "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                          "column": 63,
+                          "line": 43
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Unpaid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Partially Paid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Paid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Overdue/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Cancelled/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 46 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "column": 63,
+                            "line": 43
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('option', { name: /Paid/i })\nExpected: visible\nError: strict mode violation: getByRole('option', { name: /Paid/i }) resolved to 3 elements:\n    1) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_e_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Unpaid' })\n    2) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_f_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Partially Paid' })\n    3) <div role=\"option\" tabindex=\"-1\" aria-selected=\"false\" data-state=\"unchecked\" data-slot=\"select-item\" aria-labelledby=\"radix-_r_g_\" data-radix-collection-item=\"\" class=\"focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not(…>…</div> aka getByRole('option', { name: 'Paid', exact: true })\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('option', { name: /Paid/i })\u001b[22m\n\n\n\u001b[0m \u001b[90m 41 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Unpaid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 42 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Partially Paid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 43 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Paid/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                               \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 44 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Overdue/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 45 |\u001b[39m     \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"option\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[35m/Cancelled/i\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m 46 |\u001b[39m   })\u001b[33m;\u001b[39m\u001b[0m\n\u001b[2m    at D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts:43:63\u001b[22m"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-05T16:28:58.448Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\1_Hoc_Tap\\HMS_FE\\test-results\\e2e-billing-Billing---Admi-89428-g-thái-hiển-thị-đủ-tùy-chọn-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\1_Hoc_Tap\\HMS_FE\\test-results\\e2e-billing-Billing---Admi-89428-g-thái-hiển-thị-đủ-tùy-chọn-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                        "column": 63,
+                        "line": 43
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e4c62aab4be66f97a738-da40c6c64ba19231d13a",
+              "file": "e2e/billing.spec.ts",
+              "line": 37,
+              "column": 7
+            }
+          ],
+          "suites": [
+            {
+              "title": "Chi tiết hóa đơn",
+              "file": "e2e/billing.spec.ts",
+              "line": 48,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "Hiển thị chi tiết & hành động theo trạng thái",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "line": 49,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": -1,
+                          "parallelIndex": -1,
+                          "status": "skipped",
+                          "duration": 0,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-12-05T16:28:57.728Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                              "location": {
+                                "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                                "line": 49,
+                                "column": 10
+                              }
+                            }
+                          ],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "e4c62aab4be66f97a738-f25f1cae5823fa5bf7e5",
+                  "file": "e2e/billing.spec.ts",
+                  "line": 51,
+                  "column": 9
+                },
+                {
+                  "title": "Hủy hóa đơn UNPAID hiển thị dialog",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "line": 49,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": -1,
+                          "parallelIndex": -1,
+                          "status": "skipped",
+                          "duration": 0,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-12-05T16:28:57.734Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                              "location": {
+                                "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                                "line": 49,
+                                "column": 10
+                              }
+                            }
+                          ],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "e4c62aab4be66f97a738-fa4534d95817d89fa1b7",
+                  "file": "e2e/billing.spec.ts",
+                  "line": 63,
+                  "column": 9
+                }
+              ]
+            },
+            {
+              "title": "Ghi nhận thanh toán",
+              "file": "e2e/billing.spec.ts",
+              "line": 77,
+              "column": 8,
+              "specs": [
+                {
+                  "title": "Form thanh toán có Amount/Method/Notes và submit",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 30000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "line": 78,
+                            "column": 10
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": -1,
+                          "parallelIndex": -1,
+                          "status": "skipped",
+                          "duration": 0,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2025-12-05T16:28:57.737Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "description": "Cần đặt BILLING_INVOICE_ID để chạy test này",
+                              "location": {
+                                "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                                "line": 78,
+                                "column": 10
+                              }
+                            }
+                          ],
+                          "attachments": []
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "e4c62aab4be66f97a738-8f7ae7f539eadbbb3884",
+                  "file": "e2e/billing.spec.ts",
+                  "line": 80,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Billing - Patient",
+          "file": "e2e/billing.spec.ts",
+          "line": 95,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Patient xem chi tiết hóa đơn của mình",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Cần đặt BILLING_PATIENT_INVOICE_ID để chạy test này",
+                      "location": {
+                        "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                        "line": 96,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-05T16:28:57.740Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Cần đặt BILLING_PATIENT_INVOICE_ID để chạy test này",
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "line": 96,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e4c62aab4be66f97a738-c48db1cc14e45635da37",
+              "file": "e2e/billing.spec.ts",
+              "line": 98,
+              "column": 7
+            },
+            {
+              "title": "Patient thanh toán online/offline",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "description": "Cần đặt BILLING_PATIENT_INVOICE_ID để chạy test này",
+                      "location": {
+                        "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                        "line": 96,
+                        "column": 8
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": -1,
+                      "parallelIndex": -1,
+                      "status": "skipped",
+                      "duration": 0,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-12-05T16:28:57.742Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Cần đặt BILLING_PATIENT_INVOICE_ID để chạy test này",
+                          "location": {
+                            "file": "D:\\1_Hoc_Tap\\HMS_FE\\tests\\e2e\\billing.spec.ts",
+                            "line": 96,
+                            "column": 8
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "e4c62aab4be66f97a738-5198c60f580566bbaf31",
+              "file": "e2e/billing.spec.ts",
+              "line": 105,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-12-05T16:28:57.428Z",
+    "duration": 3094.8740000000003,
+    "expected": 1,
+    "skipped": 5,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

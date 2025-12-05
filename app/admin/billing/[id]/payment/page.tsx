@@ -29,6 +29,7 @@ export default function RecordPaymentPage() {
         amount: data.amount,
         method: data.method,
         notes: data.notes,
+        idempotencyKey: data.idempotencyKey,
       });
       toast.success("Payment recorded successfully");
       router.push(`/admin/billing/${id}`);
@@ -76,6 +77,7 @@ export default function RecordPaymentPage() {
             onSubmit={onSubmit}
             isSubmitting={isPending}
             defaultAmount={invoice.balance}
+            maxAmount={invoice.balance}
           />
         </CardContent>
       </Card>

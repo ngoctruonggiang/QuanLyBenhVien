@@ -1,0 +1,194 @@
+# Page snapshot
+
+```yaml
+- generic:
+  - generic [ref=e5] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e6]:
+      - img [ref=e7]
+    - generic [ref=e10]:
+      - button "Open issues overlay" [ref=e11]:
+        - generic [ref=e12]:
+          - generic [ref=e13]: "2"
+          - generic [ref=e14]: "3"
+        - generic [ref=e15]:
+          - text: Issue
+          - generic [ref=e16]: s
+      - button "Collapse issues badge" [ref=e17]:
+        - img [ref=e18]
+  - generic:
+    - generic:
+      - generic:
+        - generic:
+          - generic:
+            - generic:
+              - generic: HMS
+              - generic:
+                - paragraph: Health Management
+                - paragraph: Hospital System
+            - generic:
+              - generic:
+                - generic: Navigation
+                - generic:
+                  - list:
+                    - listitem:
+                      - link:
+                        - /url: /admin
+                        - img
+                        - generic: Dashboard
+                    - listitem:
+                      - link:
+                        - /url: /admin/appointments
+                        - img
+                        - generic: Appointments
+                    - listitem:
+                      - link:
+                        - /url: /admin/exams
+                        - img
+                        - generic: Examinations
+                    - listitem:
+                      - link:
+                        - /url: /admin/patients
+                        - img
+                        - generic: Patients
+                    - listitem:
+                      - link:
+                        - /url: /admin/medicines
+                        - img
+                        - generic: Medicines
+                    - listitem:
+                      - link:
+                        - /url: /admin/hr
+                        - img
+                        - generic: HR Management
+                    - listitem:
+                      - link:
+                        - /url: /admin/billing
+                        - img
+                        - generic: Billing
+                    - listitem:
+                      - link:
+                        - /url: /admin/reports
+                        - img
+                        - generic: Reports
+            - generic:
+              - generic:
+                - generic:
+                  - paragraph: Admin
+                  - paragraph: System access
+                - button:
+                  - button:
+                    - img
+                    - generic: Toggle Sidebar
+            - button
+      - generic:
+        - banner:
+          - generic:
+            - generic:
+              - navigation:
+                - list:
+                  - listitem:
+                    - generic: Admin
+                  - listitem:
+                    - img
+                  - listitem:
+                    - generic: Billing
+        - main:
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - heading [level=1]: Billing & Invoices
+                  - link:
+                    - /url: /admin/billing/payments
+                    - img
+                    - text: Payment History
+                - generic:
+                  - generic:
+                    - generic:
+                      - heading [level=4]: Total Invoices
+                      - img
+                    - generic:
+                      - generic: ...
+                      - paragraph: 0 invoices
+                  - generic:
+                    - generic:
+                      - heading [level=4]: Unpaid
+                      - img
+                    - generic:
+                      - generic: ...
+                      - paragraph: 0 invoices
+                  - generic:
+                    - generic:
+                      - heading [level=4]: Overdue
+                      - img
+                    - generic:
+                      - generic: ...
+                      - paragraph: 0 invoices
+                  - generic:
+                    - generic:
+                      - heading [level=4]: Collected
+                      - img
+                    - generic:
+                      - generic: ...
+                      - paragraph: This month
+                - generic:
+                  - textbox:
+                    - /placeholder: Search by patient or invoice ID...
+                  - combobox [expanded]:
+                    - generic: All Statuses
+                    - img
+                  - button:
+                    - img
+                    - text: Start Date
+                  - button:
+                    - img
+                    - text: End Date
+                - generic:
+                  - generic:
+                    - generic:
+                      - table:
+                        - rowgroup:
+                          - row:
+                            - columnheader: "Invoice #"
+                            - columnheader: Patient
+                            - columnheader: Date
+                            - columnheader: Due Date
+                            - columnheader: Total
+                            - columnheader: Paid
+                            - columnheader: Balance
+                            - columnheader: Status
+                            - columnheader: Actions
+                        - rowgroup:
+                          - row:
+                            - cell: Loading...
+                  - generic:
+                    - generic:
+                      - generic: Rows per page
+                      - combobox:
+                        - generic: "10"
+                        - img
+                    - generic:
+                      - button [disabled]:
+                        - img
+                      - generic:
+                        - button: "1"
+                      - button:
+                        - img
+    - region "Notifications alt+T"
+  - alert
+  - listbox [ref=e20]:
+    - option "All Statuses" [active] [selected] [ref=e21]:
+      - generic [ref=e23]:
+        - img
+      - generic [ref=e24]: All Statuses
+    - option "Unpaid" [ref=e25]:
+      - generic [ref=e27]: Unpaid
+    - option "Partially Paid" [ref=e28]:
+      - generic [ref=e30]: Partially Paid
+    - option "Paid" [ref=e31]:
+      - generic [ref=e33]: Paid
+    - option "Overdue" [ref=e34]:
+      - generic [ref=e36]: Overdue
+    - option "Cancelled" [ref=e37]:
+      - generic [ref=e39]: Cancelled
+```

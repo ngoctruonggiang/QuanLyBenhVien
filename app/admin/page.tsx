@@ -9,62 +9,63 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Users,
-  CalendarCheck,
-  Stethoscope,
-  DollarSign,
-  Pill,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  UserPlus,
-  Calendar,
-  Activity,
-  ArrowRight,
-} from "lucide-react";
+  ACTION_ICONS,
+  NAV_ICONS,
+  STATUS_ICONS,
+  TREND_ICONS,
+} from "@/config/icons";
+import { LucideIcon, ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
 
 // Mock statistics data
-const stats = [
+type TrendDirection = keyof typeof TREND_ICONS;
+
+const brandAccent = {
+  icon: "text-primary",
+  bg: "bg-primary/10",
+  trendUp: "text-primary",
+  trendDown: "text-destructive",
+};
+
+const stats: Array<{
+  title: string;
+  value: string;
+  change: string;
+  trend: TrendDirection;
+  icon: LucideIcon;
+  href: string;
+}> = [
   {
     title: "Total Patients",
     value: "1,234",
     change: "+12%",
     trend: "up",
-    icon: Users,
+    icon: NAV_ICONS.patients,
     href: "/admin/patients",
-    color: "text-blue-600",
-    bgColor: "bg-blue-100",
   },
   {
     title: "Today's Appointments",
     value: "48",
     change: "+5",
     trend: "up",
-    icon: CalendarCheck,
+    icon: NAV_ICONS.appointments,
     href: "/admin/appointments",
-    color: "text-green-600",
-    bgColor: "bg-green-100",
   },
   {
     title: "Pending Exams",
     value: "12",
     change: "-3",
     trend: "down",
-    icon: Stethoscope,
+    icon: NAV_ICONS.exams,
     href: "/admin/exams",
-    color: "text-purple-600",
-    bgColor: "bg-purple-100",
   },
   {
     title: "Today's Revenue",
     value: "₫15.2M",
     change: "+8%",
     trend: "up",
-    icon: DollarSign,
+    icon: NAV_ICONS.billing,
     href: "/admin/billing",
-    color: "text-amber-600",
-    bgColor: "bg-amber-100",
   },
 ];
 
@@ -125,39 +126,53 @@ const quickActions = [
   {
     title: "Register Patient",
     description: "Add new patient",
-    icon: UserPlus,
+    icon: ACTION_ICONS.registerPatient,
     href: "/admin/patients/new",
-    color: "text-blue-600",
   },
   {
     title: "New Appointment",
     description: "Schedule appointment",
-    icon: Calendar,
+    icon: ACTION_ICONS.newAppointment,
     href: "/admin/appointments/new",
-    color: "text-green-600",
   },
   {
     title: "Start Exam",
     description: "Begin examination",
-    icon: Activity,
+    icon: ACTION_ICONS.startExam,
     href: "/admin/exams/new",
-    color: "text-purple-600",
   },
   {
     title: "Add Medicine",
     description: "Add to inventory",
-    icon: Pill,
+    icon: ACTION_ICONS.addMedicine,
     href: "/admin/medicines/new",
-    color: "text-amber-600",
   },
 ];
 
-const statusColors: Record<string, string> = {
-  Confirmed: "bg-green-100 text-green-700",
-  Waiting: "bg-yellow-100 text-yellow-700",
-  "In Progress": "bg-blue-100 text-blue-700",
-  Completed: "bg-gray-100 text-gray-700",
-  Emergency: "bg-red-100 text-red-700",
+const statusStyles: Record<
+  string,
+  { className: string; icon: LucideIcon }
+> = {
+  Confirmed: {
+    className: "bg-primary/10 text-primary",
+    icon: STATUS_ICONS.appointments.confirmed,
+  },
+  Waiting: {
+    className: "bg-secondary text-foreground",
+    icon: STATUS_ICONS.appointments.waiting,
+  },
+  "In Progress": {
+    className: "bg-primary/10 text-primary",
+    icon: STATUS_ICONS.appointments.inProgress,
+  },
+  Completed: {
+    className: "bg-primary/10 text-primary",
+    icon: STATUS_ICONS.appointments.completed,
+  },
+  Emergency: {
+    className: "bg-destructive/10 text-destructive",
+    icon: STATUS_ICONS.appointments.emergency,
+  },
 };
 
 export default function DashboardPage() {
@@ -180,19 +195,20 @@ export default function DashboardPage() {
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
-                    <div className={`p-3 rounded-lg ${stat.bgColor}`}>
-                      <Icon className={`h-6 w-6 ${stat.color}`} />
+                    <div className={`p-3 rounded-lg ${brandAccent.bg}`}>
+                      <Icon className={`h-6 w-6 ${brandAccent.icon}`} />
                     </div>
                     <div
                       className={`flex items-center gap-1 text-sm ${
-                        stat.trend === "up" ? "text-green-600" : "text-red-600"
+                        stat.trend === "up"
+                          ? brandAccent.trendUp
+                          : brandAccent.trendDown
                       }`}
                     >
-                      {stat.trend === "up" ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
-                      )}
+                      {(() => {
+                        const TrendIcon = TREND_ICONS[stat.trend];
+                        return <TrendIcon className="h-4 w-4" />;
+                      })()}
                       {stat.change}
                     </div>
                   </div>
@@ -222,8 +238,8 @@ export default function DashboardPage() {
               return (
                 <Link key={action.title} href={action.href}>
                   <div className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer text-center">
-                    <div className="p-3 rounded-full bg-muted">
-                      <Icon className={`h-5 w-5 ${action.color}`} />
+                    <div className="p-3 rounded-full bg-primary/10">
+                      <Icon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
                       <p className="font-medium text-sm">{action.title}</p>
@@ -284,10 +300,17 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      statusColors[apt.status] || "bg-gray-100 text-gray-700"
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      statusStyles[apt.status]?.className ||
+                      "bg-secondary text-foreground"
                     }`}
                   >
+                    {(() => {
+                      const Icon =
+                        statusStyles[apt.status]?.icon ||
+                        STATUS_ICONS.appointments.waiting;
+                      return <Icon className="h-3 w-3" />;
+                    })()}
                     {apt.status}
                   </span>
                 </div>
@@ -325,19 +348,17 @@ export default function DashboardPage() {
                         {medicine.quantity} / {medicine.threshold}
                       </span>
                     </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all ${
-                          percentage < 30
-                            ? "bg-red-500"
-                            : percentage < 60
-                            ? "bg-yellow-500"
-                            : "bg-green-500"
-                        }`}
-                        style={{ width: `${Math.min(percentage, 100)}%` }}
-                      />
-                    </div>
-                  </div>
+                <div className="h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      percentage < 30
+                        ? "bg-destructive"
+                        : "bg-primary/40"
+                    }`}
+                    style={{ width: `${Math.min(percentage, 100)}%` }}
+                  />
+                </div>
+              </div>
                 );
               })}
             </div>
@@ -357,25 +378,25 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-blue-600">156</p>
+            <p className="text-3xl font-bold text-primary">156</p>
             <p className="text-sm text-muted-foreground">Patients Today</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-green-600">89%</p>
+            <p className="text-3xl font-bold text-primary">89%</p>
             <p className="text-sm text-muted-foreground">Appointment Rate</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-purple-600">24</p>
+            <p className="text-3xl font-bold text-primary">24</p>
             <p className="text-sm text-muted-foreground">Active Doctors</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <p className="text-3xl font-bold text-amber-600">₫45.8M</p>
+            <p className="text-3xl font-bold text-primary">₫45.8M</p>
             <p className="text-sm text-muted-foreground">Weekly Revenue</p>
           </CardContent>
         </Card>

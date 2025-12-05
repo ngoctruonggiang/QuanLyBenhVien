@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { NAV_ICONS } from "@/config/icons";
 import {
   Sidebar,
   SidebarContent,
@@ -25,31 +26,19 @@ import {
 } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Activity,
-  BarChart3,
-  Briefcase,
-  CalendarClock,
-  CreditCard,
-  FileText,
-  LayoutDashboard,
-  Pill,
-  UserCheck,
-  Users,
-} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useMemo } from "react";
 
 const navItems = [
-  { title: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { title: "Appointments", href: "/admin/appointments", icon: UserCheck },
-  { title: "Examinations", href: "/admin/exams", icon: Activity },
-  { title: "Patients", href: "/admin/patients", icon: Users },
-  { title: "Medicines", href: "/admin/medicines", icon: Pill },
-  { title: "HR Management", href: "/admin/hr", icon: Briefcase },
-  { title: "Billing", href: "/admin/billing", icon: CreditCard },
-  { title: "Reports", href: "/admin/reports", icon: BarChart3 },
+  { title: "Dashboard", href: "/admin", icon: NAV_ICONS.dashboard },
+  { title: "Appointments", href: "/admin/appointments", icon: NAV_ICONS.appointments },
+  { title: "Examinations", href: "/admin/exams", icon: NAV_ICONS.exams },
+  { title: "Patients", href: "/admin/patients", icon: NAV_ICONS.patients },
+  { title: "Medicines", href: "/admin/medicines", icon: NAV_ICONS.medicines },
+  { title: "HR Management", href: "/admin/hr", icon: NAV_ICONS.hr },
+  { title: "Billing", href: "/admin/billing", icon: NAV_ICONS.billing },
+  { title: "Reports", href: "/admin/reports", icon: NAV_ICONS.reports },
 ];
 
 function buildBreadcrumbs(pathname: string) {

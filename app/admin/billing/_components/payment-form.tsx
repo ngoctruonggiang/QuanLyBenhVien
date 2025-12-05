@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -20,31 +21,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PaymentFormValues, paymentSchema } from "@/lib/schemas/billing";
+import {
+  PaymentFormValues,
+  paymentSchemaWithBalance,
+} from "@/lib/schemas/billing";
 
 interface PaymentFormProps {
   defaultAmount?: number;
   onSubmit: (data: PaymentFormValues) => void;
   isSubmitting?: boolean;
+  maxAmount?: number;
 }
 
 export function PaymentForm({
   defaultAmount,
   onSubmit,
   isSubmitting,
+  maxAmount,
 }: PaymentFormProps) {
+  const [idempotencyKey] = useState(() =>
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : ""
+  );
+
+  const schema = useMemo(
+    () => paymentSchemaWithBalance(maxAmount ?? defaultAmount),
+    [maxAmount, defaultAmount]
+  );
+
   const form = useForm<PaymentFormValues>({
-    resolver: zodResolver(paymentSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       amount: defaultAmount || 0,
       method: "CASH",
       notes: "",
+      idempotencyKey,
     },
   });
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <input type="hidden" {...form.register("idempotencyKey")} />
         <FormField
           control={form.control}
           name="amount"
@@ -59,6 +78,22 @@ export function PaymentForm({
                 />
               </FormControl>
               <FormMessage />
+              {maxAmount !== undefined && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() =>
+                    form.setValue("amount", maxAmount, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  Pay full balance
+                </Button>
+              )}
             </FormItem>
           )}
         />

@@ -1,8 +1,8 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { STATUS_ICONS } from "@/config/icons";
 import { AppointmentStatus } from "@/interfaces/appointment";
-import { Clock, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 
 const statusConfig: Record<
   AppointmentStatus,
@@ -10,23 +10,23 @@ const statusConfig: Record<
 > = {
   SCHEDULED: {
     label: "Scheduled",
-    className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-    icon: <Clock className="h-3 w-3" />,
+    className: "bg-primary/10 text-primary hover:bg-primary/15",
+    icon: <STATUS_ICONS.appointments.waiting className="h-3 w-3" />,
   },
   COMPLETED: {
     label: "Completed",
-    className: "bg-green-100 text-green-800 hover:bg-green-100",
-    icon: <CheckCircle2 className="h-3 w-3" />,
+    className: "bg-primary/10 text-primary hover:bg-primary/15",
+    icon: <STATUS_ICONS.appointments.completed className="h-3 w-3" />,
   },
   CANCELLED: {
     label: "Cancelled",
-    className: "bg-red-100 text-red-800 hover:bg-red-100",
-    icon: <XCircle className="h-3 w-3" />,
+    className: "bg-destructive/10 text-destructive hover:bg-destructive/15",
+    icon: <STATUS_ICONS.appointments.cancelled className="h-3 w-3" />,
   },
   NO_SHOW: {
     label: "No Show",
-    className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
-    icon: <AlertTriangle className="h-3 w-3" />,
+    className: "bg-secondary text-foreground hover:bg-secondary/80",
+    icon: <STATUS_ICONS.appointments.noShow className="h-3 w-3" />,
   },
 };
 
