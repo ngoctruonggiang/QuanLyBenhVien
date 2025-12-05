@@ -1,0 +1,177 @@
+// ============ Summary Types (from API) ============
+
+export interface AppointmentSummary {
+  id: string;
+  appointmentTime: string;
+}
+
+export interface PatientSummary {
+  id: string;
+  fullName: string;
+  dateOfBirth?: string;
+  gender?: string;
+  phoneNumber?: string;
+}
+
+export interface DoctorSummary {
+  id: string;
+  fullName: string;
+  specialization?: string;
+  phoneNumber?: string;
+}
+
+export interface MedicineSummary {
+  id: string;
+  name: string;
+}
+
+// ============ Vitals ============
+
+export interface Vitals {
+  temperature?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  weight?: number;
+  height?: number;
+}
+
+// ============ Medical Exam ============
+
+export interface MedicalExam {
+  id: string;
+  appointment: AppointmentSummary;
+  patient: PatientSummary;
+  doctor: DoctorSummary;
+  diagnosis?: string;
+  symptoms?: string;
+  treatment?: string;
+  vitals: Vitals;
+  notes?: string;
+  examDate: string;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy?: string;
+  hasPrescription?: boolean;
+  prescription?: PrescriptionDisplay;
+}
+
+export interface MedicalExamListItem {
+  id: string;
+  appointment: AppointmentSummary;
+  patient: PatientSummary;
+  doctor: DoctorSummary;
+  diagnosis?: string;
+  examDate: string;
+  hasPrescription?: boolean;
+}
+
+export interface MedicalExamCreateRequest {
+  appointmentId: string;
+  diagnosis?: string;
+  symptoms?: string;
+  treatment?: string;
+  temperature?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  weight?: number;
+  height?: number;
+  notes?: string;
+}
+
+export interface MedicalExamUpdateRequest {
+  diagnosis?: string;
+  symptoms?: string;
+  treatment?: string;
+  temperature?: number;
+  bloodPressureSystolic?: number;
+  bloodPressureDiastolic?: number;
+  heartRate?: number;
+  weight?: number;
+  height?: number;
+  notes?: string;
+}
+
+export interface MedicalExamListParams {
+  patientId?: string;
+  doctorId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+// ============ Prescription ============
+
+export interface PrescriptionItemDisplay {
+  medicineId: string;
+  medicineName: string;
+  quantity: number;
+  dosage: string;
+  frequency: string;
+  duration: string;
+  instructions?: string;
+}
+
+export interface PrescriptionDisplay {
+  id: string;
+  notes?: string;
+  items: PrescriptionItemDisplay[];
+  createdAt: string;
+}
+
+export interface PrescriptionItem {
+  id: string;
+  medicine: MedicineSummary;
+  quantity: number;
+  unitPrice: number;
+  dosage: string;
+  durationDays?: number;
+  instructions?: string;
+}
+
+export interface Prescription {
+  id: string;
+  medicalExam: { id: string };
+  patient: PatientSummary;
+  doctor: DoctorSummary;
+  prescribedAt: string;
+  notes?: string;
+  items: PrescriptionItem[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PrescriptionListItem {
+  id: string;
+  medicalExam: { id: string };
+  doctor: DoctorSummary;
+  prescribedAt: string;
+  itemCount: number;
+}
+
+export interface PrescriptionItemRequest {
+  medicineId: string;
+  quantity: number;
+  dosage: string;
+  durationDays?: number;
+  instructions?: string;
+}
+
+export interface PrescriptionCreateRequest {
+  notes?: string;
+  items: PrescriptionItemRequest[];
+}
+
+// ============ Paginated Response ============
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
