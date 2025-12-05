@@ -61,6 +61,8 @@ export const hrKeys = {
   schedules: () => [...hrKeys.all, "schedules"] as const,
   doctorSchedules: (params: DoctorScheduleSearchParams) =>
     [...hrKeys.schedules(), "doctor", params] as const,
+  doctorMySchedules: (params: { startDate: string; endDate: string; status?: string; doctorId?: string }) =>
+    [...hrKeys.schedules(), "doctor", "me", params] as const,
   schedule: (id: string) => [...hrKeys.schedules(), id] as const,
 };
 
@@ -186,6 +188,13 @@ export const useDoctorSchedules = (params: DoctorScheduleSearchParams) => {
   return useQuery<PageResponse<ScheduleWithExtra>>({
     queryKey: hrKeys.doctorSchedules(params),
     queryFn: () => hrService.getDoctorSchedules(params),
+  });
+};
+
+export const useDoctorMySchedules = (params: { startDate: string; endDate: string; status?: string; doctorId?: string }) => {
+  return useQuery({
+    queryKey: hrKeys.doctorMySchedules(params),
+    queryFn: () => hrService.getMySchedules(params),
   });
 };
 

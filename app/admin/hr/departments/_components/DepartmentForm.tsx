@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Department, DepartmentRequest } from "@/interfaces/hr";
-import { useEmployees } from "@/hooks/queries/useHr";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import { DoctorSearchSelect } from "@/components/appointment/DoctorSearchSelect";
 
 const formSchema = z.object({
   name: z
@@ -76,13 +76,6 @@ export default function DepartmentForm({
       phoneExtension: initialData?.phoneExtension || "",
       status: initialData?.status || "ACTIVE",
     },
-  });
-
-  // Fetch doctors for head doctor selection
-  const { data: doctorsData } = useEmployees({
-    role: "DOCTOR",
-    size: 100, // Fetch enough doctors
-    status: "ACTIVE",
   });
 
   const handleSubmit = (values: DepartmentFormValues) => {
@@ -146,25 +139,11 @@ export default function DepartmentForm({
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Head Doctor</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  value={field.value || "none"}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select head doctor" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {doctorsData?.content?.map((doctor: any) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.fullName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <DoctorSearchSelect
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Search active doctor"
+                />
                 <FormMessage />
               </FormItem>
             )}

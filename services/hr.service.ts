@@ -325,6 +325,7 @@ export const hrService = {
     startDate: string;
     endDate: string;
     status?: string;
+    doctorId?: string;
   }) => {
     // const response = await axiosInstance.get(`${BASE_URL}/schedules/me`, {
     //   params,
@@ -337,8 +338,8 @@ export const hrService = {
     }
 
     await delay(500);
-    // Mocking "me" as employee 101
-    const myId = "emp-101";
+    // Mocking "me" as employee 101 (override with doctorId if provided)
+    const myId = params.doctorId || "emp-101";
     let filtered = scheduleData.filter((s) => s.employeeId === myId);
     if (params.startDate) {
       filtered = filtered.filter((s) => s.workDate >= params.startDate);

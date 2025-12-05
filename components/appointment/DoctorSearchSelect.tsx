@@ -21,24 +21,33 @@ interface Props {
   onChange: (id: string) => void;
   placeholder?: string;
   departmentId?: string;
+  status?: string;
 }
 
-export function DoctorSearchSelect({ value, onChange, placeholder = "Select doctor", departmentId }: Props) {
+export function DoctorSearchSelect({
+  value,
+  onChange,
+  placeholder = "Select doctor",
+  departmentId,
+  status = "ACTIVE",
+}: Props) {
   const [open, setOpen] = useState(false);
   const [doctors, setDoctors] = useState<Employee[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
     const fetchDoctors = async () => {
-      const res = await hrService.searchEmployees({
+      const res = await hrService.getEmployees({
         role: "DOCTOR",
         departmentId,
         search,
+        status,
+        size: 50,
       });
-      setDoctors(res);
+      setDoctors(res.content ?? []);
     };
     fetchDoctors();
-  }, [departmentId, search]);
+  }, [departmentId, search, status]);
 
   const selected = doctors.find((d) => d.id === value);
 
@@ -56,6 +65,17 @@ export function DoctorSearchSelect({ value, onChange, placeholder = "Select doct
           <CommandList>
             <CommandEmpty>Không tìm thấy</CommandEmpty>
             <CommandGroup>
+              <CommandItem
+                key="none"
+                value="none"
+                onSelect={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+              >
+                <Check className={cn("mr-2 h-4 w-4", value ? "opacity-0" : "opacity-100")} />
+                <div className="text-sm text-muted-foreground">None</div>
+              </CommandItem>
               {doctors.map((doc) => (
                 <CommandItem
                   key={doc.id}

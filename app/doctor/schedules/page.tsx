@@ -1,78 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useDoctorMySchedules } from "@/hooks/queries/useHr";
+import { Button } from "@/components/ui/button";
 
 type ScheduleStatus = "AVAILABLE" | "BOOKED" | "CANCELLED";
-
-type Schedule = {
-  id: string;
-  doctorId: string;
-  workDate: string;
-  startTime: string;
-  endTime: string;
-  status: ScheduleStatus;
-  notes?: string;
-  appointments?: number;
-};
-
-// TODO: replace with real API when backend is ready
-// import { getMySchedules } from "@/services/hr.service";
-
-const mockMySchedules: Schedule[] = [
-  {
-    id: "ms-1",
-    doctorId: "doc-1",
-    workDate: "2025-12-10",
-    startTime: "09:00",
-    endTime: "12:00",
-    status: "AVAILABLE",
-    notes: "Morning clinic",
-  },
-  {
-    id: "ms-2",
-    doctorId: "doc-1",
-    workDate: "2025-12-10",
-    startTime: "13:00",
-    endTime: "16:00",
-    status: "BOOKED",
-    notes: "Appointments",
-    appointments: 4,
-  },
-  {
-    id: "ms-3",
-    doctorId: "doc-2",
-    workDate: "2025-12-11",
-    startTime: "08:00",
-    endTime: "11:00",
-    status: "CANCELLED",
-    notes: "Surgery cancelled",
-  },
-];
 
 const statusTone: Record<ScheduleStatus, string> = {
   AVAILABLE: "bg-emerald-100 text-emerald-700",
@@ -81,88 +19,104 @@ const statusTone: Record<ScheduleStatus, string> = {
 };
 
 export default function MySchedulesPage() {
-  const defaultStart = mockMySchedules.length
-    ? new Date(mockMySchedules[0].workDate)
-    : new Date();
-  const [startDate, setStartDate] = useState<Date | undefined>(defaultStart);
-  const [endDate, setEndDate] = useState<Date | undefined>(addDays(defaultStart, 13));
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: new Date(),
+    to: addDays(new Date(), 7),
+  });
   const [status, setStatus] = useState<ScheduleStatus | "ALL">("ALL");
-  const currentDoctorId = "doc-1";
+  const [doctorId, setDoctorId] = useState<string | undefined>(undefined);
 
-  const rows = useMemo(() => {
-    const start = startDate ? new Date(format(startDate, "yyyy-MM-dd")) : undefined;
-    const end = endDate ? new Date(format(endDate, "yyyy-MM-dd")) : undefined;
-    return mockMySchedules
-      .filter((item) => item.doctorId === currentDoctorId)
-      .filter((item) => {
-        const d = new Date(item.workDate);
-        if (start && d < start) return false;
-        if (end && d > end) return false;
-        return true;
-      })
-      .filter((item) => (status === "ALL" ? true : item.status === status))
-      .sort((a, b) => a.workDate.localeCompare(b.workDate) || a.startTime.localeCompare(b.startTime));
-  }, [startDate, endDate, status]);
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
+    if (stored) setDoctorId(stored);
+  }, []);
+
+  const { data, isLoading, refetch } = useDoctorMySchedules({
+    startDate: format(dateRange.from, "yyyy-MM-dd"),
+    endDate: format(dateRange.to, "yyyy-MM-dd"),
+    status: status === "ALL" ? undefined : status,
+    doctorId,
+  });
 
   return (
-    <div className="w-full space-y-6">
+    <div className="page-shell space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">My Schedules</h1>
-        <p className="text-muted-foreground">Personal schedule for doctor view.</p>
+        <p className="text-muted-foreground">Lịch trực và ca khám của bác sĩ.</p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Date Range (next 2 weeks default)</CardTitle>
-            <CardDescription>Read-only schedule view.</CardDescription>
+            <CardTitle>Khoảng thời gian</CardTitle>
+            <CardDescription>Chọn ngày bắt đầu và kết thúc</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Start</label>
-              <input
-                type="date"
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                value={startDate ? format(startDate, "yyyy-MM-dd") : ""}
-                onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">End</label>
-              <input
-                type="date"
-                className="w-full rounded-md border px-3 py-2 text-sm"
-                value={endDate ? format(endDate, "yyyy-MM-dd") : ""}
-                onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-sm text-muted-foreground">Start</label>
+                <input
+                  type="date"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={format(dateRange.from, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      from: e.target.value ? new Date(e.target.value) : prev.from,
+                    }))
+                  }
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm text-muted-foreground">End</label>
+                <input
+                  type="date"
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  value={format(dateRange.to, "yyyy-MM-dd")}
+                  onChange={(e) =>
+                    setDateRange((prev) => ({
+                      ...prev,
+                      to: e.target.value ? new Date(e.target.value) : prev.to,
+                    }))
+                  }
+                />
+              </div>
             </div>
             <Calendar
-              mode="single"
-              selected={startDate}
-              onSelect={setStartDate}
-              className="rounded-md border"
+              mode="range"
+              selected={{ from: dateRange.from, to: dateRange.to }}
+              onSelect={(range) => {
+                if (range?.from && range?.to) setDateRange({ from: range.from, to: range.to });
+              }}
+              defaultMonth={dateRange.from}
+              numberOfMonths={1}
             />
+            <div className="flex items-center gap-2">
+              <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All statuses</SelectItem>
+                  <SelectItem value="AVAILABLE">Available</SelectItem>
+                  <SelectItem value="BOOKED">Booked</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                Refresh
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         <Card className="shadow-sm w-full">
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
-              <CardTitle className="text-lg">Upcoming schedules</CardTitle>
-              <CardDescription>Next two weeks by default</CardDescription>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
-                <SelectTrigger className="h-9 w-32">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All</SelectItem>
-                  <SelectItem value="AVAILABLE">Available</SelectItem>
-                  <SelectItem value="BOOKED">Booked</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
+              <CardTitle className="text-lg">Lịch của tôi</CardTitle>
+              <CardDescription>
+                {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -170,41 +124,47 @@ export default function MySchedulesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Notes</TableHead>
+                    <TableHead>Ngày</TableHead>
+                    <TableHead>Giờ</TableHead>
+                    <TableHead>Trạng thái</TableHead>
+                    <TableHead>Ghi chú</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.length ? (
-                    rows.map((row) => (
-                      <TableRow key={row.id}>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                        Đang tải...
+                      </TableCell>
+                    </TableRow>
+                  ) : data?.content && data.content.length > 0 ? (
+                    data.content.map((schedule: any) => (
+                      <TableRow key={schedule.id}>
                         <TableCell className="text-muted-foreground">
-                          {format(new Date(row.workDate), "dd-MM-yyyy")}
+                          {format(new Date(schedule.workDate), "dd/MM/yyyy")}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {row.startTime} - {row.endTime}
+                          {schedule.startTime} - {schedule.endTime}
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant="secondary"
-                            className={`rounded-full px-3 py-1 text-xs font-medium ${statusTone[row.status]}`}
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
+                              statusTone[schedule.status as ScheduleStatus] || ""
+                            }`}
                           >
-                            {row.status}
+                            {schedule.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {row.status === "BOOKED" && row.appointments
-                            ? `${row.notes || ""} (${row.appointments} appointments)`
-                            : row.notes || "—"}
+                          {schedule.notes || `${schedule.appointments || 0} appointments`}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">
-                        No schedules for this date.
+                      <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                        Không có lịch
                       </TableCell>
                     </TableRow>
                   )}

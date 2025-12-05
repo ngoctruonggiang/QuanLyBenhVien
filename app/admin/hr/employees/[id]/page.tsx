@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -10,34 +11,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import EmployeeForm from "../_components/EmployeeForm";
-import { EmployeeRequest } from "@/interfaces/hr";
-import { useEmployee, useUpdateEmployee } from "@/hooks/queries/useHr";
+import { useEmployee } from "@/hooks/queries/useHr";
 
-export default function EmployeeDetailPage() {
+export default function EmployeeViewPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
 
-  const { data: employee, isLoading: isFetching, error } = useEmployee(id);
-  const updateEmployee = useUpdateEmployee();
+  const { data: employee, isLoading, error } = useEmployee(id);
 
-  const handleSubmit = async (values: EmployeeRequest) => {
-    updateEmployee.mutate(
-      { id, data: values },
-      {
-        onSuccess: () => {
-          router.push("/admin/hr/employees");
-        },
-        onError: (error) => {
-          console.error("Failed to update employee:", error);
-          alert("Failed to update employee. Please try again.");
-        },
-      }
-    );
-  };
-
-  if (isFetching) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center py-10">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -67,32 +50,63 @@ export default function EmployeeDetailPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Edit Employee
-          </h1>
-          <p className="text-muted-foreground">
-            Update profile, role, and account link.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight">Employee Details</h1>
+          <p className="text-muted-foreground">View-only employee profile.</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => router.push("/admin/hr/employees")}
-        >
-          Back
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => router.push("/admin/hr/employees")}>
+            Back
+          </Button>
+          <Button onClick={() => router.push(`/admin/hr/employees/${id}/edit`)}>
+            Edit
+          </Button>
+        </div>
       </div>
 
       <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Employee Information</CardTitle>
-          <CardDescription>Fields follow HR specification.</CardDescription>
+        <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>{employee.fullName}</CardTitle>
+            <CardDescription>{employee.email}</CardDescription>
+          </div>
+          <Badge variant="secondary" className="capitalize">
+            {employee.role.toLowerCase().replace(/_/g, " ")}
+          </Badge>
         </CardHeader>
-        <CardContent>
-          <EmployeeForm
-            initialData={employee}
-            onSubmit={handleSubmit}
-            isLoading={updateEmployee.isPending}
-          />
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Department</p>
+            <p className="font-medium">
+              {employee.departmentName || "N/A"}{" "}
+              {employee.departmentId ? (
+                <Badge variant="outline" className="ml-1">
+                  {employee.departmentId}
+                </Badge>
+              ) : null}
+            </p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Status</p>
+            <Badge variant="outline" className="uppercase">
+              {employee.status}
+            </Badge>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Phone</p>
+            <p className="font-medium">{employee.phoneNumber || "N/A"}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Address</p>
+            <p className="font-medium">{employee.address || "N/A"}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">Specialization</p>
+            <p className="font-medium">{employee.specialization || "N/A"}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm text-muted-foreground">License Number</p>
+            <p className="font-medium">{employee.licenseNumber || "N/A"}</p>
+          </div>
         </CardContent>
       </Card>
     </div>
