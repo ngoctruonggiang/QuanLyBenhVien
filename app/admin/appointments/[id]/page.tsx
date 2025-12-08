@@ -84,7 +84,7 @@ export default function AppointmentDetailPage() {
           <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
           <h2 className="mt-4 text-xl font-semibold">Appointment Not Found</h2>
           <p className="mt-2 text-muted-foreground">
-            The appointment you're looking for doesn't exist or has been
+            The appointment you&apos;re looking for doesn&apos;t exist or has been
             removed.
           </p>
           <Button className="mt-4" asChild>

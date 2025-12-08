@@ -103,6 +103,7 @@ export interface MedicalExamListParams {
   startDate?: string;
   endDate?: string;
   status?: ExamStatus;
+  search?: string; // Added search parameter
   page?: number;
   size?: number;
   sort?: string;

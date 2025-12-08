@@ -10,14 +10,12 @@ import { AppointmentStatusBadge } from "@/app/admin/appointments/_components/app
 import { toast } from "sonner";
 
 export default function PatientAppointmentListPage() {
-  const [patientId, setPatientId] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(() => {
+    const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
+    return pid || "p001";
+  });
   const { data: appointments = [], isLoading } = usePatientAppointments(patientId || "");
   const cancelMutation = useCancelAppointment();
-
-  useEffect(() => {
-    const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p001"); // fallback mock patient
-  }, []);
 
   const handleCancel = async (id: string) => {
     try {

@@ -24,12 +24,10 @@ export default function MySchedulesPage() {
     to: addDays(new Date(), 7),
   });
   const [status, setStatus] = useState<ScheduleStatus | "ALL">("ALL");
-  const [doctorId, setDoctorId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
+  const [doctorId, setDoctorId] = useState<string | undefined>(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    if (stored) setDoctorId(stored);
-  }, []);
+    return stored || undefined;
+  });
 
   const { data, isLoading, refetch } = useDoctorMySchedules({
     startDate: format(dateRange.from, "yyyy-MM-dd"),

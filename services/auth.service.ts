@@ -1,4 +1,5 @@
 import axiosInstance from "@/config/axios";
+import { PaginatedResponse } from "@/interfaces/pagination";
 
 export type LoginRequest = {
   email: string;
@@ -13,6 +14,12 @@ export type LoginResponse = {
   employeeId?: string;
   patientId?: string;
 };
+
+export interface Account {
+  id: string;
+  email: string;
+  role: string;
+}
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
@@ -32,6 +39,18 @@ export const authService = {
       "/auth-service/auth/register",
       credentials
     );
+    return response;
+  },
+
+  getAccounts: async (
+    search?: string
+  ): Promise<PaginatedResponse<Account>> => {
+    const response = await axiosInstance.get<
+      never,
+      PaginatedResponse<Account>
+    >("/auth-service/auth/accounts", {
+      params: { search },
+    });
     return response;
   },
 };

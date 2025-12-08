@@ -141,7 +141,7 @@ interface ScheduleItem {
   employees: Employee[];
 }
 
-let mockSchedule: ScheduleItem[] = [];
+const mockSchedule: ScheduleItem[] = [];
 
 export const getAllEmployees = async () => {
   if (!USE_MOCK) {

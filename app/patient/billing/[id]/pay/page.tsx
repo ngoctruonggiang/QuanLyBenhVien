@@ -14,15 +14,13 @@ export default function PatientPaymentPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [patientId, setPatientId] = useState<string | null>(null);
-  const { data: invoice, isLoading } = useInvoice(id);
-  const { mutateAsync: createPayment, isPending } = useCreatePayment();
-
-  useEffect(() => {
+  const [patientId, setPatientId] = useState<string | null>(() => {
     const pid =
       typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p-1");
-  }, []);
+    return pid || "p-1";
+  });
+  const { data: invoice, isLoading } = useInvoice(id);
+  const { mutateAsync: createPayment, isPending } = useCreatePayment();
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {

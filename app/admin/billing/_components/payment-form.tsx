@@ -25,8 +25,11 @@ import {
   PaymentFormValues,
   paymentSchemaWithBalance,
 } from "@/lib/schemas/billing";
+import { Invoice } from "@/interfaces/billing"; // Import Invoice interface
+import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard"; // Import InvoiceSummaryCard
 
 interface PaymentFormProps {
+  invoice: Invoice; // Add invoice prop
   defaultAmount?: number;
   onSubmit: (data: PaymentFormValues) => void;
   isSubmitting?: boolean;
@@ -34,6 +37,7 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({
+  invoice, // Destructure invoice prop
   defaultAmount,
   onSubmit,
   isSubmitting,
@@ -52,8 +56,8 @@ export function PaymentForm({
   });
 
   const schema = useMemo(
-    () => paymentSchemaWithBalance(maxAmount ?? defaultAmount),
-    [maxAmount, defaultAmount]
+    () => paymentSchemaWithBalance(maxAmount ?? invoice.balance), // Use invoice.balance for schema
+    [maxAmount, invoice.balance]
   );
 
   const form = useForm<PaymentFormValues>({
@@ -69,6 +73,7 @@ export function PaymentForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <InvoiceSummaryCard invoice={invoice} /> {/* Render InvoiceSummaryCard */}
         <input type="hidden" {...form.register("idempotencyKey")} />
         <FormField
           control={form.control}
@@ -80,7 +85,7 @@ export function PaymentForm({
                 <Input
                   type="number"
                   {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
                 />
               </FormControl>
               <FormMessage />

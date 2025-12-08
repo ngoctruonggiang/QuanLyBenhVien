@@ -34,6 +34,7 @@ interface MedicineFormProps {
   onSubmit: (data: MedicineFormValues) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  isSubmitting?: boolean; // Add isSubmitting prop
 }
 
 const unitOptions = [
@@ -47,25 +48,35 @@ const unitOptions = [
   { value: "ampule", label: "Ampule" },
 ];
 
+interface FormInputValues {
+  name: string;
+  activeIngredient?: string;
+  unit: string;
+  description?: string;
+  quantity: number;
+  packaging?: string;
+  purchasePrice: number;
+  sellingPrice: number;
+  expiresAt: string;
+  categoryId?: string;
+}
+
 export function MedicineForm({
   initialData,
   onSubmit,
-  onCancel,
-  isLoading = false,
+  isSubmitting,
 }: MedicineFormProps) {
-  const { data: categories } = useCategory();
-
-  const form = useForm<MedicineFormValues>({
+  const form = useForm<FormInputValues>({
     resolver: zodResolver(medicineFormSchema),
     defaultValues: {
       name: initialData?.name ?? "",
       activeIngredient: initialData?.activeIngredient ?? "",
       unit: initialData?.unit ?? "",
       description: initialData?.description ?? "",
-      quantity: initialData?.quantity ?? 0,
+      quantity: Number(initialData?.quantity ?? 0),
       packaging: initialData?.packaging ?? "",
-      purchasePrice: initialData?.purchasePrice ?? 0,
-      sellingPrice: initialData?.sellingPrice ?? 0,
+      purchasePrice: Number(initialData?.purchasePrice ?? 0),
+      sellingPrice: Number(initialData?.sellingPrice ?? 0),
       expiresAt: initialData?.expiresAt ?? "",
       categoryId: initialData?.categoryId ?? "",
     },

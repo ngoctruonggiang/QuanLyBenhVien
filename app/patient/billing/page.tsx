@@ -11,19 +11,17 @@ import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard";
 
 export default function PatientInvoiceListPage() {
-  const [patientId, setPatientId] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(() => {
+    // Lấy patientId từ session/localStorage; fallback "p-1" khi dev
+    const fromStorage =
+      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
+    return fromStorage || "p-1";
+  });
   const [status, setStatus] = useState<string>("ALL");
   const { data: invoices = [], isLoading } = usePatientInvoices(
     patientId || "",
     status
   );
-
-  useEffect(() => {
-    // Lấy patientId từ session/localStorage; fallback "p-1" khi dev
-    const fromStorage =
-      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(fromStorage || "p-1");
-  }, []);
 
   return (
     <div className="page-shell space-y-6">

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -21,18 +22,10 @@ const formatDate = (value: string) =>
   });
 
 export default function DoctorExamsPage() {
-  const [doctorId, setDoctorId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("ALL");
-  const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [page, setPage] = useState(0);
-  const size = 20;
-
-  useEffect(() => {
+  const [doctorId, setDoctorId] = useState<string | null>(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    setDoctorId(stored || "emp-101");
-  }, []);
+    return stored || "emp-101";
+  });
 
   const debouncedSearch = useDebounce(search, 300);
 

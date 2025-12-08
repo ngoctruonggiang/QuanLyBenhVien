@@ -369,4 +369,56 @@ export const billingHandlers = [
     invoice.notes = `Cancelled: ${body?.reason || ""}`;
     return HttpResponse.json(invoice);
   }),
+
+  http.get("**/api/billing/payments/summary-cards", () => {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
+
+    let todayAmount = 0;
+    let todayCount = 0;
+    let thisWeekAmount = 0;
+    let thisWeekCount = 0;
+    let cashAmount = 0;
+    let cardAmount = 0;
+    let totalPayments = 0;
+
+    allPayments().forEach(p => {
+      const paymentDate = p.paymentDate.split('T')[0];
+      if (p.status === "COMPLETED") {
+        totalPayments++;
+        if (paymentDate === today) {
+          todayAmount += p.amount;
+          todayCount++;
+        }
+        if (paymentDate >= startOfWeek) {
+          thisWeekAmount += p.amount;
+          thisWeekCount++;
+        }
+        if (p.method === "CASH") {
+          cashAmount += p.amount;
+        } else if (p.method === "CREDIT_CARD") {
+          cardAmount += p.amount;
+        }
+      }
+    });
+
+    const cashPercentage = totalPayments > 0 ? (cashAmount / (cashAmount + cardAmount)) * 100 : 0;
+    const cardPercentage = totalPayments > 0 ? (cardAmount / (cashAmount + cardAmount)) * 100 : 0;
+
+
+    return HttpResponse.json({
+      status: "success",
+      data: {
+        todayAmount,
+        todayCount,
+        thisWeekAmount,
+        thisWeekCount,
+        cashAmount,
+        cashPercentage: isNaN(cashPercentage) ? 0 : cashPercentage,
+        cardAmount,
+        cardPercentage: isNaN(cardPercentage) ? 0 : cardPercentage,
+      },
+    });
+  }),
 ];

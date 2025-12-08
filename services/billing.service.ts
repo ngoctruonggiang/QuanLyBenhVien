@@ -1,4 +1,9 @@
-import { Invoice, CreatePaymentRequest, Payment } from "@/interfaces/billing";
+import {
+  Invoice,
+  CreatePaymentRequest,
+  Payment,
+  GenerateInvoiceRequest, // Added
+} from "@/interfaces/billing";
 import api from "@/config/axios";
 
 export interface InvoiceSummary {
@@ -11,37 +16,73 @@ export interface InvoiceSummary {
   collectedThisMonth: number;
 }
 
-export const getInvoices = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
+// ---- Invoice APIs ----
+// Generate invoice (internal - triggered by prescription creation)
+export const generateInvoice = async (data: GenerateInvoiceRequest) =>
+  api.post<{ status: string; data: Invoice }>(`/api/billing/invoices/generate`, data);
+
+// Get invoice by ID
+export const getInvoiceById = async (id: string) =>
+  api.get<{ status: string; data: Invoice }>(`/api/billing/invoices/${id}`);
+
+// Get invoice by appointment
+export const getInvoiceByAppointment = async (appointmentId: string) =>
+  api.get<{ status: string; data: Invoice }>(`/api/billing/invoices/by-appointment/${appointmentId}`);
+
+// List invoices (admin)
+export const getInvoiceList = async (params?: {
+  patientId?: string;
   status?: string;
   startDate?: string;
   endDate?: string;
+  page?: number;
+  size?: number;
   sort?: string;
 }) => {
   return api.get("/api/billing/invoices", { params });
 };
 
-export const getInvoiceSummary = async (): Promise<InvoiceSummary> => {
-  return api.get("/api/billing/invoices/summary");
+// Get patient invoices
+export const getPatientInvoices = async (
+  patientId: string,
+  params?: {
+    status?: string;
+    page?: number;
+    size?: number;
+  }
+) => {
+  return api.get(`/api/billing/invoices/by-patient/${patientId}`, { params });
 };
 
-export const getInvoice = async (id: string) => {
-  return api.get(`/api/billing/invoices/${id}`);
-};
+// ---- Payment APIs ----
 
-export const getInvoicesByPatient = async (patientId: string) => {
-  return api.get(`/api/billing/invoices/by-patient/${patientId}`);
-};
+// Create payment
+export const createPayment = async (data: CreatePaymentRequest) =>
+  api.post<{ status: string; data: Payment }>(`/api/billing/payments`, data);
 
-export const createPayment = async (data: CreatePaymentRequest) => {
-  return api.post("/api/billing/payments", data);
-};
+// Get payment by ID
+export const getPaymentById = async (id: string) =>
+  api.get<{ status: string; data: Payment }>(`/api/billing/payments/${id}`);
 
-export const cancelInvoice = async (id: string, reason: string) => {
-  return api.post(`/api/billing/invoices/${id}/cancel`, { reason });
-};
+// Get payments by invoice
+export const getPaymentsByInvoice = async (invoiceId: string) =>
+  api.get<{ status: string; data: Payment[] }>(`/api/billing/payments/by-invoice/${invoiceId}`);
+
+// Cancel invoice (PATCH method is more appropriate for partial updates)
+export const cancelInvoice = async (id: string, data: { cancelReason: string }) =>
+  api.patch<{ status: string; data: Invoice }>(`/api/billing/invoices/${id}/cancel`, data);
+
+
+export interface PaymentSummaryCards {
+  todayAmount: number;
+  todayCount: number;
+  thisWeekAmount: number;
+  thisWeekCount: number;
+  cashAmount: number;
+  cashPercentage: number;
+  cardAmount: number;
+  cardPercentage: number;
+}
 
 export const getPayments = async (params?: {
   page?: number;
@@ -50,6 +91,11 @@ export const getPayments = async (params?: {
   method?: string;
   startDate?: string;
   endDate?: string;
+  sort?: string;
 }) => {
   return api.get("/api/billing/payments", { params });
+};
+
+export const getPaymentSummaryCards = async (): Promise<PaymentSummaryCards> => {
+  return api.get("/api/billing/payments/summary-cards");
 };

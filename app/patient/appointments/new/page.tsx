@@ -20,17 +20,10 @@ type Step = 1 | 2 | 3;
 export default function PatientBookingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
-  const [patientId, setPatientId] = useState<string>("p001");
-  const [doctorId, setDoctorId] = useState<string>("");
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [slot, setSlot] = useState<string>("");
-  const [reason, setReason] = useState<string>("");
-  const [type, setType] = useState<"CONSULTATION" | "FOLLOW_UP" | "EMERGENCY">("CONSULTATION");
-
-  useEffect(() => {
+  const [patientId, setPatientId] = useState<string>(() => {
     const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p001");
-  }, []);
+    return pid || "p001";
+  });
 
   const isoDate = useMemo(() => (date ? date.toISOString().split("T")[0] : ""), [date]);
   const { data: slots } = useTimeSlots(doctorId, isoDate, undefined);

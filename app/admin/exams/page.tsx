@@ -28,6 +28,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { MedicalExamListItem } from "@/interfaces/medical-exam";
 import { ExamStatus } from "@/interfaces/medical-exam";
 import { ExamStatusBadge } from "./_components/exam-status-badge";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("en-US", {
@@ -37,8 +38,8 @@ const formatDate = (value: string) =>
   });
 
 export default function MedicalExamListPage() {
+  const { user } = useAuth(); // Get current user
   const [search, setSearch] = useState("");
-  const [doctorFilter, setDoctorFilter] = useState<string>("ALL");
   const [statusFilter, setStatusFilter] = useState<ExamStatus | "ALL">("ALL");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -47,28 +48,24 @@ export default function MedicalExamListPage() {
 
   const debouncedSearch = useDebounce(search, 300);
 
+  // Conditional doctorId for query parameters based on user role
+  const queryDoctorId = user?.role === "DOCTOR" ? user.employeeId : undefined;
+
   const { data, isLoading } = useMedicalExamList({
     page,
     size,
-    doctorId: doctorFilter !== "ALL" ? doctorFilter : undefined,
+    doctorId: queryDoctorId, // Pass conditional doctorId
     status: statusFilter !== "ALL" ? statusFilter : undefined,
     startDate: startDate || undefined,
     endDate: endDate || undefined,
+    search: debouncedSearch || undefined, // Use backend search
   });
 
   const exams = data?.content || [];
   const totalPages = data?.totalPages || 1;
 
-  // Filter client-side for search (since mock doesn't support it)
-  const filteredExams = exams.filter((exam: MedicalExamListItem) => {
-    if (!debouncedSearch) return true;
-    const term = debouncedSearch.toLowerCase();
-    return (
-      exam.patient.fullName.toLowerCase().includes(term) ||
-      exam.doctor.fullName.toLowerCase().includes(term) ||
-      exam.diagnosis?.toLowerCase().includes(term)
-    );
-  });
+  // No client-side filtering needed, as API will handle it for search and doctorId
+  // The displayed exams array is now directly from the API response
 
   return (
     <div className="w-full space-y-6">
@@ -98,19 +95,7 @@ export default function MedicalExamListPage() {
             />
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <Select
-              value={doctorFilter}
-              onValueChange={(v) => setDoctorFilter(v)}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-48">
-                <SelectValue placeholder="Filter by Doctor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Doctors</SelectItem>
-                <SelectItem value="emp001">Dr. Nguyen Van Hung</SelectItem>
-                <SelectItem value="emp002">Dr. Tran Thi Mai</SelectItem>
-              </SelectContent>
-            </Select>
+            {/* Doctor filter removed as it's handled by role-based logic now */}
             <Select
               value={statusFilter}
               onValueChange={(v: ExamStatus | "ALL") => {
@@ -176,8 +161,8 @@ export default function MedicalExamListPage() {
                       </span>
                     </TableCell>
                   </TableRow>
-                ) : filteredExams.length ? (
-                  filteredExams.map((exam: MedicalExamListItem) => (
+                ) : exams.length ? ( // Use exams directly
+                  exams.map((exam: MedicalExamListItem) => (
                     <TableRow key={exam.id}>
                       <TableCell className="font-medium">
                         {exam.patient.fullName}

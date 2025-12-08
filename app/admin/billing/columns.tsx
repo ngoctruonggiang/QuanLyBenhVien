@@ -30,13 +30,7 @@ export const invoiceColumns: Column<Invoice>[] = [
       return new Date(row.invoiceDate).toLocaleDateString();
     },
   },
-  {
-    key: "dueDate",
-    label: "Due Date",
-    render: (row) => {
-      return row.dueDate ? new Date(row.dueDate).toLocaleDateString() : "N/A";
-    },
-  },
+
   {
     key: "totalAmount",
     label: "Total",

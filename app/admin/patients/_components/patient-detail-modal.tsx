@@ -31,7 +31,7 @@ import { Patient } from "@/interfaces/patient";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentService } from "@/services/appointment.service";
 import { getMedicalExams } from "@/services/medical-exam.service";
-import { getInvoicesByPatient } from "@/services/billing.service";
+import { getPatientInvoices } from "@/services/billing.service";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -66,7 +66,7 @@ export function PatientDetailModal({
   // Fetch invoices for this patient
   const { data: invoicesData, isLoading: loadingInvoices } = useQuery({
     queryKey: ["patient-invoices", patient?.id],
-    queryFn: () => getInvoicesByPatient(patient?.id || ""),
+    queryFn: () => getPatientInvoices(patient?.id || ""),
     enabled: !!patient?.id && open,
   });
 

@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   CalendarClock,
-  Clock,
   Edit,
   Loader2,
   Pill,
@@ -20,18 +19,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
-  TableBody,
-  TableCell,
-  TableHead,
   TableHeader,
   TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { useMedicalExam } from "@/hooks/queries/useMedicalExam";
 import { ExamStatusBadge } from "../_components/exam-status-badge";
+import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("en-US", {
@@ -42,29 +41,10 @@ const formatDate = (value: string) =>
     minute: "2-digit",
   });
 
-// Check if exam is within 24-hour edit window
-const isEditable = (createdAt: string) => {
-  const created = new Date(createdAt);
-  const now = new Date();
-  const diffHours = (now.getTime() - created.getTime()) / (1000 * 60 * 60);
-  return diffHours <= 24;
-};
-
-// Calculate remaining time for edit window
-const getTimeRemaining = (createdAt: string) => {
-  const created = new Date(createdAt);
-  const deadline = new Date(created.getTime() + 24 * 60 * 60 * 1000);
-  const now = new Date();
-  const diff = deadline.getTime() - now.getTime();
-  if (diff <= 0) return null;
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-};
-
 export default function MedicalExamDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuth(); // Use the useAuth hook
   const { data: exam, isLoading, error } = useMedicalExam(params.id);
 
   if (isLoading) {
@@ -89,8 +69,18 @@ export default function MedicalExamDetailPage() {
     );
   }
 
-  const canEdit = isEditable(exam.createdAt);
-  const timeRemaining = getTimeRemaining(exam.createdAt);
+  // Corrected canEditExam logic based on exam status and user role
+  const canEditExam =
+    (user?.role === "ADMIN" || // Admin can always edit (admin override)
+      (user?.role === "DOCTOR" && exam.status === "PENDING")) && // Doctor can edit if exam is PENDING
+    exam.doctor.id === user?.employeeId; // Only assigned doctor can edit, if applicable
+
+  // Corrected canAddPrescription logic
+  const canAddPrescription =
+    (user?.role === "ADMIN" || // Admin can always add prescription
+      (user?.role === "DOCTOR" && exam.status === "PENDING")) && // Doctor can add if exam is PENDING
+    exam.doctor.id === user?.employeeId && // Only assigned doctor can add
+    !exam.prescription; // Only if no prescription exists yet
 
   return (
     <div className="w-full space-y-6">
@@ -112,23 +102,13 @@ export default function MedicalExamDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {exam.status ? <ExamStatusBadge status={exam.status as any} /> : null}
-          {canEdit && timeRemaining && (
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {timeRemaining} left to edit
-            </Badge>
-          )}
-          <Button variant="outline" disabled={!canEdit} asChild={canEdit}>
-            {canEdit ? (
+          {canEditExam && (
+            <Button variant="outline" asChild>
               <Link href={`/admin/exams/${exam.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" /> Edit
               </Link>
-            ) : (
-              <>
-                <Edit className="mr-2 h-4 w-4" /> Edit (Locked)
-              </>
-            )}
-          </Button>
+            </Button>
+          )}
         </div>
       </div>
 

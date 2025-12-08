@@ -6,12 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { format } from "date-fns";
-import { ArrowLeft, Loader2, CalendarDays, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, CalendarDays } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -22,14 +21,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
   Form,
   FormControl,
   FormField,
@@ -37,21 +28,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import { AppointmentType, TimeSlot } from "@/interfaces/appointment";
-import {
-  useCreateAppointment,
-  useTimeSlots,
-} from "@/hooks/queries/useAppointment";
-import { hrService } from "@/services/hr.service";
-import { getPatients } from "@/services/patient.service";
-import { Patient } from "@/interfaces/patient";
-import { Employee } from "@/interfaces/hr";
-
-// Type alias for patient display
-type PatientWithPhone = Patient;
+import { useCreateAppointment } from "@/hooks/queries/useAppointment";
+import { PatientSearchSelect } from "@/components/appointment/PatientSearchSelect";
+import { DoctorSearchSelect } from "@/components/appointment/DoctorSearchSelect";
+import { DepartmentSelect } from "@/components/hr/DepartmentSelect";
+import { TimeSlotPicker } from "@/components/appointment/TimeSlotPicker";
 
 // Form schema
 const appointmentFormSchema = z.object({
@@ -77,21 +60,7 @@ type FormValues = z.infer<typeof appointmentFormSchema>;
 export default function NewAppointmentPage() {
   const router = useRouter();
   const createMutation = useCreateAppointment();
-
-  // Patient and Doctor search states
-  const [patients, setPatients] = useState<PatientWithPhone[]>([]);
-  const [doctors, setDoctors] = useState<Employee[]>([]);
-  const [patientSearch, setPatientSearch] = useState("");
-  const [doctorSearch, setDoctorSearch] = useState("");
-  const [loadingPatients, setLoadingPatients] = useState(false);
-  const [loadingDoctors, setLoadingDoctors] = useState(false);
-  const [patientOpen, setPatientOpen] = useState(false);
-  const [doctorOpen, setDoctorOpen] = useState(false);
-
-  // Selected patient/doctor display
-  const [selectedPatient, setSelectedPatient] =
-    useState<PatientWithPhone | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<Employee | null>(null);
+  const [departmentId, setDepartmentId] = useState<string | undefined>();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(appointmentFormSchema) as any,
@@ -108,65 +77,11 @@ export default function NewAppointmentPage() {
   const watchedDoctorId = form.watch("doctorId");
   const watchedDate = form.watch("appointmentDate");
 
-  // Fetch time slots when doctor and date are selected
-  const { data: timeSlots, isLoading: loadingSlots } = useTimeSlots(
-    watchedDoctorId,
-    watchedDate ? format(watchedDate, "yyyy-MM-dd") : ""
-  );
-
-  // Load patients on search
+  // Reset doctor and time slot when department changes
   useEffect(() => {
-    const timer = setTimeout(async () => {
-      setLoadingPatients(true);
-      try {
-        // Mock uses 0-based page; always load first page and filter client-side
-        const result = await getPatients({
-          page: 0,
-          size: 20,
-          search: patientSearch || undefined,
-        });
-        const filtered = result.content.filter((p: PatientWithPhone) =>
-          patientSearch
-            ? p.fullName.toLowerCase().includes(patientSearch.toLowerCase())
-            : true
-        ) as PatientWithPhone[];
-        setPatients(filtered);
-      } catch (error) {
-        console.error("Error loading patients:", error);
-      } finally {
-        setLoadingPatients(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [patientSearch]);
-
-  // Load doctors on search
-  useEffect(() => {
-    const loadDoctors = async () => {
-      setLoadingDoctors(true);
-      try {
-        const result = await hrService.getDoctors({ status: "ACTIVE" });
-        let filtered = result.content;
-        if (doctorSearch) {
-          filtered = filtered.filter(
-            (d: Employee) =>
-              d.fullName.toLowerCase().includes(doctorSearch.toLowerCase()) ||
-              d.specialization
-                ?.toLowerCase()
-                .includes(doctorSearch.toLowerCase())
-          );
-        }
-        setDoctors(filtered);
-      } catch (error) {
-        console.error("Error loading doctors:", error);
-      } finally {
-        setLoadingDoctors(false);
-      }
-    };
-
-    loadDoctors();
-  }, [doctorSearch]);
+    form.setValue("doctorId", "");
+    form.setValue("appointmentTime", "");
+  }, [departmentId, form]);
 
   // Reset time slot when date or doctor changes
   useEffect(() => {
@@ -230,63 +145,10 @@ export default function NewAppointmentPage() {
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Patient *</FormLabel>
-                    <Popover open={patientOpen} onOpenChange={setPatientOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {selectedPatient
-                              ? selectedPatient.fullName
-                              : "Search patient by name..."}
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search patients..."
-                            value={patientSearch}
-                            onValueChange={setPatientSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>
-                              {loadingPatients
-                                ? "Loading..."
-                                : "No patient found. Type to search."}
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {patients.map((patient) => (
-                                <CommandItem
-                                  key={patient.id}
-                                  value={patient.id.toString()}
-                                  onSelect={() => {
-                                    field.onChange(patient.id.toString());
-                                    setSelectedPatient(patient);
-                                    setPatientOpen(false);
-                                  }}
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {patient.fullName}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {patient.gender} • DOB:{" "}
-                                      {patient.dateOfBirth}
-                                    </span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <PatientSearchSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -299,73 +161,25 @@ export default function NewAppointmentPage() {
             <CardHeader>
               <CardTitle className="text-lg">Doctor Selection</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <DepartmentSelect
+                  value={departmentId}
+                  onChange={setDepartmentId}
+                />
+              </FormItem>
               <FormField
                 control={form.control}
                 name="doctorId"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Doctor *</FormLabel>
-                    <Popover open={doctorOpen} onOpenChange={setDoctorOpen}>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            role="combobox"
-                            className={cn(
-                              "w-full justify-between",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {selectedDoctor
-                              ? `${selectedDoctor.fullName} - ${
-                                  selectedDoctor.departmentName ||
-                                  selectedDoctor.specialization
-                                }`
-                              : "Select a doctor..."}
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="start">
-                        <Command>
-                          <CommandInput
-                            placeholder="Search doctors..."
-                            value={doctorSearch}
-                            onValueChange={setDoctorSearch}
-                          />
-                          <CommandList>
-                            <CommandEmpty>
-                              {loadingDoctors
-                                ? "Loading..."
-                                : "No doctor found."}
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {doctors.map((doctor) => (
-                                <CommandItem
-                                  key={doctor.id}
-                                  value={doctor.id}
-                                  onSelect={() => {
-                                    field.onChange(doctor.id);
-                                    setSelectedDoctor(doctor);
-                                    setDoctorOpen(false);
-                                  }}
-                                >
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {doctor.fullName}
-                                    </span>
-                                    <span className="text-sm text-muted-foreground">
-                                      {doctor.departmentName} •{" "}
-                                      {doctor.specialization}
-                                    </span>
-                                  </div>
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                    <DoctorSearchSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      departmentId={departmentId === "ALL" ? undefined : departmentId}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
@@ -425,38 +239,12 @@ export default function NewAppointmentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time Slot *</FormLabel>
-                    {!watchedDoctorId || !watchedDate ? (
-                      <p className="text-sm text-muted-foreground">
-                        Please select a doctor and date first
-                      </p>
-                    ) : loadingSlots ? (
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <Skeleton key={i} className="h-10" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                        {timeSlots?.map((slot) => (
-                          <Button
-                            key={slot.time}
-                            type="button"
-                            variant={
-                              field.value === slot.time ? "default" : "outline"
-                            }
-                            className={cn(
-                              "h-10",
-                              !slot.available && "opacity-50 cursor-not-allowed"
-                            )}
-                            disabled={!slot.available}
-                            onClick={() => field.onChange(slot.time)}
-                          >
-                            <Clock className="mr-1 h-3 w-3" />
-                            {slot.time}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+                    <TimeSlotPicker
+                      doctorId={watchedDoctorId}
+                      date={watchedDate ? format(watchedDate, "yyyy-MM-dd") : ""}
+                      selectedSlot={field.value}
+                      onSelect={field.onChange}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

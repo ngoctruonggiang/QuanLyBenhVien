@@ -87,34 +87,37 @@ function SimplePieChart({
 }) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
 
+  // Pre-calculate segments to avoid direct reassignment in render
+  const segments = useMemo(() => {
+    let cumulativePercent = 0;
+    return data.map((item) => {
+      const percent = (item.value / total) * 100;
+      const dashArray = `${percent} ${100 - percent}`;
+      const dashOffset = -cumulativePercent;
+      cumulativePercent += percent;
+      return { ...item, dashArray, dashOffset };
+    });
+  }, [data, total]);
+
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8">
       <div className="flex justify-center">
         <div className="relative h-48 w-48">
           <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-            {(() => {
-              let cumulativePercent = 0;
-              return data.map((item, i) => {
-                const percent = (item.value / total) * 100;
-                const dashArray = `${percent} ${100 - percent}`;
-                const dashOffset = -cumulativePercent;
-                cumulativePercent += percent;
-                return (
-                  <circle
-                    key={i}
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    fill="transparent"
-                    stroke={item.color}
-                    strokeWidth="20"
-                    strokeDasharray={dashArray}
-                    strokeDashoffset={dashOffset}
-                    className="transition-all duration-500"
-                  />
-                );
-              });
-            })()}
+            {segments.map((segment, i) => (
+              <circle
+                key={i}
+                cx="50"
+                cy="50"
+                r="40"
+                fill="transparent"
+                stroke={segment.color}
+                strokeWidth="20"
+                strokeDasharray={segment.dashArray}
+                strokeDashoffset={segment.dashOffset}
+                className="transition-all duration-500"
+              />
+            ))}
           </svg>
         </div>
       </div>
@@ -152,6 +155,7 @@ const paymentMethodColors: Record<string, string> = {
 
 export default function RevenueReportPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [role, setRole] = useState<string>("ADMIN");
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
@@ -164,10 +168,9 @@ export default function RevenueReportPage() {
   const [paymentMethod, setPaymentMethod] = useState<string>("ALL");
 
   useEffect(() => {
-    const { user } = useAuth();
     const r = user?.role || null;
     setRole(r || "ADMIN");
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (role && role !== "ADMIN") {

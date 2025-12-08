@@ -15,14 +15,12 @@ export default function PatientInvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [patientId, setPatientId] = useState<string | null>(null);
-  const { data: invoice, isLoading } = useInvoice(id);
-
-  useEffect(() => {
+  const [patientId, setPatientId] = useState<string | null>(() => {
     const pid =
       typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p-1");
-  }, []);
+    return pid || "p-1";
+  });
+  const { data: invoice, isLoading } = useInvoice(id);
 
   if (isLoading) {
     return <p className="text-muted-foreground p-6">Đang tải...</p>;

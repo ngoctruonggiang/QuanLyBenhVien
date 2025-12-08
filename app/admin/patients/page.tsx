@@ -58,6 +58,7 @@ import { format } from "date-fns";
 import { Patient, PatientListParams } from "@/interfaces/patient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
+import { appointmentService } from "@/services/appointment.service";
 
 type ViewMode = "table" | "grid";
 
@@ -79,6 +80,9 @@ export default function PatientsPage() {
   });
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
+  const [showWarningDialog, setShowWarningDialog] = useState(false);
+  const [futureAppointmentsCount, setFutureAppointmentsCount] = useState(0);
+
 
   const params: PatientListParams = {
     page,
@@ -109,9 +113,19 @@ export default function PatientsPage() {
     []
   );
 
-  const handleDelete = useCallback((patient: Patient) => {
+  const handleDelete = useCallback(async (patient: Patient) => {
     setPatientToDelete(patient);
-    setDeleteId(patient.id);
+    const appointments = await appointmentService.list({ patientId: patient.id });
+    const futureAppointments = appointments.content.filter(
+      (appt) => new Date(appt.appointmentTime) > new Date()
+    );
+
+    if (futureAppointments.length > 0) {
+      setFutureAppointmentsCount(futureAppointments.length);
+      setShowWarningDialog(true);
+    } else {
+      setDeleteId(patient.id);
+    }
   }, []);
 
   const handleViewPatient = useCallback(
@@ -428,7 +442,7 @@ export default function PatientsPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[10, 20, 30, 50].map((size) => (
+                    {[10, 20, 50].map((size) => (
                       <SelectItem key={size} value={String(size)}>
                         {size}
                       </SelectItem>
@@ -489,6 +503,28 @@ export default function PatientsPage() {
               ) : (
                 "Delete"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Future Appointments Warning Dialog */}
+      <AlertDialog
+        open={showWarningDialog}
+        onOpenChange={() => setShowWarningDialog(false)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cannot Delete Patient</AlertDialogTitle>
+            <AlertDialogDescription>
+              This patient cannot be deleted because they have{" "}
+              <strong>{futureAppointmentsCount}</strong> future appointment(s).
+              Please cancel or reschedule them first.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowWarningDialog(false)}>
+              OK
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

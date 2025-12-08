@@ -11,6 +11,7 @@ export type UserRole =
 type AuthUser = {
   email: string | null;
   role: UserRole;
+  employeeId?: string; // Added employeeId
 };
 
 function normalizeRole(role: string | null): UserRole {
@@ -34,18 +35,14 @@ function readAuthFromStorage(): AuthUser | null {
 
   const role = normalizeRole(localStorage.getItem("userRole"));
   const email = localStorage.getItem("userEmail");
+  const employeeId = localStorage.getItem("userEmployeeId"); // Retrieve employeeId
 
-  return { email, role };
+  return { email, role, employeeId };
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setUser(readAuthFromStorage());
-    setIsLoading(false);
-  }, []);
+  const [user, setUser] = useState<AuthUser | null>(() => readAuthFromStorage());
+  const [isLoading, setIsLoading] = useState(false);
 
   return {
     user,

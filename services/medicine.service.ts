@@ -46,7 +46,7 @@ const generateMockMedicines = (): Medicine[] => {
   return list;
 };
 
-let MEDICINES = generateMockMedicines();
+const MEDICINES = generateMockMedicines();
 
 // ============ API FUNCTIONS ============
 export const getMedicines = async (

@@ -76,7 +76,7 @@ export default medicalExamService;
 
 // ============ Mock Data for Development - IDs synced with patient.service.ts ============
 
-let mockExams: MedicalExam[] = [
+const mockExams: MedicalExam[] = [
   {
     id: "exam001",
     appointment: { id: "apt-001", appointmentTime: "2025-12-05T09:00:00" },

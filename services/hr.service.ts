@@ -14,9 +14,9 @@ const BASE_URL = "/api/hr";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Local mutable copies for mocks
-let deptData: Department[] = [...mockDepartments];
-let employeeData: Employee[] = [...mockEmployees];
-let scheduleData: (EmployeeSchedule & {
+const deptData: Department[] = [...mockDepartments];
+const employeeData: Employee[] = [...mockEmployees];
+const scheduleData: (EmployeeSchedule & {
   departmentId?: string;
   shift?: string;
 })[] = [...mockSchedules];

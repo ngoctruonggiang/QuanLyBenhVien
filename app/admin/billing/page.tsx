@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ReusableTable } from "@/app/admin/_components/MyTable";
 import { Input } from "@/components/ui/input";
-import { useInvoices, useInvoiceSummary } from "@/hooks/queries/useBilling";
+import { useInvoiceList, usePaymentSummaryCards } from "@/hooks/queries/useBilling";
 import { invoiceColumns } from "./columns";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -51,17 +51,17 @@ export default function InvoiceListPage() {
   const [sort, setSort] = useState("invoiceDate,desc");
   const debouncedSearch = useDebounce(search, 500);
 
-  const { data, isLoading } = useInvoices(
+  const { data, isLoading } = useInvoiceList({
     page,
-    limit,
-    debouncedSearch,
-    status,
-    startDate?.toISOString(),
-    endDate?.toISOString(),
-    sort
-  );
+    size: limit,
+    search: debouncedSearch || undefined,
+    status: status === "ALL" ? undefined : status,
+    startDate: startDate?.toISOString(),
+    endDate: endDate?.toISOString(),
+    sort,
+  });
 
-  const { data: summary, isLoading: summaryLoading } = useInvoiceSummary();
+  const { data: summary, isLoading: summaryLoading } = usePaymentSummaryCards();
 
   const clearFilters = () => {
     setSearch("");
@@ -161,7 +161,7 @@ export default function InvoiceListPage() {
       {/* Filters Row */}
       <div className="flex flex-wrap items-center gap-4">
         <Input
-          placeholder="Search by patient or invoice ID..."
+          placeholder="Search by patient name or invoice ID..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"

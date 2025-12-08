@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ReusableTable, Column } from "@/app/admin/_components/MyTable";
 import { Input } from "@/components/ui/input";
-import { usePayments } from "@/hooks/queries/useBilling";
+import { usePayments, usePaymentSummaryCards } from "@/hooks/queries/useBilling";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
@@ -19,12 +19,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, ArrowLeft, X } from "lucide-react";
+import { CalendarIcon, ArrowLeft, X, Wallet, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Payment, PaymentMethod } from "@/interfaces/billing";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 
 interface PaymentWithInvoice extends Payment {
   invoiceNumber: string;
@@ -135,6 +137,7 @@ export default function PaymentHistoryPage() {
   const [method, setMethod] = useState("ALL");
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [sort, setSort] = useState("paymentDate,desc");
   const debouncedSearch = useDebounce(search, 500);
 
   const { data, isLoading } = usePayments(
@@ -143,8 +146,11 @@ export default function PaymentHistoryPage() {
     debouncedSearch,
     method,
     startDate?.toISOString(),
-    endDate?.toISOString()
+    endDate?.toISOString(),
+    sort
   );
+
+  const { data: summaryCards, isLoading: summaryLoading } = usePaymentSummaryCards();
 
   const clearFilters = () => {
     setSearch("");
@@ -152,9 +158,10 @@ export default function PaymentHistoryPage() {
     setStartDate(undefined);
     setEndDate(undefined);
     setPage(0);
+    setSort("paymentDate,desc");
   };
 
-  const hasFilters = search || method !== "ALL" || startDate || endDate;
+  const hasFilters = search || method !== "ALL" || startDate || endDate || sort !== "paymentDate,desc";
 
   return (
     <div className="space-y-6">
@@ -170,6 +177,66 @@ export default function PaymentHistoryPage() {
             View all recorded payments across invoices
           </p>
         </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Today</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.todayAmount || 0} />}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summaryLoading ? "..." : summaryCards?.todayCount || 0} payments
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">This Week</CardTitle>
+            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.thisWeekAmount || 0} />}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summaryLoading ? "..." : summaryCards?.thisWeekCount || 0} payments
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cash</CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.cashAmount || 0} />}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summaryLoading ? "..." : summaryCards?.cashPercentage.toFixed(0) || 0}%
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Card</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.cardAmount || 0} />}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {summaryLoading ? "..." : summaryCards?.cardPercentage.toFixed(0) || 0}%
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters Row */}
@@ -192,6 +259,18 @@ export default function PaymentHistoryPage() {
           <SelectItem value="INSURANCE">Insurance</SelectItem>
         </SelectContent>
       </Select>
+
+        <Select value={sort} onValueChange={setSort}> {/* Add Sort Select */}
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="paymentDate,desc">Date (newest)</SelectItem>
+            <SelectItem value="paymentDate,asc">Date (oldest)</SelectItem>
+            <SelectItem value="amount,desc">Amount (high to low)</SelectItem>
+            <SelectItem value="amount,asc">Amount (low to high)</SelectItem>
+          </SelectContent>
+        </Select>
 
         {/* Start Date Picker */}
         <Popover>

@@ -8,12 +8,7 @@ const basePaymentSchema = z.object({
   notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional(),
   idempotencyKey: z
     .string()
-    .uuid("Idempotency key must be a valid UUID")
-    .default(() =>
-      typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : ""
-    ),
+    .uuid("Idempotency key must be a valid UUID"),
 });
 
 export const paymentSchema = basePaymentSchema;

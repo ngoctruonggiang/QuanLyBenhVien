@@ -76,6 +76,7 @@ export default function RecordPaymentPage() {
           <PaymentForm
             onSubmit={onSubmit}
             isSubmitting={isPending}
+            invoice={invoice} // Pass the invoice object
             defaultAmount={invoice.balance}
             maxAmount={invoice.balance}
           />

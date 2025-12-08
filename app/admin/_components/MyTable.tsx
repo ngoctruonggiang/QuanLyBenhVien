@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton
 
 export type Column<T> = {
   key: keyof T | string;
@@ -46,6 +47,18 @@ type Props<T> = {
   // Loading từ React Query
   loading?: boolean;
 };
+
+// Skeleton row component
+const TableRowSkeleton = ({ columnsLength }: { columnsLength: number }) => (
+  <TableRow>
+    {Array.from({ length: columnsLength }).map((_, i) => (
+      <TableCell key={i}>
+        <Skeleton className="h-6 w-full" />
+      </TableCell>
+    ))}
+  </TableRow>
+);
+
 function getPaginationNumbers(current: number, total: number) {
   const pages: (number | string)[] = [];
 
@@ -109,19 +122,12 @@ export function ReusableTable<T>({
 
           <TableBody>
             {/* Loading skeleton */}
-            {loading && (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center py-6"
-                >
-                  Loading...
-                </TableCell>
-              </TableRow>
-            )}
-
-            {/* Empty state */}
-            {!loading && data.length === 0 && (
+            {loading ? (
+              Array.from({ length: rowsPerPage }).map((_, i) => (
+                <TableRowSkeleton key={i} columnsLength={columns.length} />
+              ))
+            ) : data.length === 0 ? (
+              // Empty state
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -130,10 +136,8 @@ export function ReusableTable<T>({
                   No data available
                 </TableCell>
               </TableRow>
-            )}
-
-            {/* Data rows */}
-            {!loading &&
+            ) : (
+              // Data rows
               data.map((row, i) => (
                 <TableRow key={i}>
                   {columns.map((col, idx) => (
@@ -142,7 +146,8 @@ export function ReusableTable<T>({
                     </TableCell>
                   ))}
                 </TableRow>
-              ))}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
@@ -160,13 +165,12 @@ export function ReusableTable<T>({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="6">6</SelectItem>
               <SelectItem value="10">10</SelectItem>
               <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
             </SelectContent>
           </Select>
         </div>
-
         {/* Pagination */}
         <div className="flex items-center space-x-2">
           <Button

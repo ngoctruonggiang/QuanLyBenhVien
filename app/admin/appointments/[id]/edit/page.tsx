@@ -10,7 +10,6 @@ import {
   ArrowLeft,
   Loader2,
   CalendarDays,
-  Clock,
   AlertCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -37,12 +36,11 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-import { AppointmentType } from "@/interfaces/appointment";
 import {
   useAppointment,
   useUpdateAppointment,
-  useTimeSlots,
 } from "@/hooks/queries/useAppointment";
+import { TimeSlotPicker } from "@/components/appointment/TimeSlotPicker";
 
 // Form schema - only editable fields
 const editFormSchema = z.object({
@@ -94,13 +92,6 @@ export default function EditAppointmentPage() {
 
   const watchedDate = form.watch("appointmentDate");
 
-  // Fetch time slots
-  const { data: timeSlots, isLoading: loadingSlots } = useTimeSlots(
-    appointment?.doctor.id || "",
-    watchedDate ? format(watchedDate, "yyyy-MM-dd") : "",
-    id // exclude current appointment
-  );
-
   if (isLoading) {
     return (
       <div className="mx-auto max-w-3xl space-y-6">
@@ -125,7 +116,7 @@ export default function EditAppointmentPage() {
           <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
           <h2 className="mt-4 text-xl font-semibold">Appointment Not Found</h2>
           <p className="mt-2 text-muted-foreground">
-            The appointment you're looking for doesn't exist or has been
+            The appointment you&apos;re looking for doesn&apos;t exist or has been
             removed.
           </p>
           <Button className="mt-4" asChild>
@@ -285,45 +276,13 @@ export default function EditAppointmentPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time Slot *</FormLabel>
-                    {loadingSlots ? (
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                        {Array.from({ length: 12 }).map((_, i) => (
-                          <Skeleton key={i} className="h-10" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                        {timeSlots?.map((slot) => (
-                          <Button
-                            key={slot.time}
-                            type="button"
-                            variant={
-                              field.value === slot.time
-                                ? "default"
-                                : slot.current
-                                ? "secondary"
-                                : "outline"
-                            }
-                            className={cn(
-                              "h-10",
-                              !slot.available &&
-                                !slot.current &&
-                                "opacity-50 cursor-not-allowed",
-                              slot.current && "border-primary"
-                            )}
-                            disabled={!slot.available && !slot.current}
-                            onClick={() => field.onChange(slot.time)}
-                          >
-                            <Clock className="mr-1 h-3 w-3" />
-                            {slot.time}
-                            {slot.current && " ★"}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                    <p className="text-xs text-muted-foreground">
-                      ★ Current time slot
-                    </p>
+                    <TimeSlotPicker
+                        doctorId={appointment.doctor.id}
+                        date={watchedDate ? format(watchedDate, "yyyy-MM-dd") : ""}
+                        selectedSlot={field.value}
+                        onSelect={field.onChange}
+                        excludeAppointmentId={id}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

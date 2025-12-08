@@ -17,12 +17,16 @@ import {
   MedicalExamFormValues,
   medicalExamSchema,
 } from "@/lib/schemas/medical-exam";
+import { UserRole } from "@/hooks/use-auth"; // Assuming UserRole is defined here or similar
+import { ExamStatus } from "@/interfaces/medical-exam";
 
 interface MedicalExamFormProps {
   defaultValues?: Partial<MedicalExamFormValues>;
   onSubmit: (data: MedicalExamFormValues) => void;
   isSubmitting?: boolean;
   onSubmitWithStatus?: (data: MedicalExamFormValues, status: "PENDING" | "FINALIZED") => void;
+  userRole?: UserRole; // Added userRole prop
+  currentExamStatus?: ExamStatus; // Added currentExamStatus prop
 }
 
 export function MedicalExamForm({
@@ -30,6 +34,8 @@ export function MedicalExamForm({
   onSubmit,
   isSubmitting,
   onSubmitWithStatus,
+  userRole,
+  currentExamStatus,
 }: MedicalExamFormProps) {
   const form = useForm<MedicalExamFormValues>({
     resolver: zodResolver(medicalExamSchema) as any,
@@ -47,6 +53,10 @@ export function MedicalExamForm({
       notes: "",
     },
   });
+
+  const canFinalize =
+    (userRole === "ADMIN" || userRole === "DOCTOR") &&
+    currentExamStatus !== "FINALIZED"; // Allow finalize if not already finalized
 
   return (
     <Form {...form}>
@@ -221,25 +231,29 @@ export function MedicalExamForm({
 
         {onSubmitWithStatus ? (
           <div className="flex flex-wrap gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() =>
-                form.handleSubmit((values) => onSubmitWithStatus(values, "PENDING"))()
-              }
-            >
-              {isSubmitting ? "Saving..." : "Save Draft"}
-            </Button>
-            <Button
-              type="button"
-              disabled={isSubmitting}
-              onClick={() =>
-                form.handleSubmit((values) => onSubmitWithStatus(values, "FINALIZED"))()
-              }
-            >
-              {isSubmitting ? "Saving..." : "Save & Finalize"}
-            </Button>
+            {(userRole === "ADMIN" || userRole === "DOCTOR" || userRole === "NURSE") && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() =>
+                  form.handleSubmit((values) => onSubmitWithStatus(values, "PENDING"))()
+                }
+              >
+                {isSubmitting ? "Saving..." : "Save Draft"}
+              </Button>
+            )}
+            {(userRole === "ADMIN" || userRole === "DOCTOR") && (
+              <Button
+                type="button"
+                disabled={isSubmitting || !canFinalize}
+                onClick={() =>
+                  form.handleSubmit((values) => onSubmitWithStatus(values, "FINALIZED"))()
+                }
+              >
+                {isSubmitting ? "Finalizing..." : "Save & Finalize"}
+              </Button>
+            )}
           </div>
         ) : (
           <Button type="submit" disabled={isSubmitting}>

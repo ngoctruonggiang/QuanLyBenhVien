@@ -7,7 +7,7 @@ import { usePatient, useDeletePatient } from "@/hooks/queries/usePatient";
 import { useQuery } from "@tanstack/react-query";
 import { appointmentService } from "@/services/appointment.service";
 import { getMedicalExams } from "@/services/medical-exam.service";
-import { getInvoicesByPatient } from "@/services/billing.service";
+import { getPatientInvoices } from "@/services/billing.service";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -82,7 +82,7 @@ export default function PatientDetailPage() {
   // Fetch invoices for this patient
   const { data: invoicesData, isLoading: loadingInvoices } = useQuery({
     queryKey: ["patient-invoices", patientId],
-    queryFn: () => getInvoicesByPatient(patientId),
+    queryFn: () => getPatientInvoices(patientId),
     enabled: !!patientId,
   });
 

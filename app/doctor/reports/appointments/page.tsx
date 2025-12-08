@@ -95,12 +95,10 @@ export default function DoctorAppointmentReportsPage() {
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(presets.last30Days.startDate);
   const [endDate, setEndDate] = useState<Date | undefined>(presets.last30Days.endDate);
-  const [doctorId, setDoctorId] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
+  const [doctorId, setDoctorId] = useState<string | undefined>(() => {
     const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    setDoctorId(stored || "emp-101");
-  }, []);
+    return stored || "emp-101";
+  });
 
   const { data, isLoading, refetch } = useAppointmentStats({
     startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",

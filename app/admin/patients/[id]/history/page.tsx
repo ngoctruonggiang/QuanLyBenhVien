@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { CalendarClock, FileText, Stethoscope, Wallet } from "lucide-react";
 import appointmentService from "@/services/appointment.service";
 import { getMedicalExams } from "@/services/medical-exam.service";
-import { getInvoicesByPatient } from "@/services/billing.service";
+import { getPatientInvoices } from "@/services/billing.service";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 
 type TimelineEvent = {
@@ -41,7 +41,7 @@ export default function PatientHistoryPage() {
         const [apptRes, examRes, invoiceRes] = await Promise.all([
           appointmentService.list({ patientId, page: 0, size: 50, sort: "appointmentTime,desc" }),
           getMedicalExams({ patientId, page: 0, size: 50, sort: "examDate,desc" }),
-          getInvoicesByPatient(patientId),
+          getPatientInvoices(patientId),
         ]);
 
         const apptContent = apptRes?.data?.data?.content || apptRes?.content || [];

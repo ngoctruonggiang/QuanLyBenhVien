@@ -7,8 +7,6 @@ import {
   Plus,
   Search,
   CalendarDays,
-  ArrowUp,
-  ArrowDown,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -28,15 +26,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DataTable } from "@/components/ui/data-table";
 
 import { AppointmentStatus, Appointment } from "@/interfaces/appointment";
 import {
@@ -45,42 +36,12 @@ import {
 } from "@/hooks/queries/useAppointment";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
-  AppointmentStatusBadge,
-  AppointmentTypeBadge,
   CancelAppointmentDialog,
+  getAppointmentColumns,
 } from "./_components";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
-
-type SortableField = "patient.fullName" | "doctor.fullName" | "appointmentTime" | "status";
-type SortDirection = "asc" | "desc";
-
-const SortableTableHeader = ({
-  field,
-  label,
-  className,
-  sortBy,
-  sortDir,
-  onSort,
-}: {
-  field: SortableField;
-  label: string;
-  className?: string;
-  sortBy: SortableField;
-  sortDir: SortDirection;
-  onSort: (field: SortableField) => void;
-}) => (
-  <TableHead className={cn("cursor-pointer hover:bg-muted/50", className)} onClick={() => onSort(field)}>
-    <div className="flex items-center gap-2">
-      {label}
-      {sortBy === field && (
-        sortDir === "asc" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />
-      )}
-    </div>
-  </TableHead>
-);
 
 const AppointmentPage = () => {
   const router = useRouter();
@@ -93,9 +54,7 @@ const AppointmentPage = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [sortBy, setSortBy] = useState<SortableField>("appointmentTime");
-  const [sortDir, setSortDir] = useState<SortDirection>("desc");
-
+  
   // Cancel dialog state
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
@@ -113,9 +72,8 @@ const AppointmentPage = () => {
       doctorId: doctorId === "ALL" ? undefined : doctorId,
       startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
       endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-      sort: `${sortBy},${sortDir}`,
     }),
-    [page, pageSize, debouncedSearch, status, doctorId, startDate, endDate, sortBy, sortDir]
+    [page, pageSize, debouncedSearch, status, doctorId, startDate, endDate]
   );
 
   const { data, isLoading, isFetching } = useAppointmentList(queryParams);
@@ -134,22 +92,15 @@ const AppointmentPage = () => {
       }
     });
     return Array.from(uniqueDoctors.values());
-  }, [data?.content]);
-
-  const handleSort = (field: SortableField) => {
-    if (sortBy === field) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(field);
-      setSortDir("asc");
-    }
-    setPage(0);
-  };
+  }, [data]);
 
   const handleCancelClick = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setCancelDialogOpen(true);
   };
+  
+  const columns = useMemo(() => getAppointmentColumns(handleCancelClick), []);
+
 
   const handleConfirmCancel = (reason: string) => {
     if (!selectedAppointment) return;
@@ -162,18 +113,6 @@ const AppointmentPage = () => {
         },
       }
     );
-  };
-
-  const formatDateTime = (value: string) => {
-    const date = new Date(value);
-    return {
-      date: format(date, "MMM d, yyyy"),
-      time: format(date, "h:mm a"),
-    };
-  };
-
-  const handleRowClick = (id: string) => {
-    router.push(`/admin/appointments/${id}`);
   };
 
   return (
@@ -330,219 +269,59 @@ const AppointmentPage = () => {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="overflow-hidden rounded-b-xl border-t">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <SortableTableHeader field="patient.fullName" label="Patient" className="w-[200px]" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                  <SortableTableHeader field="doctor.fullName" label="Doctor" className="w-[180px]" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                  <SortableTableHeader field="appointmentTime" label="Date & Time" className="w-[150px]" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                  <TableHead className="w-[120px]">Type</TableHead>
-                  <SortableTableHeader field="status" label="Status" className="w-[120px]" sortBy={sortBy} sortDir={sortDir} onSort={handleSort} />
-                  <TableHead>Reason</TableHead>
-                  <TableHead className="w-[80px] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  // Loading skeleton
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <TableRow key={i}>
-                      <TableCell>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-28" />
-                          <Skeleton className="h-3 w-20" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-20" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-40" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-8 w-8 ml-auto" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : data?.content && data.content.length > 0 ? (
-                  data.content.map((appointment) => {
-                    const { date, time } = formatDateTime(
-                      appointment.appointmentTime
-                    );
-                    return (
-                      <TableRow
-                        key={appointment.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleRowClick(appointment.id)}
-                      >
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {appointment.patient.fullName}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {appointment.patient.phoneNumber}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">
-                              {appointment.doctor.fullName}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {appointment.doctor.department}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{date}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {time}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <AppointmentTypeBadge type={appointment.type} />
-                        </TableCell>
-                        <TableCell>
-                          <AppointmentStatusBadge status={appointment.status} />
-                        </TableCell>
-                        <TableCell>
-                          <div className="max-w-[200px] truncate text-muted-foreground">
-                            {appointment.reason || "-"}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div
-                            className="flex justify-end gap-1"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button variant="ghost" size="sm" asChild>
-                              <Link
-                                href={`/admin/appointments/${appointment.id}`}
-                              >
-                                View
-                              </Link>
-                            </Button>
-                            {appointment.status === "SCHEDULED" && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:text-destructive"
-                                onClick={() => handleCancelClick(appointment)}
-                              >
-                                Cancel
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="py-10 text-center text-muted-foreground"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <CalendarClock className="h-8 w-8" />
-                        <span>No appointments found</span>
-                        {(search ||
-                          status !== "ALL" ||
-                          doctorId !== "ALL" ||
-                          startDate ||
-                          endDate) && (
-                          <Button
-                            variant="link"
-                            onClick={() => {
-                              setSearch("");
-                              setStatus("ALL");
-                              setDoctorId("ALL");
-                              setStartDate(undefined);
-                              setEndDate(undefined);
-                            }}
-                          >
-                            Clear filters
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Pagination */}
-          {data && data.totalElements > 0 && (
-            <div className="flex items-center justify-between border-t px-4 py-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>
-                  Showing {page * pageSize + 1}-
-                  {Math.min((page + 1) * pageSize, data.totalElements)} of{" "}
-                  {data.totalElements}
-                </span>
-                <Select
-                  value={pageSize.toString()}
-                  onValueChange={(v) => {
-                    setPageSize(Number(v));
-                    setPage(0);
-                  }}
-                >
-                  <SelectTrigger className="h-8 w-[70px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAGE_SIZE_OPTIONS.map((size) => (
-                      <SelectItem key={size} value={size.toString()}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span>per page</span>
-              </div>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page === 0 || isFetching}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= data.totalPages - 1 || isFetching}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+            <DataTable columns={columns} data={data?.content ?? []} />
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {data && data.totalElements > 0 && (
+        <div className="flex items-center justify-between border-t px-4 py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              Showing {page * pageSize + 1}-
+              {Math.min((page + 1) * pageSize, data.totalElements)} of{" "}
+              {data.totalElements}
+            </span>
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(v) => {
+                setPageSize(Number(v));
+                setPage(0);
+              }}
+            >
+              <SelectTrigger className="h-8 w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span>per page</span>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0 || isFetching}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= data.totalPages - 1 || isFetching}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Cancel Dialog */}
       <CancelAppointmentDialog

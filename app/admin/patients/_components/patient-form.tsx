@@ -38,6 +38,7 @@ import {
 import { patientFormSchema, PatientFormValues } from "@/lib/schemas/patient";
 import { TagInput } from "@/components/ui/tag-input";
 import { useEffect } from "react";
+import { AccountSearchSelect } from "@/components/ui/account-search-select";
 
 // Re-export for convenience
 export { patientFormSchema, type PatientFormValues };
@@ -436,6 +437,10 @@ export function PatientForm({
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4">
+
+
+
+
                 <FormField
                   control={form.control}
                   name="accountId"
@@ -443,7 +448,10 @@ export function PatientForm({
                     <FormItem>
                       <FormLabel>Account ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="Link to existing accountId" {...field} />
+                        <AccountSearchSelect
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

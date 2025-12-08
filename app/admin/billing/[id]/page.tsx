@@ -21,6 +21,7 @@ import { CancelInvoiceDialog } from "../_components/cancel-invoice-dialog";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
+import { PaymentHistoryTable } from "@/components/billing/PaymentHistoryTable";
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -244,53 +245,19 @@ export default function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
+
+
           {/* Payment History */}
           <Card>
             <CardHeader>
               <CardTitle>Payment History ({invoice.payments.length})</CardTitle>
             </CardHeader>
             <CardContent>
-              {invoice.payments.length > 0 ? (
-                <div className="space-y-4">
-                  {invoice.payments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="flex items-center justify-between rounded-lg border p-4"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {formatCurrency(payment.amount)} via{" "}
-                          {payment.method.replace("_", " ")}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(payment.paymentDate).toLocaleString()}
-                        </p>
-                        {payment.notes && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Note: {payment.notes}
-                          </p>
-                        )}
-                      </div>
-                      <Badge
-                        variant={
-                          payment.status === "COMPLETED" ? "default" : "outline"
-                        }
-                        className={
-                          payment.status === "COMPLETED"
-                            ? "bg-green-100 text-green-800"
-                            : ""
-                        }
-                      >
-                        {payment.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-muted-foreground">
-                  No payments recorded yet.
-                </div>
-              )}
+              <PaymentHistoryTable
+                payments={invoice.payments}
+                totalPaid={invoice.paidAmount}
+                remainingBalance={invoice.balance}
+              />
             </CardContent>
           </Card>
         </div>

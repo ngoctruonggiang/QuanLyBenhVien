@@ -14,14 +14,12 @@ export default function PatientAppointmentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [patientId, setPatientId] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(() => {
+    const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
+    return pid || "p001";
+  });
   const { data: appointment, isLoading } = useAppointment(id);
   const cancelMutation = useCancelAppointment();
-
-  useEffect(() => {
-    const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p001");
-  }, []);
 
   if (isLoading) return <p className="p-6 text-muted-foreground">Đang tải...</p>;
   if (!appointment) return <p className="p-6">Không tìm thấy lịch hẹn</p>;

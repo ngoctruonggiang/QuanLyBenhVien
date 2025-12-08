@@ -157,7 +157,8 @@ function DoctorDetailModal({
 
 export default function DoctorPerformancePage() {
   const router = useRouter();
-  const [role, setRole] = useState<string>("ADMIN");
+  const { user } = useAuth();
+  const [role, setRole] = useState<string>(user?.role || "ADMIN");
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
     presets.thisMonth.startDate
@@ -166,12 +167,6 @@ export default function DoctorPerformancePage() {
     presets.thisMonth.endDate
   );
   const [departmentId, setDepartmentId] = useState<string>("ALL");
-
-  useEffect(() => {
-    const { user } = useAuth();
-    const r = user?.role || null;
-    setRole(r || "ADMIN");
-  }, []);
 
   useEffect(() => {
     if (role && role !== "ADMIN") {

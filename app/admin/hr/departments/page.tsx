@@ -42,9 +42,12 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { DepartmentStatusBadge } from "../_components/department-status-badge";
 import { Department, DepartmentStatus } from "@/interfaces/hr";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DepartmentsPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "ADMIN";
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
   const [search, setSearch] = useState("");
@@ -52,6 +55,7 @@ export default function DepartmentsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] =
     useState<Department | null>(null);
+  const [sort, setSort] = useState("name,asc");
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -60,7 +64,7 @@ export default function DepartmentsPage() {
     size,
     search: debouncedSearch || undefined,
     status: status === "ALL" ? undefined : status,
-    sort: "name,asc",
+    sort: sort,
   });
 
   const deleteMutation = useDeleteDepartment();
@@ -97,13 +101,15 @@ export default function DepartmentsPage() {
             Manage hospital departments and their heads.
           </p>
         </div>
-        <Button
-          onClick={() => router.push("/admin/hr/departments/new")}
-          size="lg"
-          className="rounded-lg"
-        >
-          <Plus className="mr-2 h-4 w-4" /> Add Department
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => router.push("/admin/hr/departments/new")}
+            size="lg"
+            className="rounded-lg"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Add Department
+          </Button>
+        )}
       </div>
 
       <Card className="w-full shadow-sm">
@@ -135,6 +141,17 @@ export default function DepartmentsPage() {
                 <SelectItem value="ALL">All</SelectItem>
                 <SelectItem value="ACTIVE">Active</SelectItem>
                 <SelectItem value="INACTIVE">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sort} onValueChange={setSort}>
+              <SelectTrigger className="h-10 w-full rounded-lg sm:w-40">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name,asc">Name (A-Z)</SelectItem>
+                <SelectItem value="name,desc">Name (Z-A)</SelectItem>
+                <SelectItem value="createdAt,desc">Created (newest)</SelectItem>
+                <SelectItem value="createdAt,asc">Created (oldest)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -191,24 +208,28 @@ export default function DepartmentsPage() {
                         >
                           View
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full"
-                          onClick={() =>
-                            router.push(`/admin/hr/departments/${row.id}/edit`)
-                          }
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="rounded-full text-destructive"
-                          onClick={() => handleDeleteClick(row)}
-                        >
-                          Delete
-                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="rounded-full"
+                              onClick={() =>
+                                router.push(`/admin/hr/departments/${row.id}/edit`)
+                              }
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="rounded-full text-destructive"
+                              onClick={() => handleDeleteClick(row)}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
@@ -285,7 +306,6 @@ export default function DepartmentsPage() {
         </CardContent>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

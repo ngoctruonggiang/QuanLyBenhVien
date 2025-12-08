@@ -1,82 +1,101 @@
 "use client";
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { CurrencyDisplay } from "./CurrencyDisplay";
-import { Payment } from "@/interfaces/billing";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
+import { PaymentMethodBadge } from "@/components/billing/PaymentMethodBadge";
+import { PaymentStatusBadge } from "@/components/billing/PaymentStatusBadge";
+import { format } from "date-fns";
 
-interface PaymentHistoryTableProps {
-  payments: Payment[];
-  totalPaid?: number;
-  remainingBalance?: number;
+interface PaymentItem {
+  id: string;
+  amount: number;
+  method: "CASH" | "CREDIT_CARD" | "BANK_TRANSFER" | "INSURANCE";
+  status: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+  paymentDate: string;
+  notes?: string;
 }
+
+interface Props {
+  payments: PaymentItem[];
+  totalPaid: number;
+  remainingBalance: number;
+}
+
+const formatDate = (date: string) =>
+  format(new Date(date), "MMM d, yyyy, h:mm a");
 
 export function PaymentHistoryTable({
   payments,
   totalPaid,
   remainingBalance,
-}: PaymentHistoryTableProps) {
+}: Props) {
+  if (payments.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <span className="text-4xl mb-2 block">🧾</span>
+        No payments recorded yet.
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Chưa có thanh toán nào.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ngày</TableHead>
-              <TableHead>Số tiền</TableHead>
-              <TableHead>Phương thức</TableHead>
-              <TableHead>Trạng thái</TableHead>
-              <TableHead>Ghi chú</TableHead>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Date</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Method</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Notes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {payments.map((payment) => (
+            <TableRow key={payment.id}>
+              <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+              <TableCell>
+                <CurrencyDisplay amount={payment.amount} className="font-medium" />
+              </TableCell>
+              <TableCell>
+                <PaymentMethodBadge method={payment.method} />
+              </TableCell>
+              <TableCell>
+                <PaymentStatusBadge status={payment.status} />
+              </TableCell>
+              <TableCell className="text-gray-500 text-sm">
+                {payment.notes || "-"}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {payments.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell>
-                  {new Date(p.paymentDate).toLocaleDateString("vi-VN")}
-                </TableCell>
-                <TableCell>
-                  <CurrencyDisplay amount={p.amount} className="font-medium" />
-                </TableCell>
-                <TableCell>{p.method}</TableCell>
-                <TableCell>
-                  <Badge>{p.status}</Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {p.notes || "-"}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+          ))}
+        </TableBody>
+      </Table>
 
-      {(totalPaid !== undefined || remainingBalance !== undefined) && (
-        <div className="flex justify-end gap-6 border-t pt-3 text-sm">
-          {totalPaid !== undefined && (
-            <div>
-              <span className="text-muted-foreground">Đã thanh toán: </span>
-              <CurrencyDisplay
-                amount={totalPaid}
-                className="font-semibold text-green-600"
-              />
-            </div>
-          )}
-          {remainingBalance !== undefined && (
-            <div>
-              <span className="text-muted-foreground">Còn nợ: </span>
-              <CurrencyDisplay
-                amount={remainingBalance}
-                className={`font-semibold ${
-                  remainingBalance > 0 ? "text-destructive" : "text-primary"
-                }`}
-              />
-            </div>
-          )}
+      <div className="flex justify-end gap-8 pt-4 border-t">
+        <div>
+          <span className="text-gray-600">Total Paid:</span>
+          <CurrencyDisplay
+            amount={totalPaid}
+            className="ml-2 font-semibold text-green-600"
+          />
         </div>
-      )}
+        <div>
+          <span className="text-gray-600">Remaining:</span>
+          <CurrencyDisplay
+            amount={remainingBalance}
+            className={`ml-2 font-semibold ${
+              remainingBalance > 0 ? "text-red-600" : "text-green-600"
+            }`}
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -155,7 +155,7 @@ export default function ShiftSchedulingPage() {
     e.preventDefault();
     if (!draggedEmployee) return;
 
-    await addEmployeeToShift(day, shiftName, draggedEmployee.id);
+    await addEmployeeToShift({ day, shift: shiftName, employeeId: Number(draggedEmployee.id) });
     queryClient.invalidateQueries({ queryKey: ["schedule"] });
     setDraggedEmployee(null);
   };
@@ -165,7 +165,7 @@ export default function ShiftSchedulingPage() {
     shiftName: string,
     employeeId: number
   ) => {
-    await removeEmployeeFromShift(day, shiftName, employeeId);
+    await removeEmployeeFromShift({ day, shift: shiftName, employeeId: Number(employeeId) });
     queryClient.invalidateQueries({ queryKey: ["schedule"] });
   };
 
@@ -193,8 +193,8 @@ export default function ShiftSchedulingPage() {
           <SelectContent>
             <SelectItem value=" ">All Departments</SelectItem>
             {departments.map((dept) => (
-              <SelectItem key={dept} value={dept}>
-                {dept}
+              <SelectItem key={dept.id} value={dept.id}>
+                {dept.name}
               </SelectItem>
             ))}
           </SelectContent>

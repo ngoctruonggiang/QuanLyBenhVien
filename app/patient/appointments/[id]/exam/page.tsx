@@ -14,12 +14,10 @@ export default function PatientExamPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const appointmentId = params.id;
-  const [patientId, setPatientId] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [patientId, setPatientId] = useState<string | null>(() => {
     const pid = typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    setPatientId(pid || "p001");
-  }, []);
+    return pid || "p001";
+  });
 
   const { data: appointment, isLoading: loadingAppointment } = useAppointment(appointmentId);
   const { data: exam, isLoading: loadingExam, error } = useMedicalExamByAppointment(appointmentId);
