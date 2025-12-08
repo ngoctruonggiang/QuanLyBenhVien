@@ -256,7 +256,7 @@ const staticSchedules: (EmployeeSchedule & {
 const generateDynamicSchedules = () => {
   const schedules: any[] = [...staticSchedules];
   const doctors = mockEmployees.filter(emp => emp.role === 'DOCTOR');
-  const today = new Date('2025-12-06T00:00:00Z');
+  const today = new Date(); // Use the actual current date
 
   for (let i = 0; i < 30; i++) {
     const date = new Date(today);
