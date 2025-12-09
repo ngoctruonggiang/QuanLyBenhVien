@@ -8,7 +8,9 @@ import { test, expect } from "@playwright/test";
 test.describe("HR - Departments", () => {
   test("Danh sách + filter + search + pagination", async ({ page }) => {
     await page.goto("/admin/hr/departments");
-    await expect(page.getByRole("heading", { name: /Departments/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Departments/i }),
+    ).toBeVisible();
 
     await expect(page.getByPlaceholder(/Search/i)).toBeVisible();
     await page.getByPlaceholder(/Search/i).fill("Cardio");

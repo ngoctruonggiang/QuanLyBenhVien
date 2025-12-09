@@ -13,7 +13,10 @@ const statusTone: Record<ExamStatus, string> = {
 export function ExamStatusBadge({ status }: { status?: ExamStatus }) {
   if (!status) {
     return (
-      <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs font-medium">
+      <Badge
+        variant="secondary"
+        className="rounded-full px-3 py-1 text-xs font-medium"
+      >
         N/A
       </Badge>
     );

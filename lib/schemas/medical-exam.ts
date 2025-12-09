@@ -2,9 +2,18 @@ import { z } from "zod";
 
 export const medicalExamSchema = z.object({
   appointmentId: z.string().min(1, "Appointment is required"),
-  diagnosis: z.string().min(1, "Diagnosis is required"),
-  symptoms: z.string().min(1, "Symptoms are required"),
-  treatment: z.string().min(1, "Treatment plan is required"),
+  diagnosis: z
+    .string()
+    .min(1, "Diagnosis is required")
+    .max(1000, "Diagnosis is too long"),
+  symptoms: z
+    .string()
+    .min(1, "Symptoms are required")
+    .max(2000, "Symptoms are too long"),
+  treatment: z
+    .string()
+    .min(1, "Treatment plan is required")
+    .max(2000, "Treatment plan is too long"),
 
   temperature: z.coerce.number().min(30).max(45).optional(),
   bloodPressureSystolic: z.coerce.number().min(50).max(250).optional(),
@@ -13,7 +22,7 @@ export const medicalExamSchema = z.object({
   weight: z.coerce.number().min(1).max(500).optional(),
   height: z.coerce.number().min(1).max(300).optional(),
 
-  notes: z.string().optional(),
+  notes: z.string().max(2000, "Notes exceeds maximum length").optional(),
 });
 
 export const prescriptionSchema = z.object({
@@ -25,7 +34,7 @@ export const prescriptionSchema = z.object({
         dosage: z.string().min(1, "Dosage is required"),
         duration: z.string().min(1, "Duration is required"),
         notes: z.string().optional(),
-      })
+      }),
     )
     .min(1, "At least one medicine is required"),
   notes: z.string().optional(),

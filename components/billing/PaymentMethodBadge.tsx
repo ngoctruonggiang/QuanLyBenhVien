@@ -1,29 +1,29 @@
 // components/billing/PaymentMethodBadge.tsx
 
 interface Props {
-  method: 'CASH' | 'CREDIT_CARD' | 'BANK_TRANSFER' | 'INSURANCE';
+  method: "CASH" | "CREDIT_CARD" | "BANK_TRANSFER" | "INSURANCE";
 }
 
 const methodConfig = {
   CASH: {
-    label: 'Cash',
-    className: 'bg-green-100 text-green-800',
-    icon: '💵',
+    label: "Cash",
+    className: "bg-green-100 text-green-800",
+    icon: "💵",
   },
   CREDIT_CARD: {
-    label: 'Card',
-    className: 'bg-blue-100 text-blue-800',
-    icon: '💳',
+    label: "Card",
+    className: "bg-blue-100 text-blue-800",
+    icon: "💳",
   },
   BANK_TRANSFER: {
-    label: 'Bank',
-    className: 'bg-purple-100 text-purple-800',
-    icon: '🏦',
+    label: "Bank",
+    className: "bg-purple-100 text-purple-800",
+    icon: "🏦",
   },
   INSURANCE: {
-    label: 'Insurance',
-    className: 'bg-cyan-100 text-cyan-800',
-    icon: '🏥',
+    label: "Insurance",
+    className: "bg-cyan-100 text-cyan-800",
+    icon: "🏥",
   },
 };
 

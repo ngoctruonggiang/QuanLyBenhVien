@@ -59,6 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Find full user details
     const userDetails = MOCK_USERS.find((u) => u.email === email);
+    console.log("[AuthContext] Login - email:", email);
+    console.log("[AuthContext] Login - userDetails found:", userDetails);
+    console.log("[AuthContext] Login - response.role:", response.role);
 
     // Store in cookies
     Cookies.set("accessToken", response.accessToken, { expires: 7 });
@@ -67,10 +70,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.set("userRole", response.role, { expires: 7 });
 
     // Store doctorId in localStorage for doctor-specific pages
-    if (response.role === 'DOCTOR' && userDetails?.employeeId) {
-      localStorage.setItem('doctorId', userDetails.employeeId);
+    if (response.role === "DOCTOR" && userDetails?.employeeId) {
+      console.log(
+        "[AuthContext] Storing employeeId in localStorage:",
+        userDetails.employeeId
+      );
+      localStorage.setItem("userEmployeeId", userDetails.employeeId);
     } else {
-      localStorage.removeItem('doctorId');
+      localStorage.removeItem("userEmployeeId");
     }
 
     if (userDetails) {
@@ -78,6 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         Cookies.set("userFullName", userDetails.fullName, { expires: 7 });
       }
       if (userDetails.employeeId) {
+        console.log(
+          "[AuthContext] Setting employeeId cookie:",
+          userDetails.employeeId
+        );
         Cookies.set("userEmployeeId", userDetails.employeeId, { expires: 7 });
       }
       if (userDetails.patientId) {
@@ -103,8 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       router.push("/patient/appointments");
     } else if (response.role === "RECEPTIONIST") {
       router.push("/admin/patients");
+    } else if (response.role === "DOCTOR") {
+      // Add specific redirection for DOCTOR
+      router.push("/doctor/appointments");
     } else {
-      router.push("/admin");
+      router.push("/admin"); // Fallback for other admin-like roles, if any
     }
   };
 
@@ -118,9 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     Cookies.remove("userEmployeeId");
     Cookies.remove("userPatientId");
     Cookies.remove("userDepartment");
-    
+
     // Clear relevant local storage
-    localStorage.removeItem('doctorId');
+    localStorage.removeItem("userEmployeeId");
 
     // Clear state
     setUser(null);

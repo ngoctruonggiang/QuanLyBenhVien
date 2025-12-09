@@ -75,7 +75,11 @@ export default function LandingPage() {
 
   return (
     <div className="bg-background text-foreground">
-      <Header logoText={(landingContent.hospitalName || "HMS").slice(0, 3).toUpperCase()} />
+      <Header
+        logoText={(landingContent.hospitalName || "HMS")
+          .slice(0, 3)
+          .toUpperCase()}
+      />
       <main className="pt-16">
         <HeroSection
           hospitalName={landingContent.hospitalName}

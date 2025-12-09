@@ -205,7 +205,7 @@ export function ReusableTable<T>({
                 >
                   {p}
                 </Button>
-              )
+              ),
             )}
           </div>
 

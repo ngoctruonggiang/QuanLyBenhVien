@@ -980,7 +980,7 @@ const billingService = {
   generateInvoice: (data: GenerateInvoiceRequest) =>
     api.post<{ status: string; data: Invoice }>(
       `${BASE_URL}/invoices/generate`,
-      data
+      data,
     ),
 
   // Get invoice by ID
@@ -990,21 +990,21 @@ const billingService = {
   // Get invoice by appointment
   getInvoiceByAppointment: (appointmentId: string) =>
     api.get<{ status: string; data: Invoice }>(
-      `${BASE_URL}/invoices/by-appointment/${appointmentId}`
+      `${BASE_URL}/invoices/by-appointment/${appointmentId}`,
     ),
 
   // List invoices (admin)
   getInvoiceList: (params: InvoiceListParams) =>
     api.get<{ status: string; data: PaginatedResponse<InvoiceListItem> }>(
       `${BASE_URL}/invoices`,
-      { params }
+      { params },
     ),
 
   // Get patient invoices
   getPatientInvoices: (patientId: string, params?: PatientInvoiceParams) =>
     api.get<{ status: string; data: PaginatedResponse<InvoiceListItem> }>(
       `${BASE_URL}/invoices/by-patient/${patientId}`,
-      { params }
+      { params },
     ),
 
   // ---- Payment APIs ----
@@ -1020,7 +1020,7 @@ const billingService = {
   // Get payments by invoice
   getPaymentsByInvoice: (invoiceId: string) =>
     api.get<{ status: string; data: PaymentsByInvoice }>(
-      `${BASE_URL}/payments/by-invoice/${invoiceId}`
+      `${BASE_URL}/payments/by-invoice/${invoiceId}`,
     ),
 };
 
@@ -1095,7 +1095,7 @@ export const useInvoiceByAppointment = (appointmentId: string) => {
 // Get patient invoices
 export const usePatientInvoices = (
   patientId: string,
-  params?: PatientInvoiceParams
+  params?: PatientInvoiceParams,
 ) => {
   return useQuery({
     queryKey: billingKeys.patientInvoices(patientId, params),
@@ -2163,7 +2163,7 @@ export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 
 export function handleBillingError(
   error: any,
-  defaultMessage = "An error occurred"
+  defaultMessage = "An error occurred",
 ) {
   const errorCode = error.response?.data?.error?.code;
   const errorMessage = error.response?.data?.error?.message;

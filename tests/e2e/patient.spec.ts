@@ -5,7 +5,9 @@ const PATIENT_ID = process.env.PATIENT_ID || "p001";
 test.describe("Patients - Admin flow", () => {
   test("List shows filters and table", async ({ page }) => {
     await page.goto("/admin/patients");
-    await expect(page.getByRole("heading", { name: /Patients/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Patients/i }),
+    ).toBeVisible();
     await expect(page.getByPlaceholder(/Search/i)).toBeVisible();
     await expect(page.getByText(/Gender/i)).toBeVisible();
     await expect(page.getByText(/Blood Type/i)).toBeVisible();

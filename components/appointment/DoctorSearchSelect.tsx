@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -54,14 +58,23 @@ export function DoctorSearchSelect({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" className="w-full justify-between" aria-expanded={open}>
+        <Button
+          variant="outline"
+          role="combobox"
+          className="w-full justify-between"
+          aria-expanded={open}
+        >
           {selected ? selected.fullName : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Search doctor..." value={search} onValueChange={setSearch} />
+          <CommandInput
+            placeholder="Search doctor..."
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             <CommandEmpty>Không tìm thấy</CommandEmpty>
             <CommandGroup>
@@ -73,7 +86,12 @@ export function DoctorSearchSelect({
                   setOpen(false);
                 }}
               >
-                <Check className={cn("mr-2 h-4 w-4", value ? "opacity-0" : "opacity-100")} />
+                <Check
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    value ? "opacity-0" : "opacity-100",
+                  )}
+                />
                 <div className="text-sm text-muted-foreground">None</div>
               </CommandItem>
               {doctors.map((doc) => (
@@ -85,13 +103,19 @@ export function DoctorSearchSelect({
                     setOpen(false);
                   }}
                 >
-                  <Check className={cn("mr-2 h-4 w-4", value === doc.id ? "opacity-100" : "opacity-0")} />
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === doc.id ? "opacity-100" : "opacity-0",
+                    )}
+                  />
                   <div className="flex items-center gap-2">
                     <Stethoscope className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="font-medium">{doc.fullName}</p>
                       <p className="text-xs text-muted-foreground">
-                        {doc.department || ""} {doc.specialization ? `• ${doc.specialization}` : ""}
+                        {doc.departmentName || ""}{" "}
+                        {doc.specialization ? `• ${doc.specialization}` : ""}
                       </p>
                     </div>
                   </div>

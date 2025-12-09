@@ -148,7 +148,7 @@ const allPayments = () =>
       invoiceId: inv.id,
       invoiceNumber: inv.invoiceNumber,
       patientName: inv.patientName,
-    }))
+    })),
   );
 
 export const billingHandlers = [
@@ -171,7 +171,7 @@ export const billingHandlers = [
     const totalInvoices = invoices.length;
     const totalAmount = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
     const unpaid = invoices.filter(
-      (inv) => inv.status === "UNPAID" || inv.status === "PARTIALLY_PAID"
+      (inv) => inv.status === "UNPAID" || inv.status === "PARTIALLY_PAID",
     );
     const unpaidCount = unpaid.length;
     const unpaidAmount = unpaid.reduce((sum, inv) => sum + inv.balance, 0);
@@ -209,7 +209,7 @@ export const billingHandlers = [
           status: "error",
           error: { code: "INVOICE_NOT_FOUND", message: "Invoice not found" },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
     return HttpResponse.json(invoice);
@@ -233,7 +233,7 @@ export const billingHandlers = [
           status: "error",
           error: { code: "INVOICE_NOT_FOUND", message: "Invoice not found" },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
     return HttpResponse.json({
@@ -252,7 +252,7 @@ export const billingHandlers = [
           status: "error",
           error: { code: "PAYMENT_NOT_FOUND", message: "Payment not found" },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
     return HttpResponse.json(payment);
@@ -271,7 +271,7 @@ export const billingHandlers = [
       payments = payments.filter(
         (p) =>
           p.invoiceNumber.toLowerCase().includes(search) ||
-          p.patientName.toLowerCase().includes(search)
+          p.patientName.toLowerCase().includes(search),
       );
     }
 
@@ -291,7 +291,7 @@ export const billingHandlers = [
           status: "error",
           error: { code: "VALIDATION_ERROR", message: "Invalid payload" },
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const invoice = invoices.find((i) => i.id === body.invoiceId);
@@ -301,7 +301,7 @@ export const billingHandlers = [
           status: "error",
           error: { code: "INVOICE_NOT_FOUND", message: "Invoice not found" },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -315,7 +315,7 @@ export const billingHandlers = [
             message: "Amount exceeds remaining balance",
           },
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -325,8 +325,8 @@ export const billingHandlers = [
       (invoice.paidAmount ?? 0) >= invoice.totalAmount
         ? "PAID"
         : invoice.status === "UNPAID"
-        ? "PARTIALLY_PAID"
-        : invoice.status;
+          ? "PARTIALLY_PAID"
+          : invoice.status;
 
     const payment = {
       id: `pay-${Date.now()}`,
@@ -341,39 +341,44 @@ export const billingHandlers = [
     return HttpResponse.json(payment, { status: 201 });
   }),
 
-  http.post("**/api/billing/invoices/:id/cancel", async ({ params, request }) => {
-    const invoice = invoices.find((i) => i.id === params.id);
-    if (!invoice) {
-      return HttpResponse.json(
-        {
-          status: "error",
-          error: { code: "INVOICE_NOT_FOUND", message: "Invoice not found" },
-        },
-        { status: 404 }
-      );
-    }
-    if (invoice.status !== "UNPAID" || (invoice.payments ?? []).length > 0) {
-      return HttpResponse.json(
-        {
-          status: "error",
-          error: {
-            code: "INVOICE_NOT_CANCELLABLE",
-            message: "Only unpaid invoices without payments can be cancelled",
+  http.post(
+    "**/api/billing/invoices/:id/cancel",
+    async ({ params, request }) => {
+      const invoice = invoices.find((i) => i.id === params.id);
+      if (!invoice) {
+        return HttpResponse.json(
+          {
+            status: "error",
+            error: { code: "INVOICE_NOT_FOUND", message: "Invoice not found" },
           },
-        },
-        { status: 400 }
-      );
-    }
-    const body = (await request.json()) as any;
-    invoice.status = "CANCELLED";
-    invoice.notes = `Cancelled: ${body?.reason || ""}`;
-    return HttpResponse.json(invoice);
-  }),
+          { status: 404 },
+        );
+      }
+      if (invoice.status !== "UNPAID" || (invoice.payments ?? []).length > 0) {
+        return HttpResponse.json(
+          {
+            status: "error",
+            error: {
+              code: "INVOICE_NOT_CANCELLABLE",
+              message: "Only unpaid invoices without payments can be cancelled",
+            },
+          },
+          { status: 400 },
+        );
+      }
+      const body = (await request.json()) as any;
+      invoice.status = "CANCELLED";
+      invoice.notes = `Cancelled: ${body?.reason || ""}`;
+      return HttpResponse.json(invoice);
+    },
+  ),
 
   http.get("**/api/billing/payments/summary-cards", () => {
     const now = new Date();
-    const today = now.toISOString().split('T')[0]; // "YYYY-MM-DD"
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())).toISOString().split('T')[0];
+    const today = now.toISOString().split("T")[0]; // "YYYY-MM-DD"
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
+      .toISOString()
+      .split("T")[0];
 
     let todayAmount = 0;
     let todayCount = 0;
@@ -383,8 +388,8 @@ export const billingHandlers = [
     let cardAmount = 0;
     let totalPayments = 0;
 
-    allPayments().forEach(p => {
-      const paymentDate = p.paymentDate.split('T')[0];
+    allPayments().forEach((p) => {
+      const paymentDate = p.paymentDate.split("T")[0];
       if (p.status === "COMPLETED") {
         totalPayments++;
         if (paymentDate === today) {
@@ -403,9 +408,10 @@ export const billingHandlers = [
       }
     });
 
-    const cashPercentage = totalPayments > 0 ? (cashAmount / (cashAmount + cardAmount)) * 100 : 0;
-    const cardPercentage = totalPayments > 0 ? (cardAmount / (cashAmount + cardAmount)) * 100 : 0;
-
+    const cashPercentage =
+      totalPayments > 0 ? (cashAmount / (cashAmount + cardAmount)) * 100 : 0;
+    const cardPercentage =
+      totalPayments > 0 ? (cardAmount / (cashAmount + cardAmount)) * 100 : 0;
 
     return HttpResponse.json({
       status: "success",

@@ -1321,7 +1321,7 @@ export const presetDateRanges = {
 // Validate date range
 export function validateDateRange(
   startDate: string,
-  endDate: string
+  endDate: string,
 ): string | null {
   const start = parseDate(startDate);
   const end = parseDate(endDate);
@@ -1379,7 +1379,7 @@ export function calculatePercentage(value: number, total: number): number {
 
 // Add percentage to array items
 export function addPercentages<T extends { count: number }>(
-  items: T[]
+  items: T[],
 ): Array<T & { percentage: number }> {
   const total = items.reduce((sum, item) => sum + item.count, 0);
   return items.map((item) => ({
@@ -1398,7 +1398,7 @@ export function addPercentages<T extends { count: number }>(
 export function exportToCSV(
   data: any[],
   filename: string,
-  columns: ColumnConfig[]
+  columns: ColumnConfig[],
 ) {
   // Build header row
   const headers = columns.map((col) => col.label).join(",");
@@ -1417,7 +1417,7 @@ export function exportToCSV(
         }
         return value;
       })
-      .join(",")
+      .join(","),
   );
 
   // Combine and download
@@ -1596,7 +1596,7 @@ function handleReportError(
   options?: {
     setFieldErrors?: (errors: Record<string, string>) => void;
     onForbidden?: () => void;
-  }
+  },
 ) {
   const { code, message, details } = error.error;
 
@@ -1618,10 +1618,13 @@ function handleReportError(
 
     case "VALIDATION_ERROR":
       if (details && options?.setFieldErrors) {
-        const fieldErrors = details.reduce((acc, err) => {
-          acc[err.field] = err.message;
-          return acc;
-        }, {} as Record<string, string>);
+        const fieldErrors = details.reduce(
+          (acc, err) => {
+            acc[err.field] = err.message;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
         options.setFieldErrors(fieldErrors);
       } else {
         toast.error(message || "Invalid filter parameters");
@@ -1644,7 +1647,7 @@ function handleReportError(
 
     case "SERVICE_UNAVAILABLE":
       toast.warning(
-        "Some data sources are unavailable. Report may be incomplete."
+        "Some data sources are unavailable. Report may be incomplete.",
       );
       // Still display partial data if available
       break;

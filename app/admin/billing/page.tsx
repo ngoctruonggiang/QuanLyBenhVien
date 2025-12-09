@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { ReusableTable } from "@/app/admin/_components/MyTable";
 import { Input } from "@/components/ui/input";
-import { useInvoiceList, usePaymentSummaryCards } from "@/hooks/queries/useBilling";
+import {
+  useInvoiceList,
+  usePaymentSummaryCards,
+} from "@/hooks/queries/useBilling";
 import { invoiceColumns } from "./columns";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -92,7 +95,7 @@ export default function InvoiceListPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Invoices
+              Today&apos;s Collections
             </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -100,60 +103,64 @@ export default function InvoiceListPage() {
             <div className="text-2xl font-bold">
               {summaryLoading
                 ? "..."
-                : formatCurrency(summary?.totalAmount || 0)}
+                : formatCurrency(summary?.todayAmount || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summary?.totalInvoices || 0} invoices
+              {summary?.todayCount || 0} payments
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unpaid</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              This Week&apos;s Collections
+            </CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-yellow-600">
               {summaryLoading
                 ? "..."
-                : formatCurrency(summary?.unpaidAmount || 0)}
+                : formatCurrency(summary?.thisWeekAmount || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summary?.unpaidCount || 0} invoices
+              {summary?.thisWeekCount || 0} payments
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Overdue</CardTitle>
+            <CardTitle className="text-sm font-medium">Cash Payments</CardTitle>
             <AlertCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">
               {summaryLoading
                 ? "..."
-                : formatCurrency(summary?.overdueAmount || 0)}
+                : formatCurrency(summary?.cashAmount || 0)}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summary?.overdueCount || 0} invoices
+              {summary?.cashPercentage?.toFixed(1) || 0}% of total
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Collected</CardTitle>
+            <CardTitle className="text-sm font-medium">Card Payments</CardTitle>
             <Wallet className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {summaryLoading
                 ? "..."
-                : formatCurrency(summary?.collectedThisMonth || 0)}
+                : formatCurrency(summary?.cardAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">This month</p>
+            <p className="text-xs text-muted-foreground">
+              {summary?.cardPercentage?.toFixed(1) || 0}% of total
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -187,7 +194,9 @@ export default function InvoiceListPage() {
           <SelectContent>
             <SelectItem value="invoiceDate,desc">Date (newest)</SelectItem>
             <SelectItem value="invoiceDate,asc">Date (oldest)</SelectItem>
-            <SelectItem value="totalAmount,desc">Total Amount (high to low)</SelectItem>
+            <SelectItem value="totalAmount,desc">
+              Total Amount (high to low)
+            </SelectItem>
             <SelectItem value="status,asc">Status (A-Z)</SelectItem>
           </SelectContent>
         </Select>
@@ -199,7 +208,7 @@ export default function InvoiceListPage() {
               variant="outline"
               className={cn(
                 "w-[150px] justify-start text-left font-normal",
-                !startDate && "text-muted-foreground"
+                !startDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -223,7 +232,7 @@ export default function InvoiceListPage() {
               variant="outline"
               className={cn(
                 "w-[150px] justify-start text-left font-normal",
-                !endDate && "text-muted-foreground"
+                !endDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -249,14 +258,14 @@ export default function InvoiceListPage() {
       </div>
 
       <ReusableTable
-        data={data?.data ?? []}
+        data={data?.content ?? []}
         columns={invoiceColumns}
         loading={isLoading}
         pagination={{
           currentPage: (data?.page ?? 0) + 1,
-          totalPages: Math.ceil((data?.total ?? 0) / limit),
+          totalPages: data?.totalPages ?? 1,
           rowsPerPage: limit,
-          totalItems: data?.total ?? 0,
+          totalItems: data?.totalElements ?? 0,
         }}
         onPageChange={setPage}
         onRowsPerPageChange={(size) => {

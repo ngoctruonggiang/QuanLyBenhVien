@@ -50,12 +50,17 @@ function renderIcon(icon?: FeatureItem["icon"]) {
   }
 }
 
-export function FeaturesSection({ title = "Dich vu noi bat", features = defaultFeatures }: FeaturesSectionProps) {
+export function FeaturesSection({
+  title = "Dich vu noi bat",
+  features = defaultFeatures,
+}: FeaturesSectionProps) {
   return (
     <section className="bg-slate-50 px-6 py-16">
       <div className="mx-auto max-w-6xl">
         <div className="text-center animate-fade-in-up">
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">{title}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+            {title}
+          </h2>
         </div>
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

@@ -130,77 +130,172 @@ const patientStatuses: PatientStatus[] = [
   "Inactive",
 ];
 
-// Use consistent patient IDs matching patient.service.ts (p001, p002, etc.)
 export const mockPatients: Patient[] = [
   {
     id: "p001",
-    avatar: null,
+    accountId: "acc001",
     fullName: "Nguyen Van An",
+    email: "nguyenvanan@gmail.com",
     dateOfBirth: "1990-05-15",
     gender: "MALE",
-    status: "Active",
+    phoneNumber: "0901234567",
+    address: "123 Le Loi, District 1, Ho Chi Minh City",
+    identificationNumber: "079090001234",
+    healthInsuranceNumber: "HC123456789",
+    bloodType: "O+",
+    allergies: "Penicillin, Peanuts",
+    relativeFullName: "Nguyen Thi Binh",
+    relativePhoneNumber: "0907654321",
+    relativeRelationship: "SPOUSE",
+    createdAt: "2025-01-15T10:00:00Z",
+    updatedAt: "2025-01-15T10:00:00Z",
   },
   {
     id: "p002",
-    avatar: null,
+    accountId: null,
     fullName: "Tran Thi Mai",
+    email: "tranthimai@gmail.com",
     dateOfBirth: "1985-08-20",
     gender: "FEMALE",
-    status: "Active",
+    phoneNumber: "0912345678",
+    address: "456 Nguyen Hue, District 1, Ho Chi Minh City",
+    identificationNumber: "079085002345",
+    healthInsuranceNumber: "HC234567890",
+    bloodType: "A+",
+    allergies: null,
+    relativeFullName: "Tran Van Cuong",
+    relativePhoneNumber: "0918765432",
+    relativeRelationship: "PARENT",
+    createdAt: "2025-02-10T14:30:00Z",
+    updatedAt: "2025-02-10T14:30:00Z",
   },
   {
     id: "p003",
-    avatar: null,
+    accountId: "acc003",
     fullName: "Le Hoang Phuc",
+    email: "lehoangphuc@gmail.com",
     dateOfBirth: "1978-12-01",
     gender: "MALE",
-    status: "In Visit",
+    phoneNumber: "0923456789",
+    address: "789 Hai Ba Trung, District 3, Ho Chi Minh City",
+    identificationNumber: "079078003456",
+    healthInsuranceNumber: null,
+    bloodType: "B-",
+    allergies: "Aspirin, Shellfish, Latex",
+    relativeFullName: null,
+    relativePhoneNumber: null,
+    relativeRelationship: null,
+    createdAt: "2025-03-05T09:15:00Z",
+    updatedAt: "2025-03-05T09:15:00Z",
   },
   {
     id: "p004",
-    avatar: null,
+    accountId: null,
     fullName: "Pham Minh Duc",
+    email: null,
     dateOfBirth: "1995-03-25",
     gender: "MALE",
-    status: "Waiting",
+    phoneNumber: "0934567890",
+    address: "321 Vo Van Tan, District 3, Ho Chi Minh City",
+    identificationNumber: "079095004567",
+    healthInsuranceNumber: "HC345678901",
+    bloodType: "AB+",
+    allergies: null,
+    relativeFullName: "Pham Thi Lan",
+    relativePhoneNumber: "0929876543",
+    relativeRelationship: "PARENT",
+    createdAt: "2025-04-20T11:45:00Z",
+    updatedAt: "2025-04-20T11:45:00Z",
   },
   {
     id: "p005",
-    avatar: null,
+    accountId: "acc005",
     fullName: "Vo Thi Hong",
+    email: "vothihong@gmail.com",
     dateOfBirth: "2000-07-10",
     gender: "FEMALE",
-    status: "New",
+    phoneNumber: "0945678901",
+    address: "654 Cach Mang Thang 8, District 10, Ho Chi Minh City",
+    identificationNumber: "079000005678",
+    healthInsuranceNumber: "HC456789012",
+    bloodType: "O-",
+    allergies: "Ibuprofen",
+    relativeFullName: "Vo Van Hai",
+    relativePhoneNumber: "0930987654",
+    relativeRelationship: "SIBLING",
+    createdAt: "2025-05-12T16:20:00Z",
+    updatedAt: "2025-05-12T16:20:00Z",
   },
 ];
 
-export const mockAppointments: AppointmentResponse[] = [
+export const mockAppointments: Appointment[] = [
+  // Existing appointments, structure corrected
   {
     id: "apt-001",
-    patient: "Nguyen Van An",
-    doctor: "Dr. John Smith",
-    datetime: "2025-12-05T10:00:00Z",
+    patient: { id: "p001", fullName: "Nguyen Van An" },
+    doctor: { id: "emp-101", fullName: "Dr. John Smith" },
+    appointmentTime: "2025-12-05T10:00:00Z",
     type: "CONSULTATION",
     status: "SCHEDULED",
     reason: "Annual checkup",
+    createdAt: "2025-11-20T10:00:00Z",
+    updatedAt: "2025-11-20T10:00:00Z",
   },
   {
     id: "apt-002",
-    patient: "Tran Thi Mai",
-    doctor: "Dr. Sarah Johnson",
-    datetime: "2025-12-04T14:30:00Z",
+    patient: { id: "p002", fullName: "Tran Thi Mai" },
+    doctor: { id: "emp-102", fullName: "Dr. Sarah Johnson" },
+    appointmentTime: "2025-12-04T14:30:00Z",
     type: "FOLLOW_UP",
     status: "COMPLETED",
     reason: "Flu symptoms",
+    createdAt: "2025-11-20T10:00:00Z",
+    updatedAt: "2025-11-20T10:00:00Z",
   },
   {
     id: "apt-003",
-    patient: "Le Hoang Phuc",
-    doctor: "Dr. Emily Carter",
-    datetime: "2025-12-06T09:00:00Z",
+    patient: { id: "p003", fullName: "Le Hoang Phuc" },
+    doctor: { id: "emp-103", fullName: "Dr. Emily Carter" },
+    appointmentTime: "2025-12-06T09:00:00Z",
     type: "CONSULTATION",
     status: "SCHEDULED",
     reason: "Blood pressure consult",
+    createdAt: "2025-11-20T10:00:00Z",
+    updatedAt: "2025-11-20T10:00:00Z",
+  },
+  // Added appointments to fix medical-exam.service.ts dependencies
+  {
+    id: "appt-nt-002", // completedApptForNewTest
+    patient: { id: "p001", fullName: "Nguyen Van An" },
+    doctor: { id: "emp-new-doctor-001", fullName: "Dr. New Test" },
+    appointmentTime: "2025-12-08T11:00:00Z",
+    status: "COMPLETED",
+    type: "FOLLOW_UP",
+    reason: "Follow up on hypertension treatment",
+    createdAt: "2025-11-15T10:00:00Z",
+    updatedAt: "2025-12-08T12:00:00Z",
+  },
+  {
+    id: "appt-nt-004", // todayApptForNewTest
+    patient: { id: "p004", fullName: "Pham Minh Duc" },
+    doctor: { id: "emp-new-doctor-001", fullName: "Dr. New Test" },
+    appointmentTime: new Date().toISOString(),
+    status: "SCHEDULED",
+    type: "CONSULTATION",
+    reason: "Consultation for minor injury",
+    createdAt: "2025-12-01T10:00:00Z",
+    updatedAt: "2025-12-01T10:00:00Z",
+  },
+  {
+    id: "appt-js-002", // completedApptForJohnSmith
+    patient: { id: "p005", fullName: "Vo Thi Hong" },
+    doctor: { id: "emp-101", fullName: "Dr. John Smith" },
+    appointmentTime: "2025-12-07T16:00:00Z",
+    status: "COMPLETED",
+    type: "CONSULTATION",
+    reason: "Cardiac evaluation",
+    createdAt: "2025-11-10T10:00:00Z",
+    updatedAt: "2025-12-07T17:00:00Z",
   },
 ];
 
@@ -251,19 +346,48 @@ const staticSchedules: (EmployeeSchedule & {
     createdAt: "2025-11-25T00:00:00Z",
     updatedAt: "2025-11-25T00:00:00Z",
   },
+  // Dr. New Test (emp-new-doctor-001) schedules
+  {
+    id: "sch-nt-1",
+    employeeId: "emp-new-doctor-001",
+    employeeName: "Dr. New Test",
+    departmentId: "dep-1",
+    workDate: "2025-12-15", // A specific Monday
+    startTime: "09:00",
+    endTime: "17:00",
+    shift: "MORNING",
+    status: "AVAILABLE",
+    createdAt: "2025-12-01T00:00:00Z",
+    updatedAt: "2025-12-01T00:00:00Z",
+  },
+  {
+    id: "sch-nt-2",
+    employeeId: "emp-new-doctor-001",
+    employeeName: "Dr. New Test",
+    departmentId: "dep-1",
+    workDate: "2025-12-16", // A specific Tuesday
+    startTime: "10:00",
+    endTime: "14:00",
+    shift: "MORNING",
+    status: "AVAILABLE",
+    notes: "Shorter day",
+    createdAt: "2025-12-01T00:00:00Z",
+    updatedAt: "2025-12-01T00:00:00Z",
+  },
 ];
 
 const generateDynamicSchedules = () => {
   const schedules: any[] = [...staticSchedules];
-  const doctors = mockEmployees.filter(emp => emp.role === 'DOCTOR');
+  const doctors = mockEmployees.filter((emp) => emp.role === "DOCTOR");
   const today = new Date(); // Use the actual current date
 
-  for (let i = 0; i < 30; i++) {
+  // Generate schedules for 365 days (1 year) to allow advance booking
+  for (let i = 0; i < 365; i++) {
     const date = new Date(today);
     date.setDate(today.getDate() + i);
-    const workDate = date.toISOString().split('T')[0];
+    const workDate = date.toISOString().split("T")[0];
 
-    doctors.forEach(doctor => {
+    doctors.forEach((doctor) => {
       // Morning Shift
       schedules.push({
         id: `sch-${doctor.id}-morning-${i}`,
@@ -298,7 +422,6 @@ const generateDynamicSchedules = () => {
 };
 
 export const mockSchedules = generateDynamicSchedules();
-
 
 // Use consistent patient IDs (p001, p002, etc.) matching patient.service.ts
 export const mockInvoices: Invoice[] = [

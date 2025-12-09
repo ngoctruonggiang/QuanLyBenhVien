@@ -3,10 +3,14 @@ import { test, expect } from "@playwright/test";
 test.describe("Reports - Admin", () => {
   test("Dashboard cards & refresh", async ({ page }) => {
     await page.goto("/admin/reports");
-    await expect(page.getByRole("heading", { name: /Reports|Dashboard/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Reports|Dashboard/i }),
+    ).toBeVisible();
     const cards = page.locator("[data-testid='metric-card']");
     await expect(cards).toHaveCountGreaterThan(0);
-    const refresh = page.getByRole("button", { name: /Refresh|Clear Cache|Reload/i });
+    const refresh = page.getByRole("button", {
+      name: /Refresh|Clear Cache|Reload/i,
+    });
     if (await refresh.isVisible()) {
       await refresh.click();
     }
@@ -25,7 +29,9 @@ test.describe("Reports - Admin", () => {
 
   test("Appointment stats with all charts", async ({ page }) => {
     await page.goto("/admin/reports/appointments");
-    await expect(page.getByRole("heading", { name: /Appointment/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Appointment/i }),
+    ).toBeVisible();
     const charts = page.locator("canvas");
     await expect(charts.nth(0)).toBeVisible();
     await expect(charts.nth(1)).toBeVisible();
@@ -35,7 +41,9 @@ test.describe("Reports - Admin", () => {
 
   test("Doctor performance table and modal", async ({ page }) => {
     await page.goto("/admin/reports/doctors/performance");
-    await expect(page.getByRole("heading", { name: /Doctor Performance/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Doctor Performance/i }),
+    ).toBeVisible();
     const table = page.locator("table");
     await expect(table).toBeVisible();
     const firstRow = table.locator("tbody tr").first();
@@ -49,7 +57,9 @@ test.describe("Reports - Admin", () => {
 
   test("Patient activity demographics and trend", async ({ page }) => {
     await page.goto("/admin/reports/patients/activity");
-    await expect(page.getByRole("heading", { name: /Patient Activity/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Patient Activity/i }),
+    ).toBeVisible();
     const charts = page.locator("canvas");
     await expect(charts.first()).toBeVisible();
     await expect(charts.nth(1)).toBeVisible();

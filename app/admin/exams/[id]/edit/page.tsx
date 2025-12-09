@@ -12,7 +12,10 @@ import {
 } from "@/components/ui/card";
 import { MedicalExamForm } from "../../_components/medical-exam-form";
 import { MedicalExamFormValues } from "@/lib/schemas/medical-exam";
-import { useMedicalExam, useUpdateMedicalExam } from "@/hooks/queries/useMedicalExam";
+import {
+  useMedicalExam,
+  useUpdateMedicalExam,
+} from "@/hooks/queries/useMedicalExam";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 
@@ -28,14 +31,18 @@ export default function EditMedicalExamPage() {
 
   // Determine if the exam is editable based on status and user role
   const isExamEditable =
-    (user?.role === "ADMIN") || // Admin can edit any exam (admin override)
-    (user?.role === "DOCTOR" && exam?.status === "PENDING" && exam?.doctor.id === user?.employeeId); // Doctor can edit if PENDING and assigned
+    user?.role === "ADMIN" || // Admin can edit any exam (admin override)
+    (user?.role === "DOCTOR" &&
+      exam?.status === "PENDING" &&
+      exam?.doctor.id === user?.employeeId); // Doctor can edit if PENDING and assigned
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        <span className="ml-2 text-muted-foreground">Loading exam details...</span>
+        <span className="ml-2 text-muted-foreground">
+          Loading exam details...
+        </span>
       </div>
     );
   }
@@ -54,15 +61,40 @@ export default function EditMedicalExamPage() {
   // If not editable, display a warning and prevent form access
   if (!isExamEditable) {
     return (
-              <div className="mx-auto max-w-3xl">          <Card className="p-8 text-center">            <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />            <h2 className="mt-4 text-xl font-semibold">Cannot Edit Exam</h2>            <p className="mt-2 text-muted-foreground">              This exam cannot be edited because of its status (              <span className="font-medium">{exam.status}</span>) or your              permissions.            </p>            <Button className="mt-4" asChild>              <Link href={`/admin/exams/${exam.id}`}>View Exam</Link>            </Button>          </Card>        </div>
+      <div className="mx-auto max-w-3xl">
+        {" "}
+        <Card className="p-8 text-center">
+          {" "}
+          <AlertCircle className="mx-auto h-12 w-12 text-amber-500" />{" "}
+          <h2 className="mt-4 text-xl font-semibold">Cannot Edit Exam</h2>{" "}
+          <p className="mt-2 text-muted-foreground">
+            {" "}
+            This exam cannot be edited because of its status ({" "}
+            <span className="font-medium">{exam.status}</span>) or your
+            permissions.{" "}
+          </p>{" "}
+          <Button className="mt-4" asChild>
+            {" "}
+            <Link href={`/admin/exams/${exam.id}`}>View Exam</Link>{" "}
+          </Button>{" "}
+        </Card>{" "}
+      </div>
     );
   }
 
-  const handleSubmit = async (data: MedicalExamFormValues, newStatus: "PENDING" | "FINALIZED") => {
+  const handleSubmit = async (
+    data: MedicalExamFormValues,
+    newStatus: "PENDING" | "FINALIZED",
+  ) => {
     try {
       // Admins can change status to FINALIZED regardless of exam.status,
       // Doctors can only change status from PENDING to FINALIZED
-      const statusToUpdate = user?.role === "ADMIN" ? newStatus : (exam.status === "PENDING" ? newStatus : exam.status);
+      const statusToUpdate =
+        user?.role === "ADMIN"
+          ? newStatus
+          : exam.status === "PENDING"
+            ? newStatus
+            : exam.status;
 
       await updateExamMutation.mutateAsync({
         id: exam.id,
@@ -102,41 +134,40 @@ export default function EditMedicalExamPage() {
   };
 
   return (
-      <div className="w-full space-y-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Edit Medical Exam
-              </h1>
-              <p className="text-muted-foreground">
-                Patient: {exam.patient.fullName}
-              </p>
-            </div>
+    <div className="w-full space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Edit Medical Exam
+            </h1>
+            <p className="text-muted-foreground">
+              Patient: {exam.patient.fullName}
+            </p>
           </div>
-          {/* Removed timeRemaining badge as it's no longer relevant with status-based editing */}
         </div>
+        {/* Removed timeRemaining badge as it's no longer relevant with status-based editing */}
+      </div>
 
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle>Update Exam Details</CardTitle>
-            <CardDescription>
-              Modify the examination information.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MedicalExamForm
-              defaultValues={defaultValues}
-              onSubmit={() => {}} // onSubmit is not directly used here
-              onSubmitWithStatus={handleSubmit}
-              isSubmitting={updateExamMutation.isPending}
-              currentExamStatus={exam.status} // Pass current status to form for conditional rendering
-              userRole={user ? (user.role as UserRole) : undefined} // Explicitly cast
-            />
-          </CardContent>
-        </Card>
-      </div>  );
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Update Exam Details</CardTitle>
+          <CardDescription>Modify the examination information.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MedicalExamForm
+            defaultValues={defaultValues}
+            onSubmit={() => {}} // onSubmit is not directly used here
+            onSubmitWithStatus={handleSubmit}
+            isSubmitting={updateExamMutation.isPending}
+            currentExamStatus={exam.status} // Pass current status to form for conditional rendering
+            userRole={user ? (user.role as UserRole) : undefined} // Explicitly cast
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
 }

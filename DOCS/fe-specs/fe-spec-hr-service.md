@@ -955,7 +955,7 @@ const requestBody = changedFields;
 let rsql = [];
 if (filters.search) {
   rsql.push(
-    `fullName=like='*${filters.search}*',email=like='*${filters.search}*'`
+    `fullName=like='*${filters.search}*',email=like='*${filters.search}*'`,
   );
 }
 if (filters.role !== "ALL") {
@@ -1453,7 +1453,7 @@ function handleApiError(
   options?: {
     setFieldErrors?: (errors: Record<string, string>) => void;
     onNotFound?: () => void;
-  }
+  },
 ) {
   const { code, message, details } = error.error;
 
@@ -1473,10 +1473,13 @@ function handleApiError(
     // Validation errors - show field-level
     case "VALIDATION_ERROR":
       if (details && options?.setFieldErrors) {
-        const fieldErrors = details.reduce((acc, err) => {
-          acc[err.field] = err.message;
-          return acc;
-        }, {} as Record<string, string>);
+        const fieldErrors = details.reduce(
+          (acc, err) => {
+            acc[err.field] = err.message;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
         options.setFieldErrors(fieldErrors);
       } else {
         toast.error(message || "Validation failed");
@@ -1514,13 +1517,13 @@ function handleApiError(
 
     case "DEPARTMENT_HAS_EMPLOYEES":
       toast.warning(
-        "Cannot delete department with assigned employees. Consider setting status to Inactive instead."
+        "Cannot delete department with assigned employees. Consider setting status to Inactive instead.",
       );
       break;
 
     case "HAS_FUTURE_APPOINTMENTS":
       toast.warning(
-        "Cannot delete: Employee has scheduled future appointments. Cancel them first."
+        "Cannot delete: Employee has scheduled future appointments. Cancel them first.",
       );
       break;
 

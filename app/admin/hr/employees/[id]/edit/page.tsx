@@ -24,11 +24,10 @@ export default function EmployeeEditPage() {
 
   const handleSubmit = async (values: EmployeeRequest) => {
     updateEmployee.mutate(
-      { id, data: values },
+      { id, ...values },
       {
         onSuccess: () => router.push("/admin/hr/employees"),
-        onError: () =>
-          alert("Failed to update employee. Please try again."),
+        onError: () => alert("Failed to update employee. Please try again."),
       },
     );
   };
@@ -63,7 +62,9 @@ export default function EmployeeEditPage() {
     <div className="w-full space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit Employee</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Edit Employee
+          </h1>
           <p className="text-muted-foreground">Update staff profile.</p>
         </div>
       </div>

@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import DepartmentForm from "../../_components/DepartmentForm";
 import { DepartmentRequest } from "@/interfaces/hr";
 import { useDepartment, useUpdateDepartment } from "@/hooks/queries/useHr";
@@ -23,14 +24,14 @@ export default function DepartmentEditPage() {
   const updateDepartment = useUpdateDepartment();
 
   const handleSubmit = async (values: DepartmentRequest) => {
-    updateDepartment.mutate(
-      { id, data: values },
-      {
-        onSuccess: () => router.push("/admin/hr/departments"),
-        onError: () =>
-          alert("Failed to update department. Please try again."),
-      },
-    );
+    try {
+      await updateDepartment.mutateAsync({ id, ...values });
+      toast.success("Department updated successfully.");
+      router.push("/admin/hr/departments");
+    } catch (error) {
+      console.error("Failed to update department:", error);
+      toast.error("Failed to update department. Please try again.");
+    }
   };
 
   if (isLoading) {
@@ -63,8 +64,12 @@ export default function DepartmentEditPage() {
     <div className="w-full space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Edit Department</h1>
-          <p className="text-muted-foreground">Update department information.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Edit Department
+          </h1>
+          <p className="text-muted-foreground">
+            Update department information.
+          </p>
         </div>
       </div>
 

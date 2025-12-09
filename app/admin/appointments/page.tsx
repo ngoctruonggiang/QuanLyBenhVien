@@ -2,13 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import {
-  CalendarClock,
-  Plus,
-  Search,
-  CalendarDays,
-} from "lucide-react";
+import { CalendarDays, Plus, Search } from "lucide-react";
 import { format } from "date-fns";
+import { SortingState } from "@tanstack/react-table";
+import Link from "next/link";
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,7 +23,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
 import { DataTable } from "@/components/ui/data-table";
 
 import { AppointmentStatus, Appointment } from "@/interfaces/appointment";
@@ -35,18 +31,15 @@ import {
   useCancelAppointment,
 } from "@/hooks/queries/useAppointment";
 import { useDebounce } from "@/hooks/useDebounce";
-import {
-  CancelAppointmentDialog,
-  getAppointmentColumns,
-} from "./_components";
-import Link from "next/link";
+import { useEmployees } from "@/hooks/queries/useHr";
+import { CancelAppointmentDialog, getAppointmentColumns } from "./_components";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 const AppointmentPage = () => {
   const router = useRouter();
 
-  // Filters state
+  // State
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<AppointmentStatus | "ALL">("ALL");
   const [doctorId, setDoctorId] = useState<string>("ALL");
@@ -54,13 +47,20 @@ const AppointmentPage = () => {
   const [endDate, setEndDate] = useState<Date | undefined>();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  
-  // Cancel dialog state
+  const [sorting, setSorting] = useState<SortingState>([
+    { id: "appointmentTime", desc: true },
+  ]);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
+
+  const sortParams = useMemo(() => {
+    if (sorting.length === 0) return "appointmentTime,desc";
+    const { id, desc } = sorting[0];
+    return `${id},${desc ? "desc" : "asc"}`;
+  }, [sorting]);
 
   // Build query params
   const queryParams = useMemo(
@@ -72,35 +72,32 @@ const AppointmentPage = () => {
       doctorId: doctorId === "ALL" ? undefined : doctorId,
       startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
       endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+      sort: sortParams,
     }),
-    [page, pageSize, debouncedSearch, status, doctorId, startDate, endDate]
+    [
+      page,
+      pageSize,
+      debouncedSearch,
+      status,
+      doctorId,
+      startDate,
+      endDate,
+      sortParams,
+    ],
   );
 
   const { data, isLoading, isFetching } = useAppointmentList(queryParams);
+  const { data: doctorsData } = useEmployees({ role: "DOCTOR", size: 999 });
   const cancelMutation = useCancelAppointment();
 
-  // Get unique doctors for filter dropdown (from current results)
-  const doctors = useMemo(() => {
-    if (!data?.content) return [];
-    const uniqueDoctors = new Map<string, { id: string; name: string }>();
-    data.content.forEach((apt) => {
-      if (apt.doctor && !uniqueDoctors.has(apt.doctor.id)) {
-        uniqueDoctors.set(apt.doctor.id, {
-          id: apt.doctor.id,
-          name: apt.doctor.fullName,
-        });
-      }
-    });
-    return Array.from(uniqueDoctors.values());
-  }, [data]);
+  const doctors = useMemo(() => doctorsData?.content ?? [], [doctorsData]);
 
   const handleCancelClick = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setCancelDialogOpen(true);
   };
-  
-  const columns = useMemo(() => getAppointmentColumns(handleCancelClick), []);
 
+  const columns = useMemo(() => getAppointmentColumns(handleCancelClick), []);
 
   const handleConfirmCancel = (reason: string) => {
     if (!selectedAppointment) return;
@@ -111,13 +108,12 @@ const AppointmentPage = () => {
           setCancelDialogOpen(false);
           setSelectedAppointment(null);
         },
-      }
+      },
     );
   };
 
   return (
     <div className="w-full space-y-6">
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
@@ -134,11 +130,9 @@ const AppointmentPage = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <Card className="w-full shadow-sm">
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            {/* Search */}
             <div className="relative w-full lg:max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -152,9 +146,7 @@ const AppointmentPage = () => {
               />
             </div>
 
-            {/* Filter dropdowns */}
             <div className="flex flex-wrap gap-2">
-              {/* Status filter */}
               <Select
                 value={status}
                 onValueChange={(v) => {
@@ -174,7 +166,6 @@ const AppointmentPage = () => {
                 </SelectContent>
               </Select>
 
-              {/* Doctor filter */}
               <Select
                 value={doctorId}
                 onValueChange={(v) => {
@@ -189,13 +180,12 @@ const AppointmentPage = () => {
                   <SelectItem value="ALL">All Doctors</SelectItem>
                   {doctors.map((doc) => (
                     <SelectItem key={doc.id} value={doc.id}>
-                      {doc.name}
+                      {doc.fullName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              {/* Start Date */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -219,7 +209,6 @@ const AppointmentPage = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* End Date */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -243,7 +232,6 @@ const AppointmentPage = () => {
                 </PopoverContent>
               </Popover>
 
-              {/* Clear filters */}
               {(search ||
                 status !== "ALL" ||
                 doctorId !== "ALL" ||
@@ -269,11 +257,15 @@ const AppointmentPage = () => {
         </CardHeader>
 
         <CardContent className="p-0">
-            <DataTable columns={columns} data={data?.content ?? []} />
+          <DataTable
+            columns={columns}
+            data={data?.content ?? []}
+            sorting={sorting}
+            onSortingChange={setSorting}
+          />
         </CardContent>
       </Card>
 
-      {/* Pagination */}
       {data && data.totalElements > 0 && (
         <div className="flex items-center justify-between border-t px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -323,7 +315,6 @@ const AppointmentPage = () => {
         </div>
       )}
 
-      {/* Cancel Dialog */}
       <CancelAppointmentDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}

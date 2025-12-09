@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { Plus, Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -45,6 +41,7 @@ import {
 import { RoleBadge } from "../_components/role-badge";
 import { EmployeeStatusBadge } from "../_components/employee-status-badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -80,13 +77,13 @@ export default function EmployeesPage() {
   const handleDelete = (id: string, fullName: string) => {
     deleteEmployee.mutate(id, {
       onSuccess: () => {
-        // Optionally show toast notification
+        toast.success(`Employee "${fullName}" has been deleted.`);
       },
-      onError: (error) => {
-        console.error("Failed to delete employee:", error);
-        alert(
-          "Failed to delete employee. They may have upcoming appointments."
-        );
+      onError: (error: any) => {
+        const message = error.response?.data?.error?.code === 'HAS_FUTURE_APPOINTMENTS'
+          ? "Cannot delete: Employee has scheduled future appointments."
+          : "Failed to delete employee.";
+        toast.error(message);
       },
     });
   };
@@ -207,8 +204,12 @@ export default function EmployeesPage() {
                 <SelectItem value="fullName,desc">Name (Z-A)</SelectItem>
                 <SelectItem value="role,asc">Role (A-Z)</SelectItem>
                 <SelectItem value="role,desc">Role (Z-A)</SelectItem>
-                <SelectItem value="departmentName,asc">Department (A-Z)</SelectItem>
-                <SelectItem value="departmentName,desc">Department (Z-A)</SelectItem>
+                <SelectItem value="departmentName,asc">
+                  Department (A-Z)
+                </SelectItem>
+                <SelectItem value="departmentName,desc">
+                  Department (Z-A)
+                </SelectItem>
                 <SelectItem value="hiredAt,desc">Hire Date (newest)</SelectItem>
                 <SelectItem value="hiredAt,asc">Hire Date (oldest)</SelectItem>
               </SelectContent>
@@ -222,11 +223,11 @@ export default function EmployeesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Department</TableHead>
+                  <TableHead>Specialization</TableHead>
+                  <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>License</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -244,9 +245,6 @@ export default function EmployeesPage() {
                       <TableCell className="font-medium">
                         {row.fullName}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {row.email}
-                      </TableCell>
                       <TableCell>
                         <RoleBadge role={row.role} />
                       </TableCell>
@@ -254,10 +252,13 @@ export default function EmployeesPage() {
                         {row.departmentName || "N/A"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {row.phoneNumber || "N/A"}
+                        {row.specialization || "N/A"}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {row.licenseNumber || "N/A"}
+                        {row.email}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {row.phoneNumber || "N/A"}
                       </TableCell>
                       <TableCell>
                         <EmployeeStatusBadge status={row.status} />

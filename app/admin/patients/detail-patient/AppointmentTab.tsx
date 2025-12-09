@@ -78,7 +78,10 @@ const AppointmentTab = () => {
               {appointments.map((appointment) => {
                 const status = statusMap[appointment.status];
                 return (
-                  <TableRow key={appointment.id} className="hover:bg-transparent">
+                  <TableRow
+                    key={appointment.id}
+                    className="hover:bg-transparent"
+                  >
                     <TableCell className="text-[14px] text-[#111928] font-medium py-4">
                       {appointment.dateTime}
                     </TableCell>

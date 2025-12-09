@@ -7,15 +7,18 @@ import type {
 } from "@/interfaces/medicine";
 import api from "@/config/axios";
 import { USE_MOCK } from "@/lib/mocks/toggle";
+import { categoriesDB } from "./category.service"; // Import the mutable categoriesDB
 
 // ============ MOCK DATA ============
-const mockCategories = [
-  { id: "cat-1", name: "Antibiotic" },
-  { id: "cat-2", name: "Painkiller" },
-  { id: "cat-3", name: "Vitamin" },
-  { id: "cat-4", name: "Supplement" },
-  { id: "cat-5", name: "Fever" },
-];
+// Removed the static mockCategories here as it's now imported
+// const mockCategories = [
+//   { id: "cat-1", name: "Antibiotic" },
+//   { id: "cat-2", name: "Painkiller" },
+//   { id: "cat-3", name: "Vitamin" },
+//   { id: "cat-4", name: "Supplement" },
+//   { id: "cat-5", name: "Fever" },
+// ];
+
 
 const random = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
@@ -24,8 +27,9 @@ const generateMockMedicines = (): Medicine[] => {
   const list: Medicine[] = [];
   const now = new Date().toISOString();
 
+  // Use categoriesDB for generating mock medicines
   for (let i = 1; i <= 50; i++) {
-    const cat = mockCategories[i % mockCategories.length];
+    const cat = categoriesDB[i % categoriesDB.length]; // Use categoriesDB here
     list.push({
       id: `med-${i}`,
       name: `Medicine ${i}`,
@@ -50,7 +54,7 @@ const MEDICINES = generateMockMedicines();
 
 // ============ API FUNCTIONS ============
 export const getMedicines = async (
-  params: MedicineListParams = {}
+  params: MedicineListParams = {},
 ): Promise<MedicineListResponse> => {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 300));
@@ -63,7 +67,7 @@ export const getMedicines = async (
       filtered = filtered.filter((m) =>
         [m.name, m.activeIngredient, m.description]
           .filter(Boolean)
-          .some((field) => field!.toLowerCase().includes(keyword))
+          .some((field) => field!.toLowerCase().includes(keyword)),
       );
     }
 
@@ -100,12 +104,12 @@ export const getMedicine = async (id: string): Promise<Medicine> => {
 };
 
 export const createMedicine = async (
-  data: CreateMedicineRequest
+  data: CreateMedicineRequest,
 ): Promise<Medicine> => {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
     const now = new Date().toISOString();
-    const cat = mockCategories.find((c) => c.id === data.categoryId);
+    const cat = categoriesDB.find((c) => c.id === data.categoryId); // Use categoriesDB here
     const newMedicine: Medicine = {
       id: `med-${Date.now()}`,
       name: data.name,
@@ -132,7 +136,7 @@ export const createMedicine = async (
 
 export const updateMedicine = async (
   id: string,
-  data: UpdateMedicineRequest
+  data: UpdateMedicineRequest,
 ): Promise<Medicine> => {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 500));
@@ -140,7 +144,7 @@ export const updateMedicine = async (
     if (index === -1) throw new Error("Medicine not found");
 
     const cat = data.categoryId
-      ? mockCategories.find((c) => c.id === data.categoryId)
+      ? categoriesDB.find((c) => c.id === data.categoryId) // Use categoriesDB here
       : null;
 
     MEDICINES[index] = {

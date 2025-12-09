@@ -34,7 +34,7 @@ export default function EditMedicinePage() {
         onSuccess: () => {
           router.push(`/admin/medicines/${medicineId}`);
         },
-      }
+      },
     );
   };
 

@@ -1,9 +1,9 @@
 # AI Agent Operations Guide for HMS_FE Project
 
 > **Target Audience:** AI assistants (Claude, GPT, Gemini, etc.) assigned to work on this Hospital Management System Frontend codebase
-> 
+>
 > **Last Updated:** December 6, 2025
-> 
+>
 > **Project:** HMS_FE (Hospital Management System - Frontend)
 
 ---
@@ -17,6 +17,17 @@ You are an AI agent tasked with maintaining and enhancing a Next.js-based Hospit
 3. Make safe, spec-compliant changes
 4. Maintain code quality and consistency
 5. Follow established workflows
+
+---
+
+## ⚠️ CRITICAL: Read First
+
+**Before doing ANY work on this project, you MUST read:**
+
+1. **This file** (AI-AGENT-OPERATIONS-GUIDE.md) - How to operate on the codebase
+2. **`DOCS/AI-CODING-STANDARDS.md`** ⭐ - Coding conventions & standards (MANDATORY)
+
+These documents ensure consistency when multiple AI agents work on the same project.
 
 ---
 
@@ -38,6 +49,7 @@ You are an AI agent tasked with maintaining and enhancing a Next.js-based Hospit
 ## 🚀 Quick Reference
 
 ### Tech Stack
+
 ```yaml
 Framework: Next.js 14+ (App Router)
 Language: TypeScript
@@ -50,6 +62,7 @@ Package Manager: pnpm
 ```
 
 ### Key Commands
+
 ```bash
 # Development
 pnpm dev                    # Start dev server (port 3000)
@@ -71,6 +84,7 @@ pnpm update                # Update dependencies
 ```
 
 ### Directory Structure Map
+
 ```
 HMS_FE/
 ├── app/                    # Next.js App Router pages
@@ -109,6 +123,7 @@ HMS_FE/
 ```
 
 **Layout Hierarchy:**
+
 ```
 app/layout.tsx (Root)
   └── app/admin/layout.tsx (Admin sidebar + RoleGuard)
@@ -124,6 +139,7 @@ app/layout.tsx (Root)
 - **Shared Components:** `components/` (cross-module utilities)
 
 **Example Component Structure:**
+
 ```typescript
 // components/ui/button.tsx (Base UI)
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(...);
@@ -153,6 +169,7 @@ export function PatientCard({ patient, onEdit, onDelete }) {...}
 ```
 
 **Key Principles:**
+
 - Pages call **hooks** (`usePatients`, `useCreatePatient`)
 - Hooks call **services** (`patientService.getAll()`)
 - Services use **Axios** with auth interceptors
@@ -164,19 +181,21 @@ export function PatientCard({ patient, onEdit, onDelete }) {...}
 
 ### Must-Read Before Any Work
 
-| File | Purpose | Why Critical |
-|------|---------|--------------|
-| `DOCS/fe-specs/*.md` | Feature specifications | **SOURCE OF TRUTH** for permissions, routes, business logic |
-| `DOCS/fe-specs/ROLE-PERMISSIONS-MATRIX.md` | Role permission reference | Defines who can access what |
-| `hooks/use-auth.ts` | Auth hook & UserRole type | Central auth state, role definitions |
-| `config/axios.ts` | HTTP client config | Auth interceptors, base URL, error handling |
-| `app/admin/layout.tsx` | Admin shell | Nav menu with role-based visibility |
-| `components/auth/RoleGuard.tsx` | Route protection | Enforces role-based access |
-| `package.json` | Dependencies | Available libraries, scripts |
+| File                                       | Purpose                   | Why Critical                                                |
+| ------------------------------------------ | ------------------------- | ----------------------------------------------------------- |
+| **`DOCS/AI-CODING-STANDARDS.md`**          | **Coding conventions**    | **MANDATORY** - Ensures consistency across AI agents        |
+| `DOCS/fe-specs/*.md`                       | Feature specifications    | **SOURCE OF TRUTH** for permissions, routes, business logic |
+| `DOCS/fe-specs/ROLE-PERMISSIONS-MATRIX.md` | Role permission reference | Defines who can access what                                 |
+| `hooks/use-auth.ts`                        | Auth hook & UserRole type | Central auth state, role definitions                        |
+| `config/axios.ts`                          | HTTP client config        | Auth interceptors, base URL, error handling                 |
+| `app/admin/layout.tsx`                     | Admin shell               | Nav menu with role-based visibility                         |
+| `components/auth/RoleGuard.tsx`            | Route protection          | Enforces role-based access                                  |
+| `package.json`                             | Dependencies              | Available libraries, scripts                                |
 
 ### Frequently Modified Files
 
 **When adding a new feature:**
+
 1. Create route in `app/[role]/[module]/`
 2. Add service in `services/[module].service.ts`
 3. Add React Query hooks in `hooks/queries/use[Module].ts`
@@ -191,25 +210,25 @@ export function PatientCard({ patient, onEdit, onDelete }) {...}
 
 ```typescript
 export type UserRole =
-  | "ADMIN"          // Full system access
-  | "DOCTOR"         // Clinical data + own schedules
-  | "NURSE"          // Patient vitals + assist doctors
-  | "RECEPTIONIST"   // Front desk: patients, appointments, billing
-  | "PATIENT"        // Own data only
-  | "UNKNOWN";       // Unauthenticated
+  | "ADMIN" // Full system access
+  | "DOCTOR" // Clinical data + own schedules
+  | "NURSE" // Patient vitals + assist doctors
+  | "RECEPTIONIST" // Front desk: patients, appointments, billing
+  | "PATIENT" // Own data only
+  | "UNKNOWN"; // Unauthenticated
 ```
 
 ### Permission Matrix Summary
 
-| Module | ADMIN | DOCTOR | NURSE | RECEPTIONIST | PATIENT |
-|--------|-------|--------|-------|--------------|---------|
-| **Patients** | Full CRUD | View + Update | View + Update | View + Register + Update | Own only |
-| **Appointments** | Full CRUD | View + Complete | View | Full CRUD | Own only |
-| **Medical Exams** | View All | Full CRUD | Draft Vitals | ❌ No Access | Own Results |
-| **Billing** | Full CRUD | ❌ No Access | ❌ No Access | View + Record Payments | Own Invoices |
-| **HR Management** | Full CRUD | View (for scheduling) | View | View (read-only) | ❌ No Access |
-| **Reports** | Full Access | Limited (own stats) | ❌ No Access | ❌ No Access | ❌ No Access |
-| **Medicines** | Full CRUD | ❌ No Access | ❌ No Access | ❌ No Access | ❌ No Access |
+| Module            | ADMIN       | DOCTOR                | NURSE         | RECEPTIONIST             | PATIENT      |
+| ----------------- | ----------- | --------------------- | ------------- | ------------------------ | ------------ |
+| **Patients**      | Full CRUD   | View + Update         | View + Update | View + Register + Update | Own only     |
+| **Appointments**  | Full CRUD   | View + Complete       | View          | Full CRUD                | Own only     |
+| **Medical Exams** | View All    | Full CRUD             | Draft Vitals  | ❌ No Access             | Own Results  |
+| **Billing**       | Full CRUD   | ❌ No Access          | ❌ No Access  | View + Record Payments   | Own Invoices |
+| **HR Management** | Full CRUD   | View (for scheduling) | View          | View (read-only)         | ❌ No Access |
+| **Reports**       | Full Access | Limited (own stats)   | ❌ No Access  | ❌ No Access             | ❌ No Access |
+| **Medicines**     | Full CRUD   | ❌ No Access          | ❌ No Access  | ❌ No Access             | ❌ No Access |
 
 ### Implementing Role Checks
 
@@ -254,19 +273,19 @@ import { useAuth } from "@/hooks/use-auth";
 
 function PatientDetail() {
   const { user } = useAuth();
-  
+
   return (
     <>
       {/* Everyone can see view button */}
       <Button onClick={handleView}>View</Button>
-      
+
       {/* Only admin can see delete button */}
       {user?.role === "ADMIN" && (
         <Button onClick={handleDelete} variant="destructive">
           Delete
         </Button>
       )}
-      
+
       {/* Multiple roles */}
       {["ADMIN", "RECEPTIONIST"].includes(user?.role) && (
         <Button onClick={handleEdit}>Edit</Button>
@@ -286,7 +305,7 @@ export const deletePatient = async (id: string) => {
   if (user?.role !== "ADMIN") {
     throw new Error("Only ADMIN can delete patients");
   }
-  
+
   return axiosInstance.delete(`/patients/${id}`);
 };
 ```
@@ -300,6 +319,7 @@ export const deletePatient = async (id: string) => {
 **Steps to take BEFORE writing any code:**
 
 1. **Read the Specification**
+
    ```bash
    # Find relevant spec file
    grep -r "keyword" DOCS/fe-specs/
@@ -308,12 +328,14 @@ export const deletePatient = async (id: string) => {
    ```
 
 2. **Check Role Permissions**
+
    ```bash
    # Consult the matrix
    cat DOCS/fe-specs/ROLE-PERMISSIONS-MATRIX.md
    ```
 
 3. **Locate Existing Code**
+
    ```bash
    # Find related files
    find app -name "*[module]*"
@@ -321,6 +343,7 @@ export const deletePatient = async (id: string) => {
    ```
 
 4. **Understand Data Models**
+
    ```bash
    # Check interfaces
    cat interfaces/[module].ts
@@ -496,8 +519,8 @@ export { PatientList } from "./patient-list";
 
 ```typescript
 // ❌ BAD: No context
-oldString: "roles: ['ADMIN']"
-newString: "roles: ['ADMIN', 'RECEPTIONIST']"
+oldString: "roles: ['ADMIN']";
+newString: "roles: ['ADMIN', 'RECEPTIONIST']";
 
 // ✅ GOOD: Clear context
 oldString: `
@@ -507,7 +530,7 @@ oldString: `
     icon: NAV_ICONS.billing,
     roles: ["ADMIN"],
   },
-`
+`;
 newString: `
   {
     title: "Billing",
@@ -515,7 +538,7 @@ newString: `
     icon: NAV_ICONS.billing,
     roles: ["ADMIN", "RECEPTIONIST"],
   },
-`
+`;
 ```
 
 ### Protocol 2: Batch Independent Changes
@@ -577,21 +600,28 @@ interface Patient {
 
 // Pattern observed:
 export const getPatients = async (params?: PatientQueryParams) => {
-  const response = await axiosInstance.get<ApiResponse<Patient[]>>("/patients", { params });
+  const response = await axiosInstance.get<ApiResponse<Patient[]>>(
+    "/patients",
+    { params },
+  );
   return response.data;
 };
 
 // When adding new method, MATCH this pattern:
 export const searchPatients = async (query: string) => {
-  const response = await axiosInstance.get<ApiResponse<Patient[]>>("/patients/search", {
-    params: { q: query },
-  });
+  const response = await axiosInstance.get<ApiResponse<Patient[]>>(
+    "/patients/search",
+    {
+      params: { q: query },
+    },
+  );
   return response.data;
 };
 
 // ❌ DON'T break pattern:
-export async function searchPatients(query) {  // Wrong: different syntax
-  return axiosInstance.get("/patients/search?q=" + query);  // Wrong: no types
+export async function searchPatients(query) {
+  // Wrong: different syntax
+  return axiosInstance.get("/patients/search?q=" + query); // Wrong: no types
 }
 ```
 
@@ -626,14 +656,14 @@ pnpm test:e2e -- tests/e2e/[module]
 
 **For any feature change, test with ALL relevant roles:**
 
-| Role | Test Scenarios |
-|------|----------------|
-| **ADMIN** | - Can access feature<br>- Can perform all actions<br>- Can see all data |
-| **DOCTOR** | - Can access if permitted<br>- Can perform allowed actions<br>- Cannot perform restricted actions |
-| **NURSE** | - Can access if permitted<br>- Can perform allowed actions<br>- Cannot see admin-only features |
-| **RECEPTIONIST** | - Can access patients/appointments/billing<br>- CANNOT access exams/reports<br>- CANNOT delete patients |
-| **PATIENT** | - Can only access own data<br>- Cannot see other patients' data |
-| **UNKNOWN** (logged out) | - Redirected to login<br>- Cannot access protected routes |
+| Role                     | Test Scenarios                                                                                          |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **ADMIN**                | - Can access feature<br>- Can perform all actions<br>- Can see all data                                 |
+| **DOCTOR**               | - Can access if permitted<br>- Can perform allowed actions<br>- Cannot perform restricted actions       |
+| **NURSE**                | - Can access if permitted<br>- Can perform allowed actions<br>- Cannot see admin-only features          |
+| **RECEPTIONIST**         | - Can access patients/appointments/billing<br>- CANNOT access exams/reports<br>- CANNOT delete patients |
+| **PATIENT**              | - Can only access own data<br>- Cannot see other patients' data                                         |
+| **UNKNOWN** (logged out) | - Redirected to login<br>- Cannot access protected routes                                               |
 
 ### E2E Test Pattern
 
@@ -752,9 +782,7 @@ function MyComponent() {
   return (
     <div>
       {/* Method 1: Single role check */}
-      {user?.role === "ADMIN" && (
-        <Button onClick={handleDelete}>Delete</Button>
-      )}
+      {user?.role === "ADMIN" && <Button onClick={handleDelete}>Delete</Button>}
 
       {/* Method 2: Multiple roles */}
       {["ADMIN", "DOCTOR"].includes(user?.role) && (
@@ -762,9 +790,7 @@ function MyComponent() {
       )}
 
       {/* Method 3: Inverse check (everyone except...) */}
-      {user?.role !== "PATIENT" && (
-        <Button onClick={handleEdit}>Edit</Button>
-      )}
+      {user?.role !== "PATIENT" && <Button onClick={handleEdit}>Edit</Button>}
 
       {/* Method 4: Complex logic */}
       {(user?.role === "ADMIN" || (user?.role === "DOCTOR" && isAssigned)) && (
@@ -833,7 +859,7 @@ export const useCreatePatient = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePatientDto) => 
+    mutationFn: (data: CreatePatientDto) =>
       patientService.createPatient(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
@@ -943,7 +969,7 @@ axiosInstance.interceptors.response.use(
       toast.error("You don't have permission to perform this action");
     }
     return Promise.reject(error);
-  }
+  },
 );
 ```
 
@@ -1013,7 +1039,7 @@ if (user?.role !== "ADMIN") {
   }
 >
   {/* Protected content */}
-</RoleGuard>
+</RoleGuard>;
 ```
 
 ### Pattern 3: Form Validation Errors
@@ -1046,7 +1072,7 @@ const form = useForm({
       <FormMessage /> {/* Shows validation error */}
     </FormItem>
   )}
-/>
+/>;
 ```
 
 ---
@@ -1143,6 +1169,7 @@ const form = useForm({
 ## 📚 Reference Quick Links
 
 ### Internal Documentation
+
 - `/DOCS/fe-specs/` - Feature specifications
 - `/DOCS/fe-specs/ROLE-PERMISSIONS-MATRIX.md` - Role permissions
 - `/DOCS/api-contracts-complete.md` - API documentation
@@ -1150,6 +1177,7 @@ const form = useForm({
 - `/DOCS/design_guidelines.md` - UI/UX guidelines
 
 ### Key Code Files
+
 - `/hooks/use-auth.ts` - Auth hook & UserRole type
 - `/config/axios.ts` - HTTP client configuration
 - `/components/auth/RoleGuard.tsx` - Route protection
@@ -1157,6 +1185,7 @@ const form = useForm({
 - `/lib/utils.ts` - Utility functions
 
 ### External Resources
+
 - [Next.js Docs](https://nextjs.org/docs)
 - [React Query Docs](https://tanstack.com/query/latest)
 - [shadcn/ui Components](https://ui.shadcn.com)
@@ -1232,9 +1261,9 @@ Error type?
 
 ## 🔄 Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | Dec 6, 2025 | Initial comprehensive guide created |
+| Version | Date        | Changes                             |
+| ------- | ----------- | ----------------------------------- |
+| 1.0     | Dec 6, 2025 | Initial comprehensive guide created |
 
 ---
 

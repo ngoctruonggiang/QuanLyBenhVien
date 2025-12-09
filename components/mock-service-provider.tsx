@@ -10,7 +10,7 @@ export function MockServiceProvider() {
       .then(({ worker }) =>
         worker.start({
           onUnhandledRequest: "bypass",
-        })
+        }),
       )
       .catch((err) => {
         console.error("MSW worker failed to start", err);

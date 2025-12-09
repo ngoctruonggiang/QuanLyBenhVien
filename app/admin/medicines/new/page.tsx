@@ -29,7 +29,7 @@ export default function NewMedicinePage() {
         onSuccess: () => {
           router.push("/admin/medicines");
         },
-      }
+      },
     );
   };
 

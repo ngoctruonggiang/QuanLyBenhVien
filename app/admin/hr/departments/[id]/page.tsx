@@ -67,7 +67,9 @@ export default function DepartmentViewPage() {
           >
             Back
           </Button>
-          <Button onClick={() => router.push(`/admin/hr/departments/${id}/edit`)}>
+          <Button
+            onClick={() => router.push(`/admin/hr/departments/${id}/edit`)}
+          >
             Edit
           </Button>
         </div>

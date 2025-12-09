@@ -19,7 +19,9 @@ test.describe("Medical Exam - Doctor flow", () => {
 
   test("Doctor exams list shows entries", async ({ page }) => {
     await page.goto("/doctor/exams");
-    await expect(page.getByRole("heading", { name: /Hồ sơ khám của tôi/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Hồ sơ khám của tôi/i }),
+    ).toBeVisible();
     await expect(page.locator("table")).toBeVisible();
   });
 });

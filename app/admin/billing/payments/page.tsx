@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { ReusableTable, Column } from "@/app/admin/_components/MyTable";
 import { Input } from "@/components/ui/input";
-import { usePayments, usePaymentSummaryCards } from "@/hooks/queries/useBilling";
+import {
+  usePayments,
+  usePaymentSummaryCards,
+} from "@/hooks/queries/useBilling";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
   Select,
@@ -41,7 +44,10 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-const methodConfig: Record<PaymentMethod, { label: string; className: string }> = {
+const methodConfig: Record<
+  PaymentMethod,
+  { label: string; className: string }
+> = {
   CASH: {
     label: "Cash",
     className: "bg-green-100 text-green-800",
@@ -147,10 +153,11 @@ export default function PaymentHistoryPage() {
     method,
     startDate?.toISOString(),
     endDate?.toISOString(),
-    sort
+    sort,
   );
 
-  const { data: summaryCards, isLoading: summaryLoading } = usePaymentSummaryCards();
+  const { data: summaryCards, isLoading: summaryLoading } =
+    usePaymentSummaryCards();
 
   const clearFilters = () => {
     setSearch("");
@@ -161,7 +168,12 @@ export default function PaymentHistoryPage() {
     setSort("paymentDate,desc");
   };
 
-  const hasFilters = search || method !== "ALL" || startDate || endDate || sort !== "paymentDate,desc";
+  const hasFilters =
+    search ||
+    method !== "ALL" ||
+    startDate ||
+    endDate ||
+    sort !== "paymentDate,desc";
 
   return (
     <div className="space-y-6">
@@ -188,7 +200,11 @@ export default function PaymentHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.todayAmount || 0} />}
+              {summaryLoading ? (
+                "..."
+              ) : (
+                <CurrencyDisplay amount={summaryCards?.todayAmount || 0} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
               {summaryLoading ? "..." : summaryCards?.todayCount || 0} payments
@@ -202,10 +218,15 @@ export default function PaymentHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.thisWeekAmount || 0} />}
+              {summaryLoading ? (
+                "..."
+              ) : (
+                <CurrencyDisplay amount={summaryCards?.thisWeekAmount || 0} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "..." : summaryCards?.thisWeekCount || 0} payments
+              {summaryLoading ? "..." : summaryCards?.thisWeekCount || 0}{" "}
+              payments
             </p>
           </CardContent>
         </Card>
@@ -216,10 +237,17 @@ export default function PaymentHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.cashAmount || 0} />}
+              {summaryLoading ? (
+                "..."
+              ) : (
+                <CurrencyDisplay amount={summaryCards?.cashAmount || 0} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "..." : summaryCards?.cashPercentage.toFixed(0) || 0}%
+              {summaryLoading
+                ? "..."
+                : summaryCards?.cashPercentage.toFixed(0) || 0}
+              %
             </p>
           </CardContent>
         </Card>
@@ -230,10 +258,17 @@ export default function PaymentHistoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {summaryLoading ? "..." : <CurrencyDisplay amount={summaryCards?.cardAmount || 0} />}
+              {summaryLoading ? (
+                "..."
+              ) : (
+                <CurrencyDisplay amount={summaryCards?.cardAmount || 0} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {summaryLoading ? "..." : summaryCards?.cardPercentage.toFixed(0) || 0}%
+              {summaryLoading
+                ? "..."
+                : summaryCards?.cardPercentage.toFixed(0) || 0}
+              %
             </p>
           </CardContent>
         </Card>
@@ -251,16 +286,18 @@ export default function PaymentHistoryPage() {
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Payment method" />
           </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Methods</SelectItem>
-          <SelectItem value="CASH">Cash</SelectItem>
-          <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-          <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-          <SelectItem value="INSURANCE">Insurance</SelectItem>
-        </SelectContent>
-      </Select>
+          <SelectContent>
+            <SelectItem value="ALL">All Methods</SelectItem>
+            <SelectItem value="CASH">Cash</SelectItem>
+            <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+            <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+            <SelectItem value="INSURANCE">Insurance</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <Select value={sort} onValueChange={setSort}> {/* Add Sort Select */}
+        <Select value={sort} onValueChange={setSort}>
+          {" "}
+          {/* Add Sort Select */}
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
@@ -279,7 +316,7 @@ export default function PaymentHistoryPage() {
               variant="outline"
               className={cn(
                 "w-[150px] justify-start text-left font-normal",
-                !startDate && "text-muted-foreground"
+                !startDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -303,7 +340,7 @@ export default function PaymentHistoryPage() {
               variant="outline"
               className={cn(
                 "w-[150px] justify-start text-left font-normal",
-                !endDate && "text-muted-foreground"
+                !endDate && "text-muted-foreground",
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />

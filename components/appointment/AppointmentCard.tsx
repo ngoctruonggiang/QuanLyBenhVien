@@ -45,7 +45,9 @@ export function AppointmentCard({
         <p className="text-muted-foreground">Lý do: {appointment.reason}</p>
         <div className="flex gap-2 flex-wrap">
           <Button size="sm" variant="outline" asChild>
-            <Link href={`/patient/appointments/${appointment.id}`}>Chi tiết</Link>
+            <Link href={`/patient/appointments/${appointment.id}`}>
+              Chi tiết
+            </Link>
           </Button>
           {cancelable && onCancel && (
             <Button size="sm" variant="destructive" onClick={onCancel}>

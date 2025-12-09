@@ -56,7 +56,7 @@ export function ScheduleStatusBadge({
       className={cn(
         "border-0 font-medium",
         config.className,
-        sizeClasses[size]
+        sizeClasses[size],
       )}
     >
       {showIcon && (

@@ -1,0 +1,53 @@
+// Using the interface from a different namespace, so importing it
+import { Patient } from "@/interfaces/patient";
+
+export const mockPatients: Patient[] = [
+  {
+    id: "p001",
+    fullName: "Patient Nguyen Van An",
+    dateOfBirth: "1990-05-15",
+    gender: "MALE",
+    address: "123 Main St, Anytown, USA",
+    phoneNumber: "555-1234",
+    email: "patient@hms.com",
+    bloodType: "O+",
+    createdAt: new Date("2023-01-10").toISOString(),
+    updatedAt: new Date("2023-10-25").toISOString(),
+  },
+  {
+    id: "p002",
+    fullName: "Maria Garcia",
+    dateOfBirth: "1985-08-22",
+    gender: "FEMALE",
+    address: "456 Oak Ave, Anytown, USA",
+    phoneNumber: "555-5678",
+    email: "maria.garcia@example.com",
+    bloodType: "A-",
+    createdAt: new Date("2023-02-20").toISOString(),
+    updatedAt: new Date("2023-11-15").toISOString(),
+  },
+  {
+    id: "p003",
+    fullName: "David Johnson",
+    dateOfBirth: "1978-11-02",
+    gender: "MALE",
+    address: "789 Pine Ln, Anytown, USA",
+    phoneNumber: "555-9101",
+    email: "david.j@example.com",
+    bloodType: "B+",
+    createdAt: new Date("2023-03-01").toISOString(),
+    updatedAt: new Date("2023-09-30").toISOString(),
+  },
+  {
+    id: "p004",
+    fullName: "Emily White",
+    dateOfBirth: "2005-01-30",
+    gender: "FEMALE",
+    address: "101 Maple Dr, Anytown, USA",
+    phoneNumber: "555-1122",
+    email: "emily.w@example.com",
+    bloodType: "AB+",
+    createdAt: new Date("2023-04-12").toISOString(),
+    updatedAt: new Date("2023-10-20").toISOString(),
+  },
+];

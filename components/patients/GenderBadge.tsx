@@ -12,7 +12,10 @@ export function GenderBadge({ gender }: { gender: Gender | null | undefined }) {
   };
   const cfg = map[gender];
   return (
-    <Badge variant="secondary" className={`rounded-full px-3 py-1 text-xs font-medium ${cfg.className}`}>
+    <Badge
+      variant="secondary"
+      className={`rounded-full px-3 py-1 text-xs font-medium ${cfg.className}`}
+    >
       {cfg.label}
     </Badge>
   );

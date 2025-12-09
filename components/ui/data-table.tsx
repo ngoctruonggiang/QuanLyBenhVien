@@ -7,6 +7,7 @@ import {
   useReactTable,
   SortingState,
   getSortedRowModel,
+  OnChangeFn,
 } from "@tanstack/react-table";
 
 import {
@@ -22,19 +23,31 @@ import { useState } from "react";
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  sorting?: SortingState;
+  onSortingChange?: OnChangeFn<SortingState>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  sorting: controlledSorting,
+  onSortingChange: setControlledSorting,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [internalSorting, setInternalSorting] = useState<SortingState>([]);
+
+  const isControlled =
+    controlledSorting !== undefined && setControlledSorting !== undefined;
+
+  const sorting = isControlled ? controlledSorting : internalSorting;
+  const setSorting = isControlled ? setControlledSorting : setInternalSorting;
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    manualSorting: isControlled,
     state: {
       sorting,
     },
@@ -53,7 +66,7 @@ export function DataTable<TData, TValue>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </TableHead>
                 );

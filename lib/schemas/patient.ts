@@ -19,7 +19,7 @@ export const patientFormSchema = z.object({
         const d = new Date(val);
         return d < new Date();
       },
-      { message: "Date of birth cannot be in the future" }
+      { message: "Date of birth cannot be in the future" },
     ),
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional(),
   address: z
@@ -34,7 +34,9 @@ export const patientFormSchema = z.object({
     .string()
     .max(50, "Insurance number must be less than 50 characters")
     .optional(),
-  bloodType: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).optional(),
+  bloodType: z
+    .enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+    .optional(),
   allergies: z.array(z.string()).optional(),
   relativeFullName: z
     .string()

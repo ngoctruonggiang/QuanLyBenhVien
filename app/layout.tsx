@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
@@ -23,10 +23,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${poppins.variable} font-sans text-[16px] antialiased`}>
         <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <MockServiceProvider />
-          {children}
-        </AuthProvider>
+          <AuthProvider>
+            <MockServiceProvider />
+            {children}
+          </AuthProvider>
         </QueryClientProvider>
       </body>
     </html>

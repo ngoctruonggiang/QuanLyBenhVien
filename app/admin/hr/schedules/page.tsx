@@ -9,6 +9,7 @@ import {
   startOfMonth,
   startOfWeek,
   differenceInCalendarDays,
+  isToday,
 } from "date-fns";
 import {
   CalendarDays,
@@ -67,23 +68,24 @@ import type {
   ScheduleStatus,
   EmployeeSchedule,
 } from "@/interfaces/hr";
+import { cn } from "@/lib/utils";
 
 const shiftPresets = [
   {
     key: "MORNING" as const,
-    label: "Ca sáng",
+    label: "Morning Shift",
     time: "07:00 - 12:00",
     bg: "bg-amber-50",
   },
   {
     key: "AFTERNOON" as const,
-    label: "Ca chiều",
+    label: "Afternoon Shift",
     time: "13:00 - 18:00",
     bg: "bg-sky-50",
   },
   {
     key: "EVENING" as const,
-    label: "Ca tối",
+    label: "Evening Shift",
     time: "18:00 - 23:00",
     bg: "bg-purple-50",
   },
@@ -107,15 +109,15 @@ export default function SchedulesPage() {
 
   const weekStart = useMemo(
     () => startOfWeek(date || new Date(), { weekStartsOn: 1 }),
-    [date]
+    [date],
   );
   const weekEnd = useMemo(
     () => endOfWeek(weekStart, { weekStartsOn: 1 }),
-    [weekStart]
+    [weekStart],
   );
   const weekDays = useMemo(
     () => Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i)),
-    [weekStart]
+    [weekStart],
   );
   const monthStart = useMemo(() => startOfMonth(date || new Date()), [date]);
   const monthEnd = useMemo(() => endOfMonth(monthStart), [monthStart]);
@@ -171,7 +173,7 @@ export default function SchedulesPage() {
       onError: (error) => {
         console.error("Failed to create schedule:", error);
         alert(
-          "Failed to create schedule. Employee may already have a schedule for this date."
+          "Failed to create schedule. Employee may already have a schedule for this date.",
         );
       },
     });
@@ -207,7 +209,7 @@ export default function SchedulesPage() {
   const handleUpdate = (data: ScheduleRequest) => {
     if (!editId) return;
     updateSchedule.mutate(
-      { id: editId, data },
+      { id: editId, ...data },
       {
         onSuccess: () => {
           setEditId(null);
@@ -216,7 +218,7 @@ export default function SchedulesPage() {
           console.error("Failed to update schedule:", error);
           alert("Failed to update schedule.");
         },
-      }
+      },
     );
   };
 
@@ -237,9 +239,9 @@ export default function SchedulesPage() {
       <Card className="shadow-sm">
         <CardHeader className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-2xl">Lịch làm việc</CardTitle>
+            <CardTitle className="text-2xl">Work Schedules</CardTitle>
             <p className="text-muted-foreground">
-              Quản lý lịch trực của bác sĩ theo tuần
+              Manage doctor and staff work schedules.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -248,82 +250,87 @@ export default function SchedulesPage() {
               size="icon"
               className="rounded-full"
               onClick={() =>
-                setDate(addDays(weekStart, viewMode === "week" ? -7 : -30))
+                setDate(addDays(date || new Date(), viewMode === "week" ? -7 : -30))
               }
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <div className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
-              <span>
-                {viewMode === "week"
-                  ? `${format(weekStart, "dd-MM")} - ${format(
-                      weekEnd,
-                      "dd-MM-yyyy"
-                    )}`
-                  : format(monthStart, "MM-yyyy")}
-              </span>
-            </div>
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setDate(new Date())}
+            >
+              Today
+            </Button>
             <Button
               variant="outline"
               size="icon"
               className="rounded-full"
               onClick={() =>
-                setDate(addDays(weekStart, viewMode === "week" ? 7 : 30))
+                setDate(addDays(date || new Date(), viewMode === "week" ? 7 : 30))
               }
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
-            <Button
-              variant={viewMode === "week" ? "default" : "outline"}
-              onClick={() => setViewMode("week")}
-              className="rounded-full"
-            >
-              Tuần
-            </Button>
-            <Button
-              variant={viewMode === "month" ? "default" : "outline"}
-              onClick={() => setViewMode("month")}
-              className="rounded-full"
-            >
-              Tháng
-            </Button>
-            <Button className="bg-emerald-600 hover:bg-emerald-700">
-              Sao chép sang tuần sau
-            </Button>
-            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-              <DialogTrigger asChild>
-                <Button className="rounded-lg">
-                  <Plus className="mr-2 h-4 w-4" /> Tạo lịch
+            <div className="flex items-center gap-2 rounded-full border px-4 py-2 text-sm text-muted-foreground">
+              <CalendarDays className="h-4 w-4" />
+              <span>
+                {viewMode === "week"
+                  ? `${format(weekStart, "MMM dd")} - ${format(
+                      weekEnd,
+                      "MMM dd, yyyy",
+                    )}`
+                  : format(monthStart, "MMMM yyyy")}
+              </span>
+            </div>
+            <div className="ml-auto flex items-center gap-2">
+                <Button
+                variant={viewMode === "week" ? "default" : "outline"}
+                onClick={() => setViewMode("week")}
+                className="rounded-full"
+                >
+                Week
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-lg">
-                <DialogHeader>
-                  <DialogTitle>Tạo lịch</DialogTitle>
-                </DialogHeader>
-                <ScheduleForm
-                  onSubmit={handleCreate}
-                  isLoading={createSchedule.isPending}
-                  onCancel={() => setIsCreateOpen(false)}
-                  initialData={{
-                    workDate: format(date || weekStart, "yyyy-MM-dd"),
-                  }}
-                />
-              </DialogContent>
-            </Dialog>
+                <Button
+                variant={viewMode === "month" ? "default" : "outline"}
+                onClick={() => setViewMode("month")}
+                className="rounded-full"
+                >
+                Month
+                </Button>
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                <DialogTrigger asChild>
+                    <Button className="rounded-lg">
+                    <Plus className="mr-2 h-4 w-4" /> Create Schedule
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                    <DialogTitle>Create Schedule</DialogTitle>
+                    </DialogHeader>
+                    <ScheduleForm
+                    onSubmit={handleCreate}
+                    isLoading={createSchedule.isPending}
+                    onCancel={() => setIsCreateOpen(false)}
+                    initialData={{
+                        workDate: format(date || weekStart, "yyyy-MM-dd"),
+                    }}
+                    />
+                </DialogContent>
+                </Dialog>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          {/* Department filter */}
           <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-muted-foreground">Chọn khoa:</span>
+            <span className="text-sm text-muted-foreground">Filter by:</span>
             <Select value={activeDept} onValueChange={(v) => setActiveDept(v)}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Chọn khoa" />
+                <SelectValue placeholder="Department" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tất cả khoa</SelectItem>
+                <SelectItem value="ALL">All Departments</SelectItem>
                 {departments.map((dept) => (
                   <SelectItem key={dept.id} value={dept.id}>
                     {dept.name}
@@ -331,16 +338,15 @@ export default function SchedulesPage() {
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-sm text-muted-foreground">Nhân viên:</span>
             <Select
               value={activeEmployee}
               onValueChange={(v) => setActiveEmployee(v)}
             >
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Chọn nhân viên" />
+                <SelectValue placeholder="Employee" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ALL">Tất cả</SelectItem>
+                <SelectItem value="ALL">All Employees</SelectItem>
                 {employees.map((emp) => (
                   <SelectItem key={emp.id} value={emp.id}>
                     {emp.fullName}
@@ -358,15 +364,15 @@ export default function SchedulesPage() {
             <div className="overflow-auto">
               <div className="min-w-[900px] rounded-xl border bg-white shadow-sm">
                 <div className="grid grid-cols-[140px_repeat(7,minmax(120px,1fr))] border-b bg-slate-50 text-sm font-medium">
-                  <div className="px-4 py-3 text-slate-500">Ca làm</div>
+                  <div className="px-4 py-3 text-slate-500">Shift</div>
                   {weekDays.map((day) => (
                     <div
                       key={day.toISOString()}
-                      className="px-4 py-3 text-center"
+                      className={cn("px-4 py-3 text-center", { "bg-blue-50 text-blue-700": isToday(day) })}
                     >
-                      <div className="font-semibold">Th {format(day, "i")}</div>
+                      <div className="font-semibold">{format(day, "eee")}</div>
                       <div className="text-xs text-muted-foreground">
-                        {format(day, "dd-MM")}
+                        {format(day, "dd/MM")}
                       </div>
                     </div>
                   ))}
@@ -391,7 +397,7 @@ export default function SchedulesPage() {
                     {weekDays.map((day) => {
                       const dateStr = format(day, "yyyy-MM-dd");
                       const dayItems = filtered.filter(
-                        (s) => s.workDate === dateStr && s.shift === shift.key
+                        (s) => s.workDate === dateStr && s.shift === shift.key,
                       );
                       return (
                         <div
@@ -432,13 +438,13 @@ export default function SchedulesPage() {
                                   </div>
                                   <div className="mt-1 flex gap-2 text-xs text-primary">
                                     <button onClick={() => setEditId(item.id)}>
-                                      Sửa
+                                      Edit
                                     </button>
                                     <button
                                       className="text-destructive"
                                       onClick={() => setDeleteId(item.id)}
                                     >
-                                      Xóa
+                                      Delete
                                     </button>
                                   </div>
                                 </div>
@@ -474,7 +480,7 @@ export default function SchedulesPage() {
                           setIsCreateOpen(true);
                         }}
                       >
-                        Thêm lịch
+                        Add Schedule
                       </Button>
                     </div>
                     {dayItems.length ? (
@@ -500,13 +506,13 @@ export default function SchedulesPage() {
                             </div>
                             <div className="mt-1 flex gap-2 text-xs text-primary">
                               <button onClick={() => setEditId(item.id)}>
-                                Sửa
+                                Edit
                               </button>
                               <button
                                 className="text-destructive"
                                 onClick={() => setDeleteId(item.id)}
                               >
-                                Xóa
+                                Delete
                               </button>
                             </div>
                           </div>
@@ -514,7 +520,7 @@ export default function SchedulesPage() {
                       </div>
                     ) : (
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Chưa có lịch.
+                        No schedules for this day.
                       </p>
                     )}
                   </div>
@@ -525,7 +531,6 @@ export default function SchedulesPage() {
         </CardContent>
       </Card>
 
-      {/* Edit Drawer */}
       <Drawer open={!!editId} onOpenChange={(open) => !open && setEditId(null)}>
         <DrawerContent>
           <DrawerHeader>
@@ -543,7 +548,6 @@ export default function SchedulesPage() {
         </DrawerContent>
       </Drawer>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}

@@ -43,7 +43,14 @@ export const medicalExamColumns: Column<MedicalExam>[] = [
               View Details
             </DropdownMenuItem>
           </Link>
-          {/* Edit is usually restricted to the creator doctor within 24h, but Admin might view only */}
+          {exam.status !== "FINALIZED" && (
+            <Link href={`/admin/exams/${exam.id}/edit`}>
+              <DropdownMenuItem>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Exam
+              </DropdownMenuItem>
+            </Link>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     ),

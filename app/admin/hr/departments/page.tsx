@@ -83,7 +83,7 @@ export default function DepartmentsPage() {
     try {
       await deleteMutation.mutateAsync(departmentToDelete.id);
       toast.success(
-        `Department "${departmentToDelete.name}" deleted successfully`
+        `Department "${departmentToDelete.name}" deleted successfully`,
       );
       setDeleteDialogOpen(false);
       setDepartmentToDelete(null);
@@ -117,7 +117,7 @@ export default function DepartmentsPage() {
           <div className="relative w-full sm:max-w-xl">
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
-              placeholder="Search by name or location"
+              placeholder="Search by name..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -150,6 +150,8 @@ export default function DepartmentsPage() {
               <SelectContent>
                 <SelectItem value="name,asc">Name (A-Z)</SelectItem>
                 <SelectItem value="name,desc">Name (Z-A)</SelectItem>
+                <SelectItem value="status,asc">Status (A-Z)</SelectItem>
+                <SelectItem value="status,desc">Status (Z-A)</SelectItem>
                 <SelectItem value="createdAt,desc">Created (newest)</SelectItem>
                 <SelectItem value="createdAt,asc">Created (oldest)</SelectItem>
               </SelectContent>
@@ -215,7 +217,9 @@ export default function DepartmentsPage() {
                               size="sm"
                               className="rounded-full"
                               onClick={() =>
-                                router.push(`/admin/hr/departments/${row.id}/edit`)
+                                router.push(
+                                  `/admin/hr/departments/${row.id}/edit`,
+                                )
                               }
                             >
                               Edit

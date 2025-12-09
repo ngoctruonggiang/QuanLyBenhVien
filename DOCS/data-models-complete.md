@@ -13,6 +13,7 @@
 This document defines the **final database schemas** for all 8 microservices in the 3-week MVP.
 
 **Services & Databases:**
+
 - **auth-service** → `auth_db` (1 entity: Account)
 - **patient-service** → `patient_db` (1 entity: Patient)
 - **medicine-service** → `medicine_db` (2 entities: Category, Medicine)
@@ -43,7 +44,7 @@ This document defines the **final database schemas** for all 8 microservices in 
 │  - accounts    │◄───FK──│   - patients      │         │    - categories     │
 │                │        │     (accountId)   │         │    - medicines      │
 └────────────────┘        └───────────────────┘         └─────────────────────┘
-                                    
+
 ┌──────────────────┐      ┌─────────────────────┐      ┌─────────────────────┐
 │    hr_db         │      │  appointment_db     │      │  medical_exam_db    │
 │    ------        │      │  ---------------    │      │  ----------------   │
@@ -65,6 +66,7 @@ This document defines the **final database schemas** for all 8 microservices in 
 ```
 
 **Cross-Service Relationships (Soft FKs via IDs):**
+
 - `patients.accountId` → `accounts.id` (auth-service)
 - `employees.accountId` → `accounts.id` (auth-service)
 - `employees.departmentId` → `departments.id` (hr-service)
@@ -85,6 +87,7 @@ This document defines the **final database schemas** for all 8 microservices in 
 **Purpose:** User authentication and authorization
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "accounts")
@@ -92,20 +95,20 @@ public class Account {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(unique = true, nullable = false)
     @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid format")
     private String email;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Password is required")
     private String password; // BCrypt hashed (validation happens in service layer before hashing)
-    
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private RoleEnum role; // ADMIN, PATIENT, DOCTOR, NURSE, EMPLOYEE
-    
+
     private String refreshToken; // JWT refresh token
     private Instant refreshTokenExpiresAt;
     private boolean emailVerified = false;
@@ -117,6 +120,7 @@ public enum RoleEnum {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE accounts (
     id VARCHAR(36) PRIMARY KEY,
@@ -126,13 +130,14 @@ CREATE TABLE accounts (
     refresh_token TEXT,
     refresh_token_expires_at DATETIME(6),
     email_verified BOOLEAN DEFAULT FALSE,
-    
+
     INDEX idx_accounts_email (email),
     INDEX idx_accounts_role (role)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key (auto-generated)
 - `email`: Unique user email for login
 - `password`: BCrypt hashed password (NEVER store plaintext)
@@ -142,6 +147,7 @@ CREATE TABLE accounts (
 - `emailVerified`: Email verification status (default: false)
 
 **Constraints & Business Rules:**
+
 - `email`: Unique constraint, valid email format required
 - `password`: BCrypt hashed (strength: 10 rounds minimum)
 - `role`: Must be one of enum values (ADMIN, PATIENT, DOCTOR, NURSE, EMPLOYEE)
@@ -149,6 +155,7 @@ CREATE TABLE accounts (
 - Email verification required before full account access
 
 **Sample Data:**
+
 ```sql
 INSERT INTO accounts (id, email, password, role, email_verified) VALUES
 ('550e8400-e29b-41d4-a716-446655440001', 'admin@hms.com', '$2a$10$...', 'ADMIN', TRUE),
@@ -167,6 +174,7 @@ INSERT INTO accounts (id, email, password, role, email_verified) VALUES
 **Purpose:** Patient demographic and health profile
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "patients")
@@ -174,44 +182,44 @@ public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     private Long accountId; // FK to accounts.id (soft FK)
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Full name is required")
     private String fullName;
-    
+
     @Email(message = "Email must be valid format")
     private String email;
-    
+
     @Past(message = "Date of birth must be in the past")
     private Instant dateOfBirth;
-    
+
     private Gender gender; // Enum: MALE, FEMALE, OTHER
-    
+
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone number must be 10-15 digits")
     private String phoneNumber;
     private String address;
     private String identificationNumber; // National ID
     private String healthInsuranceNumber;
-    
+
     // Emergency Contact
     private String relativeFullName;
     private String relativePhoneNumber;
     private String relativeRelationship; // e.g., "Spouse", "Parent", "Sibling"
-    
+
     // Health Information
     @Column(length = 5)
     @Pattern(regexp = "^(A|B|AB|O)[+-]$", message = "Blood type must be A+, A-, B+, B-, AB+, AB-, O+, or O-")
     private String bloodType; // A+, A-, B+, B-, AB+, AB-, O+, O-
-    
+
     @Column(columnDefinition = "TEXT")
     private String allergies; // Comma-separated or JSON string
-    
+
     // Soft delete tracking
     private Instant deletedAt; // Nullable - tracks when patient was soft deleted
     private String deletedBy; // User ID who performed deletion
-    
+
     // Audit fields
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
@@ -225,6 +233,7 @@ public enum Gender {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE patients (
     id VARCHAR(36) PRIMARY KEY,
@@ -237,26 +246,26 @@ CREATE TABLE patients (
     address TEXT,
     identification_number VARCHAR(50),
     health_insurance_number VARCHAR(50),
-    
+
     -- Emergency Contact
     relative_full_name VARCHAR(255),
     relative_phone_number VARCHAR(50),
     relative_relationship VARCHAR(50),
-    
+
     -- Health Information
     blood_type VARCHAR(5),
     allergies TEXT,
-    
+
     -- Soft delete tracking
     deleted_at DATETIME(6),
     deleted_by VARCHAR(36),
-    
+
     -- Audit
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_patients_account_id (account_id),
     INDEX idx_patients_full_name (full_name),
     INDEX idx_patients_phone (phone_number),
@@ -267,6 +276,7 @@ CREATE TABLE patients (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `accountId`: Soft FK to accounts.id (nullable - staff can register patients without accounts)
 - `fullName`: Patient's full legal name
@@ -286,6 +296,7 @@ CREATE TABLE patients (
 - `deletedBy`: User ID who performed deletion (nullable)
 
 **Constraints & Business Rules:**
+
 - `accountId`: Can be NULL (walk-in patients without accounts)
 - `bloodType`: Must be one of 8 standard types or NULL
 - `allergies`: Stored as comma-separated string (e.g., "Penicillin, Peanuts")
@@ -298,12 +309,12 @@ CREATE TABLE patients (
   - All queries must filter `WHERE deleted_at IS NULL`
   - `deletedBy` is nullable (allows testing without authentication)
 
-
 **Sample Data:**
+
 ```sql
-INSERT INTO patients (id, account_id, full_name, email, date_of_birth, gender, phone_number, 
+INSERT INTO patients (id, account_id, full_name, email, date_of_birth, gender, phone_number,
                       blood_type, allergies, relative_full_name, relative_phone_number, relative_relationship) VALUES
-('p001', 2, 'Nguyen Van A', 'patient1@gmail.com', '1990-01-15', 'MALE', '0901234567', 
+('p001', 2, 'Nguyen Van A', 'patient1@gmail.com', '1990-01-15', 'MALE', '0901234567',
  'O+', 'Penicillin, Peanuts', 'Nguyen Thi B', '0907654321', 'Spouse'),
 ('p002', NULL, 'Tran Thi C', 'patient2@gmail.com', '1985-05-20', 'FEMALE', '0912345678',
  'A+', NULL, 'Tran Van D', '0908765432', 'Father');
@@ -319,6 +330,7 @@ INSERT INTO patients (id, account_id, full_name, email, date_of_birth, gender, p
 **Purpose:** Medicine classification (Antibiotics, Painkillers, etc.)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "categories")
@@ -326,13 +338,13 @@ public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Category name is required")
     private String name;
-    
+
     private String description;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -341,6 +353,7 @@ public class Category {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE categories (
     id VARCHAR(36) PRIMARY KEY,
@@ -350,21 +363,24 @@ CREATE TABLE categories (
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     UNIQUE KEY uk_categories_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `name`: Unique category name (e.g., "Antibiotics", "Painkillers")
 - `description`: Detailed category description
 - Standard audit fields (createdAt, updatedAt, createdBy, updatedBy)
 
 **Constraints:**
+
 - `name`: UNIQUE constraint (case-sensitive)
 
 **Sample Data:**
+
 ```sql
 INSERT INTO categories (id, name, description) VALUES
 ('cat001', 'Antibiotics', 'Medications that fight bacterial infections'),
@@ -381,6 +397,7 @@ INSERT INTO categories (id, name, description) VALUES
 **Purpose:** Medicine master catalog with pricing and inventory
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "medicines")
@@ -388,39 +405,39 @@ public class Medicine {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Medicine name is required")
     private String name;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Active ingredient is required")
     private String activeIngredient;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Unit is required")
     private String unit; // e.g., "tablet", "ml", "capsule"
-    
+
     private String description;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Quantity is required")
     @Min(value = 0, message = "Quantity must be non-negative")
     private Long quantity; // Stock quantity
-    
+
     private String concentration; // e.g., "500mg"
     private String packaging; // e.g., "Box of 20 tablets"
-    
+
     @Column(nullable = false)
     @NotNull(message = "Purchase price is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Purchase price must be non-negative")
     private BigDecimal purchasePrice;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Selling price is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Selling price must be non-negative")
     private BigDecimal sellingPrice;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Expiration date is required")
     @Future(message = "Expiration date must be in the future")
@@ -428,17 +445,17 @@ public class Medicine {
 
     @Column(length = 255)
     private String manufacturer; // e.g., "Pfizer", "Sanofi"
-    
+
     @Column(columnDefinition = "TEXT")
     private String sideEffects; // Common side effects
-    
+
     @Column(length = 255)
     private String storageConditions; // e.g., "Store at room temperature (15-30°C)"
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -447,6 +464,7 @@ public class Medicine {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE medicines (
     id VARCHAR(36) PRIMARY KEY,
@@ -464,12 +482,12 @@ CREATE TABLE medicines (
     manufacturer VARCHAR(255),
     side_effects TEXT,
     storage_conditions VARCHAR(255),
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
     INDEX idx_medicines_name (name),
     INDEX idx_medicines_category (category_id),
@@ -480,6 +498,7 @@ CREATE TABLE medicines (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `name`: Medicine commercial name
 - `activeIngredient`: Active pharmaceutical ingredient
@@ -497,6 +516,7 @@ CREATE TABLE medicines (
 - `storageConditions`: Storage requirements (temperature, humidity)
 
 **Constraints & Business Rules:**
+
 - **Pricing Rule:** `sellingPrice` must be >= `purchasePrice` (validation in service layer before save/update)
   - Prevents selling medicine at a loss
   - Validation error message: "Selling price must be greater than or equal to purchase price"
@@ -506,6 +526,7 @@ CREATE TABLE medicines (
 - **Pattern Note:** Price snapshot prevents historical data corruption when prices change
 
 **Sample Data:**
+
 ```sql
 INSERT INTO medicines (id, name, active_ingredient, unit, quantity, concentration, packaging, purchase_price, selling_price, expires_at, category_id) VALUES
 ('med001', 'Amoxicillin 500mg', 'Amoxicillin', 'capsule', 1000, '500mg', 'Box of 20 capsules',
@@ -524,6 +545,7 @@ INSERT INTO medicines (id, name, active_ingredient, unit, quantity, concentratio
 **Purpose:** Hospital departments/specializations organization
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "departments")
@@ -531,24 +553,24 @@ public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false, unique = true)
     @NotBlank(message = "Department name is required")
     private String name; // e.g., "Cardiology", "Pediatrics", "Emergency"
-    
+
     @Column(columnDefinition = "TEXT")
     private String description;
-    
+
     private String headDoctorId; // FK to employees.id (optional)
-    
+
     private String location; // e.g., "Building A - Floor 3"
-    
+
     private String phoneExtension; // Internal phone number
-    
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private DepartmentStatus status; // ACTIVE, INACTIVE
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -561,6 +583,7 @@ public enum DepartmentStatus {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE departments (
     id VARCHAR(36) PRIMARY KEY,
@@ -570,12 +593,12 @@ CREATE TABLE departments (
     location VARCHAR(255),
     phone_extension VARCHAR(20),
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_departments_name (name),
     INDEX idx_departments_status (status),
     INDEX idx_departments_head_doctor (head_doctor_id)
@@ -583,6 +606,7 @@ CREATE TABLE departments (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `name`: Unique department name (e.g., "Cardiology", "Pediatrics")
 - `description`: Detailed department description
@@ -592,12 +616,14 @@ CREATE TABLE departments (
 - `status`: ACTIVE or INACTIVE
 
 **Constraints & Business Rules:**
+
 - `name`: UNIQUE constraint
 - `headDoctorId`: Can be NULL (assigned later)
 - Only ACTIVE departments can accept new appointments
 - Departments can be deactivated but not deleted (historical data integrity)
 
 **Sample Data:**
+
 ```sql
 INSERT INTO departments (id, name, description, location, phone_extension, status) VALUES
 ('dept001', 'Cardiology', 'Heart and cardiovascular diseases', 'Building A - Floor 3', '301', 'ACTIVE'),
@@ -614,6 +640,7 @@ INSERT INTO departments (id, name, description, location, phone_extension, statu
 **Purpose:** Staff information (doctors, nurses, receptionists, admin)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "employees")
@@ -621,42 +648,42 @@ public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     private String accountId; // FK to accounts.id (soft FK)
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Full name is required")
     private String fullName;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Role is required")
     @Enumerated(EnumType.STRING)
     private EmployeeRole role; // DOCTOR, NURSE, RECEPTIONIST, ADMIN
-    
+
     private String departmentId; // FK to departments.id (soft FK)
-    
+
     private String specialization; // For doctors: additional specialization details
-    
+
     @Pattern(regexp = "^[A-Z]{2}-[0-9]{5}$", message = "License number must be format XX-12345")
     private String licenseNumber; // Medical license
-    
+
     @Email(message = "Email must be valid format")
     private String email;
-    
+
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Phone number must be 10-15 digits")
     private String phoneNumber;
     private String address;
-    
+
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private EmployeeStatus status; // ACTIVE, ON_LEAVE, RESIGNED
-    
+
     private Instant hiredAt;
-    
+
     // Soft delete tracking
     private Instant deletedAt; // Nullable - tracks when employee was soft deleted
     private String deletedBy; // User ID who performed deletion
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -673,6 +700,7 @@ public enum EmployeeStatus {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE employees (
     id VARCHAR(36) PRIMARY KEY,
@@ -687,16 +715,16 @@ CREATE TABLE employees (
     address TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
     hired_at DATETIME(6),
-    
+
     -- Soft delete tracking
     deleted_at DATETIME(6),
     deleted_by VARCHAR(36),
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_employees_account_id (account_id),
     INDEX idx_employees_role (role),
     INDEX idx_employees_department_id (department_id),
@@ -708,6 +736,7 @@ CREATE TABLE employees (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `accountId`: Soft FK to accounts.id (nullable - staff without login access)
 - `fullName`: Employee's full name
@@ -724,6 +753,7 @@ CREATE TABLE employees (
 - `deletedBy`: User ID who performed deletion (nullable)
 
 **Constraints & Business Rules:**
+
 - `departmentId`: Required for DOCTOR and NURSE roles
 - `licenseNumber`: Required for DOCTOR and NURSE, must be unique
 - `accountId`: Can be NULL (staff without login access)
@@ -736,9 +766,10 @@ CREATE TABLE employees (
   - `deletedBy` is nullable (allows testing without authentication)
 
 **Sample Data:**
+
 ```sql
 INSERT INTO employees (id, account_id, full_name, role, department_id, specialization, license_number, email, phone_number, status, hired_at) VALUES
-('emp001', '550e8400-e29b-41d4-a716-446655440003', 'Dr. Nguyen Van Hung', 'DOCTOR', 'dept001', 'Interventional Cardiology', 
+('emp001', '550e8400-e29b-41d4-a716-446655440003', 'Dr. Nguyen Van Hung', 'DOCTOR', 'dept001', 'Interventional Cardiology',
  'MD-12345', 'dr.hung@hms.com', '0901111111', 'ACTIVE', '2020-01-15'),
 ('emp002', '550e8400-e29b-41d4-a716-446655440004', 'Nurse Tran Thi Mai', 'NURSE', 'dept001', NULL,
  'RN-67890', 'nurse.mai@hms.com', '0902222222', 'ACTIVE', '2021-03-20');
@@ -752,6 +783,7 @@ INSERT INTO employees (id, account_id, full_name, role, department_id, specializ
 **Purpose:** Employee availability calendar for all roles (doctors, nurses, receptionists, admin)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "employee_schedules")
@@ -759,31 +791,31 @@ public class EmployeeSchedule {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Employee ID is required")
     private String employeeId; // FK to employees.id (all roles)
-    
+
     @Column(nullable = false)
     @NotNull(message = "Work date is required")
     @FutureOrPresent(message = "Work date cannot be in the past")
     private LocalDate workDate; // e.g., 2025-12-05
-    
+
     @Column(nullable = false)
     @NotNull(message = "Start time is required")
     private LocalTime startTime; // e.g., 08:00
-    
+
     @Column(nullable = false)
     @NotNull(message = "End time is required")
     private LocalTime endTime; // e.g., 17:00
-    
+
     @Column(nullable = false)
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     private ScheduleStatus status; // AVAILABLE, BOOKED, CANCELLED
-    
+
     private String notes; // e.g., "Conference 2PM-4PM"
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -796,6 +828,7 @@ public enum ScheduleStatus {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE employee_schedules (
     id VARCHAR(36) PRIMARY KEY,
@@ -805,12 +838,12 @@ CREATE TABLE employee_schedules (
     end_time TIME NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE',
     notes TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_schedules_employee_id (employee_id),
     INDEX idx_schedules_work_date (work_date),
     INDEX idx_schedules_status (status),
@@ -819,6 +852,7 @@ CREATE TABLE employee_schedules (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `employeeId`: Soft FK to employees.id (all roles: DOCTOR, NURSE, RECEPTIONIST, ADMIN)
 - `workDate`: Schedule date (DATE type)
@@ -828,6 +862,7 @@ CREATE TABLE employee_schedules (
 - `notes`: Optional notes (e.g., "Conference 2PM-4PM")
 
 **Constraints & Business Rules:**
+
 - UNIQUE constraint on (employee_id, work_date) - one schedule per employee per day
 - `startTime` < `endTime` (validation in service layer)
 - Cannot create schedules for past dates
@@ -840,6 +875,7 @@ CREATE TABLE employee_schedules (
   - Role-specific filtering in business logic (only DOCTOR schedules in appointment booking)
 
 **Sample Data:**
+
 ```sql
 INSERT INTO employee_schedules (id, employee_id, work_date, start_time, end_time, status) VALUES
 ('sch001', 'emp001', '2025-12-05', '08:00', '12:00', 'AVAILABLE'),  -- Doctor
@@ -859,6 +895,7 @@ INSERT INTO employee_schedules (id, employee_id, work_date, start_time, end_time
 **Purpose:** Patient appointment bookings
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "appointments")
@@ -866,34 +903,34 @@ public class Appointment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Patient ID is required")
     private String patientId; // FK to patients.id (patient-service)
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Doctor ID is required")
     private String doctorId; // FK to employees.id (hr-service)
-    
+
     @Column(nullable = false)
     @NotNull(message = "Appointment time is required")
     @Future(message = "Appointment time must be in the future")
     private LocalDateTime appointmentTime; // e.g., 2025-12-05 09:00
-    
+
     @Column(nullable = false)
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status; // SCHEDULED, COMPLETED, CANCELLED, NO_SHOW
-    
+
     @Enumerated(EnumType.STRING)
     private AppointmentType type; // CONSULTATION, FOLLOW_UP, EMERGENCY
-    
+
     private String reason; // Chief complaint
     private String notes; // Admin notes
-    
+
     private Instant cancelledAt;
     private String cancelReason;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -910,6 +947,7 @@ public enum AppointmentType {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE appointments (
     id VARCHAR(36) PRIMARY KEY,
@@ -922,12 +960,12 @@ CREATE TABLE appointments (
     notes TEXT,
     cancelled_at DATETIME(6),
     cancel_reason TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_appointments_patient_id (patient_id),
     INDEX idx_appointments_doctor_id (doctor_id),
     INDEX idx_appointments_time (appointment_time),
@@ -937,6 +975,7 @@ CREATE TABLE appointments (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `patientId`: Soft FK to patients.id (patient-service)
 - `doctorId`: Soft FK to employees.id where role=DOCTOR (hr-service)
@@ -949,6 +988,7 @@ CREATE TABLE appointments (
 - `cancelReason`: Reason for cancellation
 
 **Constraints & Business Rules:**
+
 - Cannot book appointments in the past
 - Cannot double-book doctors (validate no overlapping appointments)
 - Doctor must have available schedule for appointment date
@@ -959,7 +999,7 @@ CREATE TABLE appointments (
     ```yaml
     appointment:
       duration-minutes: 30
-      buffer-minutes: 0  # Optional gap between appointments
+      buffer-minutes: 0 # Optional gap between appointments
     ```
   - **Usage Example:**
     ```java
@@ -976,6 +1016,7 @@ CREATE TABLE appointments (
 - **Pattern Note:** Cross-service validation with hr-service for doctor availability
 
 **Sample Data:**
+
 ```sql
 INSERT INTO appointments (id, patient_id, doctor_id, appointment_time, status, type, reason) VALUES
 ('apt001', 'p001', 'emp001', '2025-12-05 09:00', 'SCHEDULED', 'CONSULTATION', 'Chest pain'),
@@ -990,9 +1031,10 @@ INSERT INTO appointments (id, patient_id, doctor_id, appointment_time, status, t
 ### Entity 6.1: `MedicalExam`
 
 **Table Name:** `medical_exams`  
-**Purpose:** Exam records after appointment completion  
+**Purpose:** Exam records after appointment completion
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "medical_exams")
@@ -1000,23 +1042,23 @@ public class MedicalExam {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false, unique = true)
     @NotBlank(message = "Appointment ID is required")
     private String appointmentId; // FK to appointments.id (one-to-one)
-    
+
     private String patientId; // Denormalized for query performance
     private String doctorId; // Denormalized for query performance
-    
+
     @Column(columnDefinition = "TEXT")
     private String diagnosis; // Primary diagnosis
-    
+
     @Column(columnDefinition = "TEXT")
     private String symptoms; // Patient symptoms
-    
+
     @Column(columnDefinition = "TEXT")
     private String treatment; // Treatment plan
-    
+
     // Vitals
     private Double temperature; // Celsius
     private Integer bloodPressureSystolic; // mmHg
@@ -1024,12 +1066,12 @@ public class MedicalExam {
     private Integer heartRate; // bpm
     private Double weight; // kg
     private Double height; // cm
-    
+
     @Column(columnDefinition = "TEXT")
     private String notes; // Doctor's notes
-    
+
     private Instant examDate;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -1038,6 +1080,7 @@ public class MedicalExam {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE medical_exams (
     id VARCHAR(36) PRIMARY KEY,
@@ -1047,7 +1090,7 @@ CREATE TABLE medical_exams (
     diagnosis TEXT,
     symptoms TEXT,
     treatment TEXT,
-    
+
     -- Vitals
     temperature DECIMAL(4,1),
     blood_pressure_systolic INT,
@@ -1055,15 +1098,15 @@ CREATE TABLE medical_exams (
     heart_rate INT,
     weight DECIMAL(5,2),
     height DECIMAL(5,2),
-    
+
     notes TEXT,
     exam_date DATETIME(6),
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_exams_appointment_id (appointment_id),
     INDEX idx_exams_patient_id (patient_id),
     INDEX idx_exams_doctor_id (doctor_id),
@@ -1072,6 +1115,7 @@ CREATE TABLE medical_exams (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `appointmentId`: Soft FK to appointments.id (UNIQUE - one exam per appointment)
 - `patientId`: Denormalized from appointment (query performance)
@@ -1089,13 +1133,15 @@ CREATE TABLE medical_exams (
 - `examDate`: Exam completion timestamp
 
 **Constraints & Business Rules:**
+
 - UNIQUE constraint on `appointmentId` (one exam per appointment)
 - Can only create exam for `status = COMPLETED` appointments
 - Vitals (temperature, BP, heart rate, etc.) are optional but recommended
 - `examDate` defaults to appointment time
 - **Pattern Note:** Denormalization of patientId/doctorId improves query performance
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO medical_exams (id, appointment_id, patient_id, doctor_id, diagnosis, symptoms, temperature, blood_pressure_systolic, blood_pressure_diastolic, heart_rate, exam_date) VALUES
 ('exam001', 'apt002', 'p002', 'emp001', 'Hypertension Stage 1', 'Headache, dizziness',
@@ -1107,9 +1153,10 @@ INSERT INTO medical_exams (id, appointment_id, patient_id, doctor_id, diagnosis,
 ### Entity 6.2: `Prescription`
 
 **Table Name:** `prescriptions`  
-**Purpose:** Medicine prescriptions linked to exams  
+**Purpose:** Medicine prescriptions linked to exams
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "prescriptions")
@@ -1117,32 +1164,33 @@ public class Prescription {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Medical exam ID is required")
     private String medicalExamId; // FK to medical_exams.id
-    
+
     private String patientId; // Denormalized
     private String doctorId; // Denormalized
-    
+
     @Column(nullable = false)
     @NotNull(message = "Prescription date is required")
     private Instant prescribedAt; // Defaults to Instant.now() in service layer
-    
+
     @Column(columnDefinition = "TEXT")
     private String notes; // Usage instructions
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
     @LastModifiedBy private String updatedBy;
-    
+
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL)
     private List<PrescriptionItem> items;
 }
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE prescriptions (
     id VARCHAR(36) PRIMARY KEY,
@@ -1151,12 +1199,12 @@ CREATE TABLE prescriptions (
     doctor_id VARCHAR(36),
     prescribed_at DATETIME(6) NOT NULL,
     notes TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_prescriptions_exam_id (medical_exam_id),
     INDEX idx_prescriptions_patient_id (patient_id),
     INDEX idx_prescriptions_prescribed_at (prescribed_at)
@@ -1164,6 +1212,7 @@ CREATE TABLE prescriptions (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `medicalExamId`: Soft FK to medical_exams.id
 - `patientId`: Denormalized (query performance)
@@ -1172,6 +1221,7 @@ CREATE TABLE prescriptions (
 - `notes`: General usage instructions
 
 **Constraints & Business Rules:**
+
 - One prescription per medical exam (business logic validation)
 - Contains multiple prescription items (one-to-many relationship)
 - Cannot modify after 24 hours (immutable for audit)
@@ -1181,9 +1231,10 @@ CREATE TABLE prescriptions (
 ### Entity 6.3: `PrescriptionItem`
 
 **Table Name:** `prescription_items`  
-**Purpose:** Individual medicines in a prescription (with price snapshot)  
+**Purpose:** Individual medicines in a prescription (with price snapshot)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "prescription_items")
@@ -1191,64 +1242,65 @@ public class PrescriptionItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @ManyToOne
     @JoinColumn(name = "prescription_id", nullable = false)
     @NotNull(message = "Prescription is required")
     private Prescription prescription;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Medicine ID is required")
     private String medicineId; // FK to medicines.id (soft FK)
-    
+
     // Medicine snapshot (price at prescription time)
     @Column(nullable = false)
     @NotBlank(message = "Medicine name is required")
     private String medicineName;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Unit price must be greater than 0")
     private BigDecimal unitPrice; // Selling price at prescription time
-    
+
     @Column(nullable = false)
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Dosage is required")
     private String dosage; // e.g., "1 tablet twice daily"
-    
+
     private Integer durationDays; // e.g., 7 days
-    
+
     @Column(columnDefinition = "TEXT")
     private String instructions; // Special instructions
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
 }
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE prescription_items (
     id VARCHAR(36) PRIMARY KEY,
     prescription_id VARCHAR(36) NOT NULL,
     medicine_id VARCHAR(36) NOT NULL,
-    
+
     -- Snapshot at prescription time
     medicine_name VARCHAR(255) NOT NULL,
     unit_price DECIMAL(12,2) NOT NULL,
-    
+
     quantity INT NOT NULL,
     dosage VARCHAR(255) NOT NULL,
     duration_days INT,
     instructions TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    
+
     FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE,
     INDEX idx_prescription_items_prescription_id (prescription_id),
     INDEX idx_prescription_items_medicine_id (medicine_id)
@@ -1256,6 +1308,7 @@ CREATE TABLE prescription_items (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `prescriptionId`: FK to prescriptions.id (CASCADE delete)
 - `medicineId`: Soft FK to medicines.id (reference only)
@@ -1267,6 +1320,7 @@ CREATE TABLE prescription_items (
 - `instructions`: Special instructions (e.g., "Take with food")
 
 **Constraints & Business Rules:**
+
 - `unitPrice` snapshot prevents price changes from affecting historical prescriptions
 - `unitPrice` must be greater than 0 (prevents zero-price prescriptions)
 - `quantity` triggers stock decrement in medicine-service (via event/API call)
@@ -1277,14 +1331,15 @@ CREATE TABLE prescription_items (
 - Cannot modify after 24 hours (immutable for audit)
 - **Pattern Note:** Price snapshot pattern ensures billing accuracy regardless of future price changes
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO prescriptions (id, medical_exam_id, patient_id, doctor_id, prescribed_at) VALUES
 ('rx001', 'exam001', 'p002', 'emp001', '2025-12-05 10:30');
 
-INSERT INTO prescription_items (id, prescription_id, medicine_id, medicine_name, unit_price, 
+INSERT INTO prescription_items (id, prescription_id, medicine_id, medicine_name, unit_price,
                                  quantity, dosage, duration_days, instructions) VALUES
-('rxi001', 'rx001', 'med001', 'Amoxicillin 500mg', 8000, 20, '1 capsule twice daily', 10, 
+('rxi001', 'rx001', 'med001', 'Amoxicillin 500mg', 8000, 20, '1 capsule twice daily', 10,
  'Take with food'),
 ('rxi002', 'rx001', 'med002', 'Paracetamol 500mg', 1500, 10, '1 tablet as needed', 5,
  'Maximum 4 tablets per day');
@@ -1297,9 +1352,10 @@ INSERT INTO prescription_items (id, prescription_id, medicine_id, medicine_name,
 ### Entity 7.1: `Invoice`
 
 **Table Name:** `invoices`  
-**Purpose:** Patient invoices (consultation + medicine costs)  
+**Purpose:** Patient invoices (consultation + medicine costs)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "invoices")
@@ -1307,54 +1363,54 @@ public class Invoice {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Patient ID is required")
     private String patientId; // FK to patients.id
-    
+
     private String appointmentId; // FK to appointments.id (optional)
-    
+
     @Column(nullable = false, unique = true)
     @NotBlank(message = "Invoice number is required")
     @Pattern(regexp = "^INV-\\d{8}-\\d{4}$", message = "Invoice number must be format INV-YYYYMMDD-XXXX")
     private String invoiceNumber; // Auto-generated: INV-20251205-0001
-    
+
     @Column(nullable = false)
     @NotNull(message = "Invoice date is required")
     private Instant invoiceDate;
-    
+
     @FutureOrPresent(message = "Due date must be in the future or present")
     private Instant dueDate; // Payment deadline (nullable for immediate payment, or 7+ days for installments/insurance)
-    
+
     @Column(nullable = false)
     @NotNull(message = "Subtotal is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Subtotal must be greater than 0")
     private BigDecimal subtotal; // Before discounts/tax
-    
+
     @DecimalMin(value = "0.0", inclusive = true, message = "Discount must be non-negative")
     private BigDecimal discount; // Discount amount (can be 0)
-    
+
     @DecimalMin(value = "0.0", inclusive = true, message = "Tax must be non-negative")
     private BigDecimal tax; // Tax amount (VAT 10%, can be 0)
-    
+
     @Column(nullable = false)
     @NotNull(message = "Total amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Total amount must be greater than 0")
     private BigDecimal totalAmount; // Final amount = subtotal - discount + tax
-    
+
     @Column(nullable = false)
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
     private InvoiceStatus status; // UNPAID, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED
-    
+
     @Column(columnDefinition = "TEXT")
     private String notes;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
     @LastModifiedBy private String updatedBy;
-    
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL)
     private List<InvoiceItem> items;
 }
@@ -1365,6 +1421,7 @@ public enum InvoiceStatus {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE invoices (
     id VARCHAR(36) PRIMARY KEY,
@@ -1373,20 +1430,20 @@ CREATE TABLE invoices (
     invoice_number VARCHAR(50) UNIQUE NOT NULL,
     invoice_date DATETIME(6) NOT NULL,
     due_date DATETIME(6),
-    
+
     subtotal DECIMAL(15,2) NOT NULL,
     discount DECIMAL(15,2) DEFAULT 0,
     tax DECIMAL(15,2) DEFAULT 0,
     total_amount DECIMAL(15,2) NOT NULL,
-    
+
     status VARCHAR(50) NOT NULL DEFAULT 'UNPAID',
     notes TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_invoices_patient_id (patient_id),
     INDEX idx_invoices_appointment_id (appointment_id),
     INDEX idx_invoices_number (invoice_number),
@@ -1396,6 +1453,7 @@ CREATE TABLE invoices (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `patientId`: Soft FK to patients.id
 - `appointmentId`: Soft FK to appointments.id (nullable)
@@ -1410,6 +1468,7 @@ CREATE TABLE invoices (
 - `notes`: Additional notes
 
 **Constraints & Business Rules:**
+
 - `invoiceNumber`: UNIQUE constraint, auto-generated format INV-YYYYMMDD-XXXX
 - **Payment Models:**
   - **Immediate payment**: `dueDate = null` or `dueDate = invoiceDate` (same-day payment required)
@@ -1426,7 +1485,8 @@ CREATE TABLE invoices (
   - OVERDUE: dueDate < current date AND status != PAID
 - Auto-generate invoice when appointment status = COMPLETED
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO invoices (id, patient_id, appointment_id, invoice_number, invoice_date, due_date,
                       subtotal, discount, tax, total_amount, status) VALUES
@@ -1439,9 +1499,10 @@ INSERT INTO invoices (id, patient_id, appointment_id, invoice_number, invoice_da
 ### Entity 7.2: `InvoiceItem`
 
 **Table Name:** `invoice_items`  
-**Purpose:** Line items in invoice (consultation fee, medicines, tests)  
+**Purpose:** Line items in invoice (consultation fee, medicines, tests)
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "invoice_items")
@@ -1449,38 +1510,38 @@ public class InvoiceItem {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @ManyToOne
     @JoinColumn(name = "invoice_id", nullable = false)
     @NotNull(message = "Invoice is required")
     private Invoice invoice;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Item type is required")
     @Enumerated(EnumType.STRING)
     private ItemType type; // CONSULTATION, MEDICINE, TEST, OTHER
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Description is required")
     private String description; // e.g., "Consultation - Cardiology", "Amoxicillin 500mg"
-    
+
     private String referenceId; // prescription_item.id or other reference
-    
+
     @Column(nullable = false)
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Unit price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Unit price must be greater than 0")
     private BigDecimal unitPrice;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
     private BigDecimal amount; // quantity * unitPrice
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
 }
@@ -1491,6 +1552,7 @@ public enum ItemType {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE invoice_items (
     id VARCHAR(36) PRIMARY KEY,
@@ -1501,10 +1563,10 @@ CREATE TABLE invoice_items (
     quantity INT NOT NULL,
     unit_price DECIMAL(12,2) NOT NULL,
     amount DECIMAL(15,2) NOT NULL,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    
+
     FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
     INDEX idx_invoice_items_invoice_id (invoice_id),
     INDEX idx_invoice_items_type (type)
@@ -1512,6 +1574,7 @@ CREATE TABLE invoice_items (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `invoiceId`: FK to invoices.id (CASCADE delete)
 - `type`: CONSULTATION, MEDICINE, TEST, OTHER
@@ -1522,6 +1585,7 @@ CREATE TABLE invoice_items (
 - `amount`: Total line item amount (quantity × unitPrice)
 
 **Constraints & Business Rules:**
+
 - `amount = quantity × unitPrice` (calculated field)
 - Invoice subtotal = SUM(amount) across all items
 - **Consultation Fee Configuration:**
@@ -1541,7 +1605,8 @@ CREATE TABLE invoice_items (
   - Fee is snapshot at invoice creation time (immune to future price changes)
 - Medicine prices copied from `prescription_items.unitPrice` (snapshot)
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO invoice_items (id, invoice_id, type, description, quantity, unit_price, amount) VALUES
 ('ini001', 'inv001', 'CONSULTATION', 'Cardiology Consultation', 1, 200000, 200000),
@@ -1554,9 +1619,10 @@ INSERT INTO invoice_items (id, invoice_id, type, description, quantity, unit_pri
 ### Entity 7.3: `Payment`
 
 **Table Name:** `payments`  
-**Purpose:** Payment transactions for invoices  
+**Purpose:** Payment transactions for invoices
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "payments")
@@ -1564,39 +1630,39 @@ public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotBlank(message = "Invoice ID is required")
     private String invoiceId; // FK to invoices.id
-    
+
     @Column(unique = true)
     @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", message = "Idempotency key must be valid UUID")
     private String idempotencyKey; // UUID - prevents duplicate payments (CRITICAL)
-    
+
     @Column(nullable = false)
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", inclusive = true, message = "Amount must be greater than 0")
     private BigDecimal amount;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Payment method is required")
     @Enumerated(EnumType.STRING)
     private PaymentMethod method; // CASH, CREDIT_CARD, BANK_TRANSFER, INSURANCE
-    
+
     @Column(nullable = false)
     @NotNull(message = "Payment status is required")
     @Enumerated(EnumType.STRING)
     private PaymentStatus status; // PENDING, COMPLETED, FAILED, REFUNDED
-    
+
     private String transactionId; // External payment gateway transaction ID
-    
+
     @Column(nullable = false)
     @NotNull(message = "Payment date is required")
     private Instant paymentDate;
-    
+
     @Column(columnDefinition = "TEXT")
     private String notes;
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
     @CreatedBy private String createdBy;
@@ -1613,6 +1679,7 @@ public enum PaymentStatus {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE payments (
     id VARCHAR(36) PRIMARY KEY,
@@ -1624,12 +1691,12 @@ CREATE TABLE payments (
     transaction_id VARCHAR(255),
     payment_date DATETIME(6) NOT NULL,
     notes TEXT,
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
     created_by VARCHAR(36),
     updated_by VARCHAR(36),
-    
+
     INDEX idx_payments_invoice_id (invoice_id),
     INDEX idx_payments_method (method),
     INDEX idx_payments_status (status),
@@ -1638,6 +1705,7 @@ CREATE TABLE payments (
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `invoiceId`: Soft FK to invoices.id
 - `idempotencyKey`: Client-generated UUID (UNIQUE - prevents duplicate payments)
@@ -1649,6 +1717,7 @@ CREATE TABLE payments (
 - `notes`: Additional payment notes
 
 **Constraints & Business Rules:**
+
 - **Idempotency Pattern (CRITICAL):**
   - **Client-Side UUID Generation:**
     - **Frontend (JavaScript):** `crypto.randomUUID()` or `uuidv4()` library
@@ -1694,7 +1763,8 @@ CREATE TABLE payments (
       - Invoice status recalculates: total payments = original - refund
 - **Pattern Note:** Idempotency key prevents financial data corruption from duplicate requests
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO payments (id, invoice_id, idempotency_key, amount, method, status, payment_date) VALUES
 ('pay001', 'inv001', '550e8400-e29b-41d4-a716-446655440000', 550000, 'CASH', 'COMPLETED', '2025-12-05 11:00');
@@ -1707,9 +1777,10 @@ INSERT INTO payments (id, invoice_id, idempotency_key, amount, method, status, p
 ### Entity 8.1: `ReportCache`
 
 **Table Name:** `report_cache`  
-**Purpose:** Cache aggregated reports for performance  
+**Purpose:** Cache aggregated reports for performance
 
 **Entity Definition:**
+
 ```java
 @Entity
 @Table(name = "report_cache")
@@ -1717,33 +1788,33 @@ public class ReportCache {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    
+
     @Column(nullable = false)
     @NotNull(message = "Report type is required")
     @Enumerated(EnumType.STRING)
     private ReportType reportType; // REVENUE, APPOINTMENTS, DOCTOR_PERFORMANCE, PATIENT_ACTIVITY
-    
+
     @Column(nullable = false)
     @NotNull(message = "Start date is required")
     private LocalDate startDate;
-    
+
     @Column(nullable = false)
     @NotNull(message = "End date is required")
     private LocalDate endDate;
-    
+
     @Column(columnDefinition = "TEXT")
     private String filters; // JSON: {"doctorId": "emp001", "status": "COMPLETED"}
-    
+
     @Column(columnDefinition = "LONGTEXT")
     @NotBlank(message = "Report data is required")
     private String data; // JSON cached result
-    
+
     @Column(nullable = false)
     @NotNull(message = "Generated timestamp is required")
     private Instant generatedAt;
-    
+
     private Instant expiresAt; // TTL for cache invalidation
-    
+
     @CreatedDate private Instant createdAt;
     @LastModifiedDate private Instant updatedAt;
 }
@@ -1754,6 +1825,7 @@ public enum ReportType {
 ```
 
 **MySQL Schema:**
+
 ```sql
 CREATE TABLE report_cache (
     id VARCHAR(36) PRIMARY KEY,
@@ -1764,16 +1836,17 @@ CREATE TABLE report_cache (
     data LONGTEXT NOT NULL,
     generated_at DATETIME(6) NOT NULL,
     expires_at DATETIME(6),
-    
+
     created_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),
     updated_at DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
-    
+
     INDEX idx_report_cache_type_dates (report_type, start_date, end_date),
     INDEX idx_report_cache_expires_at (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
 **Field Descriptions:**
+
 - `id`: UUID primary key
 - `reportType`: REVENUE, APPOINTMENTS, DOCTOR_PERFORMANCE, PATIENT_ACTIVITY
 - `startDate`: Report period start date
@@ -1784,6 +1857,7 @@ CREATE TABLE report_cache (
 - `expiresAt`: Cache expiration timestamp (TTL)
 
 **Constraints & Business Rules:**
+
 - Composite index on (report_type, start_date, end_date) for fast lookups
 - Cache TTL: 12 hours (configurable)
 - Reports regenerate on-demand if cache expired (`expiresAt < current timestamp`)
@@ -1791,10 +1865,11 @@ CREATE TABLE report_cache (
 - `filters` allow parameterized caching (e.g., per doctor, per department)
 - **Pattern Note:** Caching pattern reduces database load for expensive aggregation queries
 
-**Sample Data:
+\*\*Sample Data:
+
 ```sql
 INSERT INTO report_cache (id, report_type, start_date, end_date, filters, data, generated_at, expires_at) VALUES
-('rc001', 'REVENUE', '2025-12-01', '2025-12-31', '{}', 
+('rc001', 'REVENUE', '2025-12-01', '2025-12-31', '{}',
  '{"totalRevenue": 50000000, "paidInvoices": 45, "pendingInvoices": 5}',
  '2025-12-05 08:00', '2025-12-05 20:00');
 ```
@@ -1867,16 +1942,19 @@ INSERT INTO report_cache (id, report_type, start_date, end_date, filters, data, 
 ## 🎯 Design Patterns & Best Practices
 
 **1. Database-per-Service Pattern:**
+
 - Each microservice has isolated database (8 services = 8 databases)
 - Ensures loose coupling and independent deployment
 - No shared database dependencies
 
 **2. Soft Foreign Keys:**
+
 - Cross-service relationships use IDs only (no DB-level FK constraints)
 - Examples: `appointments.patientId` → `patients.id`, `appointments.doctorId` → `employees.id`
 - Enables service autonomy and prevents cascading failures
 
 **3. Soft Delete Pattern:**
+
 - **Entities:** Employee
 - **Implementation:** `deletedAt` timestamp + `deletedBy` user ID (both nullable)
 - **Purpose:** Preserve audit trail, prevent orphan records
@@ -1884,40 +1962,47 @@ INSERT INTO report_cache (id, report_type, start_date, end_date, filters, data, 
 - **Testing:** `deletedBy` nullable allows testing without authentication
 
 **4. Price Snapshot Pattern:**
+
 - **Entities:** PrescriptionItem, InvoiceItem
 - **Implementation:** Copy price at transaction time (not live reference)
 - **Purpose:** Prevents historical data corruption when prices change
 - **Example:** `prescription_items.unitPrice` stores medicine price at prescription time
 
 **5. Idempotency Pattern:**
+
 - **Entities:** Payment
 - **Implementation:** Client-generated `idempotencyKey` (UUID, UNIQUE constraint)
 - **Purpose:** Prevents duplicate payments on network retry/timeout
 - **Critical for:** Financial transactions, payment gateways
 
 **6. Denormalization for Performance:**
+
 - **Entities:** MedicalExam (patientId, doctorId), Prescription (patientId, doctorId)
 - **Purpose:** Improve query performance, reduce cross-service calls
 - **Trade-off:** Data duplication vs query speed
 
 **7. Generic Scheduling Pattern:**
+
 - **Entity:** EmployeeSchedule
 - **Implementation:** Single table for all employee roles (DOCTOR, NURSE, RECEPTIONIST, ADMIN)
 - **Purpose:** Flexibility for different schedule types (appointments, shifts, coverage)
 - **Filtering:** Role-specific logic in business layer
 
 **8. Cache Pattern:**
+
 - **Entity:** ReportCache
 - **Implementation:** Store expensive aggregation results as JSON with TTL
 - **Purpose:** Reduce database load for complex reports
 - **TTL:** 12 hours (configurable)
 
 **9. Audit Trail:**
+
 - **All Entities:** createdAt, updatedAt, createdBy, updatedBy
 - **Purpose:** Track all data changes for compliance and debugging
 - **Integration:** Spring Data JPA @CreatedDate, @CreatedBy annotations
 
 **10. UUID Primary Keys:**
+
 - **All Entities:** String-based UUID (not auto-increment)
 - **Purpose:** Distributed ID generation, no coordination required
 - **Format:** VARCHAR(36) for MySQL compatibility
@@ -1926,16 +2011,16 @@ INSERT INTO report_cache (id, report_type, start_date, end_date, filters, data, 
 
 ## 📊 Entity Summary
 
-| Service | Database | Entities | Purpose |
-|---------|----------|----------|---------|
-| auth-service | auth_db | Account (1) | Authentication & authorization |
-| patient-service | patient_db | Patient (1) | Patient demographics & health info |
-| medicine-service | medicine_db | Category, Medicine (2) | Medicine catalog & inventory |
-| hr-service | hr_db | Department, Employee, EmployeeSchedule (3) | Staff & scheduling management |
-| appointment-service | appointment_db | Appointment (1) | Appointment bookings |
-| medical-exam-service | medical_exam_db | MedicalExam, Prescription, PrescriptionItem (3) | Medical records & prescriptions |
-| billing-service | billing_db | Invoice, InvoiceItem, Payment (3) | Billing & payment processing |
-| reports-service | reports_db | ReportCache (1) | Report caching & aggregation |
+| Service              | Database        | Entities                                        | Purpose                            |
+| -------------------- | --------------- | ----------------------------------------------- | ---------------------------------- |
+| auth-service         | auth_db         | Account (1)                                     | Authentication & authorization     |
+| patient-service      | patient_db      | Patient (1)                                     | Patient demographics & health info |
+| medicine-service     | medicine_db     | Category, Medicine (2)                          | Medicine catalog & inventory       |
+| hr-service           | hr_db           | Department, Employee, EmployeeSchedule (3)      | Staff & scheduling management      |
+| appointment-service  | appointment_db  | Appointment (1)                                 | Appointment bookings               |
+| medical-exam-service | medical_exam_db | MedicalExam, Prescription, PrescriptionItem (3) | Medical records & prescriptions    |
+| billing-service      | billing_db      | Invoice, InvoiceItem, Payment (3)               | Billing & payment processing       |
+| reports-service      | reports_db      | ReportCache (1)                                 | Report caching & aggregation       |
 
 **Total:** 8 services, 8 databases, 15 entities
 
@@ -1955,6 +2040,7 @@ INSERT INTO report_cache (id, report_type, start_date, end_date, filters, data, 
 ## 🚀 Ready for Development
 
 All schemas are production-ready with microservices best practices:
+
 - ✅ Service isolation (database-per-service)
 - ✅ Data integrity (soft FKs, unique constraints)
 - ✅ Audit compliance (audit fields, soft delete)

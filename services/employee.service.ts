@@ -67,7 +67,7 @@ export const getEmployees = async (params?: any) => {
     filtered = filtered.filter(
       (e) =>
         e.fullName.toLowerCase().includes(lowerSearch) ||
-        e.email.toLowerCase().includes(lowerSearch)
+        e.email.toLowerCase().includes(lowerSearch),
     );
   }
 
@@ -172,7 +172,7 @@ export const addEmployeeToShift = async (data: {
   if (!employee) throw new Error("Employee not found");
 
   let scheduleItem = mockSchedule.find(
-    (s) => s.day === data.day && s.shift === data.shift
+    (s) => s.day === data.day && s.shift === data.shift,
   );
 
   if (!scheduleItem) {
@@ -201,12 +201,12 @@ export const removeEmployeeFromShift = async (data: {
   }
   await delay(300);
   const scheduleItem = mockSchedule.find(
-    (s) => s.day === data.day && s.shift === data.shift
+    (s) => s.day === data.day && s.shift === data.shift,
   );
 
   if (scheduleItem) {
     scheduleItem.employees = scheduleItem.employees.filter(
-      (e) => e.id !== data.employeeId
+      (e) => e.id !== data.employeeId,
     );
   }
   return true;
@@ -246,7 +246,7 @@ export const getEmployeeAttendance = async (): Promise<
 export const updateAttendance = async (
   employeeId: number,
   date: string,
-  status: AttendanceStatus | null
+  status: AttendanceStatus | null,
 ): Promise<boolean> => {
   if (!USE_MOCK) {
     throw new Error("Attendance API not implemented");
@@ -261,7 +261,7 @@ export const updateAttendance = async (
     }
     // Recalculate sum
     employee.sum = Object.values(employee.attendance).filter(
-      (s) => s === "Present"
+      (s) => s === "Present",
     ).length;
   }
   return true;

@@ -16,7 +16,9 @@ test.describe("Appointments - Admin", () => {
   test("Danh sách: hiển thị filters, table, pagination", async ({ page }) => {
     await page.goto("/admin/appointments");
 
-    await expect(page.getByRole("heading", { name: /Appointments/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Appointments/i }),
+    ).toBeVisible();
     await expect(page.getByPlaceholder(/Search/i)).toBeVisible();
     await expect(page.getByText(/Status/i)).toBeVisible();
     await expect(page.getByText(/Doctor/i)).toBeVisible();
@@ -27,21 +29,33 @@ test.describe("Appointments - Admin", () => {
   test("Bộ lọc trạng thái đủ options", async ({ page }) => {
     await page.goto("/admin/appointments");
     await page.getByText(/Status/i).click();
-    await expect(page.getByRole("option", { name: /SCHEDULED/i })).toBeVisible();
-    await expect(page.getByRole("option", { name: /COMPLETED/i })).toBeVisible();
-    await expect(page.getByRole("option", { name: /CANCELLED/i })).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /SCHEDULED/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /COMPLETED/i }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("option", { name: /CANCELLED/i }),
+    ).toBeVisible();
     await expect(page.getByRole("option", { name: /NO_SHOW/i })).toBeVisible();
   });
 
   test("Tạo mới appointment (submit rỗng báo lỗi)", async ({ page }) => {
     await page.goto("/admin/appointments/new");
-    await page.getByRole("button", { name: /Book Appointment|Create/i }).click();
-    await expect(page.getByText(/required|Please select/i).first()).toBeVisible();
+    await page
+      .getByRole("button", { name: /Book Appointment|Create/i })
+      .click();
+    await expect(
+      page.getByText(/required|Please select/i).first(),
+    ).toBeVisible();
   });
 
   test("Xem chi tiết appointment", async ({ page }) => {
     await page.goto(`/admin/appointments/${SAMPLE_APPOINTMENT_ID}`);
-    await expect(page.getByText(/Appointment Details|Appointment #/i)).toBeVisible();
+    await expect(
+      page.getByText(/Appointment Details|Appointment #/i),
+    ).toBeVisible();
     await expect(page.getByText(/Status/i)).toBeVisible();
     await expect(page.getByText(/Patient/i)).toBeVisible();
     await expect(page.getByText(/Doctor/i)).toBeVisible();
@@ -61,15 +75,21 @@ test.describe("Appointments - Admin", () => {
 
   test("Reschedule/Chỉnh sửa appointment", async ({ page }) => {
     await page.goto(`/admin/appointments/${SAMPLE_APPOINTMENT_ID}/edit`);
-    await expect(page.getByRole("heading", { name: /Edit|Reschedule/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Edit|Reschedule/i }),
+    ).toBeVisible();
     // Không submit thật; chỉ kiểm tra form render và validation
     await page.getByRole("button", { name: /Save/i }).click();
-    await expect(page.getByText(/required|Please select/i).first()).toBeVisible();
+    await expect(
+      page.getByText(/required|Please select/i).first(),
+    ).toBeVisible();
   });
 
   test("Complete appointment", async ({ page }) => {
     await page.goto(`/admin/appointments/${SAMPLE_APPOINTMENT_ID}`);
-    const completeBtn = page.getByRole("button", { name: /Complete|Mark as Completed/i });
+    const completeBtn = page.getByRole("button", {
+      name: /Complete|Mark as Completed/i,
+    });
     if (await completeBtn.isVisible()) {
       await completeBtn.click();
       // Tùy UI: có thể là dialog xác nhận, kiểm tra không crash

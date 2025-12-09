@@ -2,7 +2,11 @@
 
 import { Badge } from "@/components/ui/badge";
 
-export function AllergyTags({ allergies }: { allergies?: string | string[] | null }) {
+export function AllergyTags({
+  allergies,
+}: {
+  allergies?: string | string[] | null;
+}) {
   const tags =
     typeof allergies === "string"
       ? allergies
@@ -11,7 +15,8 @@ export function AllergyTags({ allergies }: { allergies?: string | string[] | nul
           .filter(Boolean)
       : allergies || [];
 
-  if (!tags.length) return <p className="text-sm text-muted-foreground">Không có</p>;
+  if (!tags.length)
+    return <p className="text-sm text-muted-foreground">Không có</p>;
 
   return (
     <div className="flex flex-wrap gap-2">

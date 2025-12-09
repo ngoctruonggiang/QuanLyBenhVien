@@ -38,7 +38,7 @@ const ResetPasswordPage = () => {
 
   const handlePasswordChange = (
     field: "newPassword" | "confirmPassword",
-    value: string
+    value: string,
   ) => {
     setPasswords((prev) => ({ ...prev, [field]: value }));
     if (field === "newPassword") {

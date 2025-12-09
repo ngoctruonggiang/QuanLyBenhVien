@@ -29,7 +29,7 @@ export function UpdateAttendanceModal({
   onConfirm,
 }: UpdateAttendanceModalProps) {
   const handleStatusSelect = (
-    status: "Present" | "Absent" | "Leave" | null
+    status: "Present" | "Absent" | "Leave" | null,
   ) => {
     onConfirm(status);
     onOpenChange(false);

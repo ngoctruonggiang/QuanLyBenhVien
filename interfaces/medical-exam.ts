@@ -55,6 +55,7 @@ export interface MedicalExam {
   updatedBy?: string;
   hasPrescription?: boolean;
   prescription?: PrescriptionDisplay;
+  cancelReason?: string;
 }
 
 export interface MedicalExamListItem {

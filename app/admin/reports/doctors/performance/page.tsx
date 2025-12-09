@@ -161,10 +161,10 @@ export default function DoctorPerformancePage() {
   const [role, setRole] = useState<string>(user?.role || "ADMIN");
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
-    presets.thisMonth.startDate
+    presets.thisMonth.startDate,
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    presets.thisMonth.endDate
+    presets.thisMonth.endDate,
   );
   const [departmentId, setDepartmentId] = useState<string>("ALL");
 
@@ -211,8 +211,11 @@ export default function DoctorPerformancePage() {
       completionRate: doc.statistics.completionRate,
       patientsSeen: doc.statistics.patientsSeen,
       totalRevenue: doc.statistics.totalRevenue,
-      averageTicket: doc.statistics.averageTicketSize,
-      satisfaction: doc.statistics.satisfactionScore,
+      averageTicket:
+        doc.statistics.patientsSeen > 0
+          ? doc.statistics.totalRevenue / doc.statistics.patientsSeen
+          : 0,
+      // satisfaction: doc.statistics.satisfactionScore,
     }));
     exportToCSV(rows, "doctor-performance.csv");
   };
@@ -279,7 +282,7 @@ export default function DoctorPerformancePage() {
                 value={sortBy}
                 onValueChange={(v) =>
                   setSortBy(
-                    v as "completionRate" | "patientsSeen" | "totalRevenue"
+                    v as "completionRate" | "patientsSeen" | "totalRevenue",
                   )
                 }
               >

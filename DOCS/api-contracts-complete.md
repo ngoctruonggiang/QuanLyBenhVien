@@ -11,6 +11,7 @@
 ## 🎯 Overview
 
 This document defines ALL API contracts for the 3-week MVP, including:
+
 - **Total Services:** 8 services (3 existing enhanced + 5 new)
 - **Total Endpoints:** ~95 REST endpoints
 - **Authentication:** JWT Bearer tokens via API Gateway
@@ -63,11 +64,13 @@ This document defines ALL API contracts for the 3-week MVP, including:
 ### Global Headers
 
 **All authenticated requests must include:**
+
 ```http
 Authorization: Bearer {JWT_TOKEN}
 ```
 
 **API Gateway automatically injects these headers to downstream services:**
+
 ```http
 X-User-ID: 550e8400-e29b-41d4-a716-446655440001
 X-User-Role: DOCTOR
@@ -76,19 +79,20 @@ X-User-Email: doctor1@hms.com
 
 ### Role-Based Access Control (RBAC)
 
-| Role | Permissions |
-|------|-------------|
-| **ADMIN** | Full access to all endpoints |
-| **DOCTOR** | Read/Write patients, appointments, exams, prescriptions; Read HR, medicines, billing |
-| **NURSE** | Read/Write patients, appointments; Read exams, medicines |
-| **PATIENT** | Read own data (patients, appointments, exams, invoices); Create appointments |
-| **EMPLOYEE** | Read patients, appointments, medicines |
+| Role         | Permissions                                                                          |
+| ------------ | ------------------------------------------------------------------------------------ |
+| **ADMIN**    | Full access to all endpoints                                                         |
+| **DOCTOR**   | Read/Write patients, appointments, exams, prescriptions; Read HR, medicines, billing |
+| **NURSE**    | Read/Write patients, appointments; Read exams, medicines                             |
+| **PATIENT**  | Read own data (patients, appointments, exams, invoices); Create appointments         |
+| **EMPLOYEE** | Read patients, appointments, medicines                                               |
 
 ---
 
 ## 📋 Standard Response Schemas
 
 ### Success Response
+
 ```json
 {
   "status": "success",
@@ -100,6 +104,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 ### Error Response
+
 ```json
 {
   "status": "error",
@@ -118,6 +123,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 ### Paginated Response
+
 ```json
 {
   "status": "success",
@@ -149,6 +155,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Create new user account
 
 **Request Body:**
+
 ```json
 {
   "email": "patient1@gmail.com",
@@ -159,12 +166,14 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `email`: Required, valid email format, unique
 - `password`: Required, min 8 chars, must include uppercase, lowercase, number, special char
 - `passwordConfirm`: Required, must match password
 - `role`: Required, one of [ADMIN, PATIENT, EMPLOYEE, DOCTOR, NURSE]
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -179,6 +188,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • email is required
   • email must be valid format (user@domain.com)
@@ -203,6 +213,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Authenticate user and get JWT tokens
 
 **Request Body:**
+
 ```json
 {
   "email": "patient1@gmail.com",
@@ -211,6 +222,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -229,6 +241,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 INVALID_CREDENTIALS`: Wrong email/password
 
 ---
@@ -240,6 +253,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Get new access token using refresh token
 
 **Request Body:**
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIs..."
@@ -247,6 +261,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -258,6 +273,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: refreshToken is required
 - `401 INVALID_TOKEN`: Refresh token expired/invalid/revoked
 
@@ -270,6 +286,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Revoke refresh token
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -280,6 +297,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 
 ---
@@ -291,6 +309,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Get current authenticated user info
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -304,6 +323,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 
 ---
@@ -321,6 +341,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Create new patient profile
 
 **Request Body:**
+
 ```json
 {
   "accountId": "550e8400-e29b-41d4-a716-446655440002",
@@ -341,6 +362,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `fullName`: Required, max 255 chars
 - `dateOfBirth`: Required, ISO 8601 date format
 - `gender`: One of [MALE, FEMALE, OTHER]
@@ -348,6 +370,7 @@ X-User-Email: doctor1@hms.com
 - `phoneNumber`: Valid Vietnamese phone format
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -370,6 +393,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • fullName is required
   • fullName exceeds maximum length (255 characters)
@@ -393,9 +417,11 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve patient by ID
 
 **Path Parameters:**
+
 - `id` (string): Patient UUID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -422,6 +448,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Not authorized to view this patient
 - `404 PATIENT_NOT_FOUND`: Patient doesn't exist
 
@@ -434,18 +461,21 @@ X-User-Email: doctor1@hms.com
 **Description:** List all patients with pagination and filters
 
 **Query Parameters:**
+
 - `page` (int, default=0): Page number
 - `size` (int, default=20, max=100): Page size
 - `search` (string): RSQL search query
 - `sort` (string, default=createdAt,desc): Sort field and direction
 
 **RSQL Search Examples:**
+
 - `fullName=like='Nguyen*'`
 - `bloodType==O+`
 - `gender==MALE;bloodType==O+` (AND)
 - `bloodType==O+,bloodType==A+` (OR)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -468,6 +498,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN, DOCTOR, or NURSE)
 
 ---
@@ -479,6 +510,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Update patient information
 
 **Request Body:** (Same as Create, all fields optional)
+
 ```json
 {
   "fullName": "Nguyen Van A Updated",
@@ -487,6 +519,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -500,6 +533,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed (same rules as Create Patient)
 - `403 FORBIDDEN`: Not authorized to update this patient
 - `404 PATIENT_NOT_FOUND`: Patient doesn't exist
@@ -513,6 +547,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Soft delete patient (marks as deleted, preserves audit trail)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -525,12 +560,14 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Business Rules:**
+
 - Patient record is NOT permanently deleted (soft delete only)
 - Sets `deletedAt` timestamp and `deletedBy` user ID
 - Validates no future appointments exist before deletion
 - Deleted patients excluded from all list queries by default
 
 **Error Codes:**
+
 - `404 PATIENT_NOT_FOUND`: Patient doesn't exist
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `409 HAS_FUTURE_APPOINTMENTS`: Cannot delete patient with scheduled future appointments
@@ -550,6 +587,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Add new medicine to catalog
 
 **Request Body:**
+
 ```json
 {
   "name": "Amoxicillin 500mg",
@@ -570,12 +608,14 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `name`: Required, max 255 chars
 - `sellingPrice`: Must be >= purchasePrice
 - `quantity`: Non-negative integer
 - `expiresAt`: Must be future date
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -598,6 +638,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name is required
   • name exceeds maximum length (255 characters)
@@ -620,6 +661,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve medicine details
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -650,13 +692,15 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Field Visibility by Role:**
-- 
+
+-
 - **All roles**: name, activeIngredient, unit, concentration, sellingPrice, sideEffects, storageConditions, category, manufacturer
 - **ADMIN, DOCTOR, NURSE**: All fields above + purchasePrice, quantity, expiresAt, packaging, description
 - **ADMIN**: All fields (full inventory details)
 - **DOCTOR, NURSE**: All fields except purchasePrice (clinical + stock info)
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 - `404 MEDICINE_NOT_FOUND`: Medicine doesn't exist
 
@@ -669,6 +713,7 @@ X-User-Email: doctor1@hms.com
 **Description:** List medicines with filters
 
 **Query Parameters:**
+
 - `page` (int, default=0): Page number
 - `size` (int, default=20, max=100): Page size
 - `sort` (string, default=createdAt,desc): Sort field and direction
@@ -676,6 +721,7 @@ X-User-Email: doctor1@hms.com
 - `categoryId` (string): Filter by category ID
 
 **RSQL Search Examples:**
+
 - `name=like='*cillin*'` (search by name)
 - `quantity<100` (low stock - ADMIN only)
 - `expiresAt<'2026-01-01'` (expiring soon - ADMIN only)
@@ -683,6 +729,7 @@ X-User-Email: doctor1@hms.com
 - `sellingPrice>5000;sellingPrice<10000` (price range)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -716,11 +763,13 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Field Visibility by Role:**
+
 - **ADMIN**: All fields (full inventory details)
 - **DOCTOR, NURSE**: All fields except purchasePrice (clinical + stock info)
 - **EMPLOYEE**: name, activeIngredient, unit, concentration, sellingPrice, manufacturer, category only (basic info)
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN, DOCTOR, NURSE, or EMPLOYEE)
 - `404 CATEGORY_NOT_FOUND`: Category ID doesn't exist (if categoryId filter applied)
@@ -734,6 +783,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Partial update medicine information
 
 **Request Body:** (All fields optional - only include fields to update)
+
 ```json
 {
   "name": "Amoxicillin 500mg Updated",
@@ -753,11 +803,13 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `sellingPrice`: Must be >= purchasePrice (if both provided)
 - `expiresAt`: Must be future date (if provided)
 - `name`: Max 255 chars (if provided)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -790,6 +842,7 @@ X-User-Email: doctor1@hms.com
 **Note:** This endpoint can update `quantity` directly. However, for stock adjustments with audit trail (prescription deductions, restocking), use the dedicated `PATCH /api/medicines/{id}/stock` endpoint which tracks reason and reference.
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name exceeds maximum length (255 characters)
   • purchasePrice must be positive (> 0)
@@ -813,11 +866,13 @@ X-User-Email: doctor1@hms.com
 **Response:** `204 No Content`
 
 **Business Rules:**
+
 - Medicine is permanently deleted from database
 - Cannot delete medicine if it has been used in any prescription (referential integrity)
 - Consider using Update Medicine to set quantity=0 instead of deleting for audit purposes
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `404 MEDICINE_NOT_FOUND`: Medicine doesn't exist
 - `409 MEDICINE_IN_USE`: Cannot delete medicine referenced in prescriptions
@@ -831,6 +886,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Increment or decrement medicine quantity
 
 **Request Body:**
+
 ```json
 {
   "quantity": -20
@@ -840,6 +896,7 @@ X-User-Email: doctor1@hms.com
 **Note:** This endpoint uses delta values (positive to add, negative to deduct). For prescription deductions, this is called internally by the Medical Exam Service when creating prescriptions.
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -853,6 +910,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • quantity is required
   • quantity must be non-zero integer
@@ -865,11 +923,13 @@ X-User-Email: doctor1@hms.com
 ### 3.7 Medicine Categories
 
 #### 3.7.1 Create Category
+
 **Endpoint:** `POST /api/medicines/categories`  
 **Access:** ADMIN  
 **Description:** Create new medicine category
 
 **Request Body:**
+
 ```json
 {
   "name": "Antibiotics",
@@ -878,9 +938,11 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `name`: Required, max 255 chars, unique
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -894,6 +956,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name is required
   • name exceeds maximum length (255 characters)
@@ -903,11 +966,13 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### 3.7.2 Get Category by ID
+
 **Endpoint:** `GET /api/medicines/categories/{id}`  
 **Access:** Authenticated  
 **Description:** Retrieve category details
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -922,26 +987,31 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 - `404 CATEGORY_NOT_FOUND`: Category doesn't exist
 
 ---
 
 #### 3.7.3 List Categories
+
 **Endpoint:** `GET /api/medicines/categories`  
 **Access:** Authenticated  
 **Description:** List all medicine categories
 
 **Query Parameters:**
+
 - `page` (int, default=0): Page number
 - `size` (int, default=20, max=100): Page size
 - `sort` (string, default=name,asc): Sort field and direction
 - `search` (string): RSQL search query
 
 **RSQL Examples:**
+
 - `name=like='*bio*'` (search by name)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -969,16 +1039,19 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 
 ---
 
 #### 3.7.4 Update Category
+
 **Endpoint:** `PATCH /api/medicines/categories/{id}`  
 **Access:** ADMIN  
 **Description:** Partial update category information
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "name": "Antibiotics - Updated",
@@ -987,6 +1060,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1001,6 +1075,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name exceeds maximum length (255 characters)
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
@@ -1010,6 +1085,7 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### 3.7.5 Delete Category
+
 **Endpoint:** `DELETE /api/medicines/categories/{id}`  
 **Access:** ADMIN only  
 **Description:** Delete medicine category
@@ -1017,10 +1093,12 @@ X-User-Email: doctor1@hms.com
 **Response:** `204 No Content`
 
 **Business Rules:**
+
 - Cannot delete category if medicines are assigned to it
 - Alternatively, medicines will have `categoryId` set to NULL (ON DELETE SET NULL behavior)
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `404 CATEGORY_NOT_FOUND`: Category doesn't exist
 - `409 CATEGORY_HAS_MEDICINES`: Cannot delete category with assigned medicines (if enforcing strict deletion)
@@ -1036,9 +1114,11 @@ X-User-Email: doctor1@hms.com
 ### 4.1 Department APIs
 
 #### Create Department
+
 **Endpoint:** `POST /api/hr/departments`  
 **Access:** ADMIN  
 **Request Body:**
+
 ```json
 {
   "name": "Cardiology",
@@ -1050,6 +1130,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -1066,6 +1147,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name is required
   • name exceeds maximum length (255 characters)
@@ -1073,18 +1155,20 @@ X-User-Email: doctor1@hms.com
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `409 DEPARTMENT_NAME_EXISTS`: Department name already exists
 
-
 ---
 
 #### Get Department by ID
+
 **Endpoint:** `GET /api/hr/departments/{id}`  
 **Access:** Authenticated  
 **Description:** Retrieve department details by ID
 
 **Path Parameters:**
+
 - `id` (string): Department UUID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1107,17 +1191,20 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 - `404 DEPARTMENT_NOT_FOUND`: Department doesn't exist
 
 ---
 
 #### List Departments
+
 **Endpoint:** `GET /api/hr/departments`  
 **Access:** Authenticated  
 **Description:** List all departments with optional filters
 
 **Query Parameters:**
+
 - `page` (int, default=0): Page number
 - `size` (int, default=20, max=100): Page size
 - `sort` (string, default=name,asc): Sort field and direction
@@ -1125,6 +1212,7 @@ X-User-Email: doctor1@hms.com
 - `search` (string): RSQL search query
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1151,16 +1239,19 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 
 ---
 
 #### Update Department
+
 **Endpoint:** `PATCH /api/hr/departments/{id}`  
 **Access:** ADMIN  
 **Description:** Partial update department information
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "name": "Cardiology - Updated",
@@ -1173,6 +1264,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1195,6 +1287,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • name exceeds maximum length (255 characters)
   • status must be one of [ACTIVE, INACTIVE]
@@ -1206,6 +1299,7 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Delete Department
+
 **Endpoint:** `DELETE /api/hr/departments/{id}`  
 **Access:** ADMIN only  
 **Description:** Delete department (only if no employees assigned)
@@ -1213,10 +1307,12 @@ X-User-Email: doctor1@hms.com
 **Response:** `204 No Content`
 
 **Business Rules:**
+
 - Cannot delete department if employees are assigned to it
 - Consider setting status to INACTIVE instead of deleting
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `404 DEPARTMENT_NOT_FOUND`: Department doesn't exist
 - `409 DEPARTMENT_HAS_EMPLOYEES`: Cannot delete department with assigned employees
@@ -1226,9 +1322,11 @@ X-User-Email: doctor1@hms.com
 ### 4.2 Employee APIs
 
 #### Create Employee
+
 **Endpoint:** `POST /api/hr/employees`  
 **Access:** ADMIN  
 **Request Body:**
+
 ```json
 {
   "accountId": "550e8400-e29b-41d4-a716-446655440003",
@@ -1246,11 +1344,13 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `role`: One of [DOCTOR, NURSE, RECEPTIONIST, ADMIN]
 - `departmentId`: Required for DOCTOR/NURSE
 - `licenseNumber`: Required for DOCTOR/NURSE, unique
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -1276,6 +1376,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • fullName is required
   • fullName exceeds maximum length (255 characters)
@@ -1294,14 +1395,17 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Get Employee by ID
+
 **Endpoint:** `GET /api/hr/employees/{id}`  
 **Access:** Authenticated  
 **Description:** Retrieve employee details by ID
 
 **Path Parameters:**
+
 - `id` (string): Employee UUID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1329,17 +1433,20 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 - `404 EMPLOYEE_NOT_FOUND`: Employee doesn't exist
 
 ---
 
 #### List Employees
+
 **Endpoint:** `GET /api/hr/employees`  
 **Access:** Authenticated  
 **Description:** List all employees with pagination and filters
 
 **Query Parameters:**
+
 - `page` (int, default=0): Page number
 - `size` (int, default=20, max=100): Page size
 - `sort` (string, default=fullName,asc): Sort field and direction
@@ -1349,11 +1456,13 @@ X-User-Email: doctor1@hms.com
 - `search` (string): RSQL search query
 
 **RSQL Examples:**
+
 - `fullName=like='*Nguyen*'`
 - `role==DOCTOR;status==ACTIVE`
 - `specialization=like='*Cardio*'`
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1382,16 +1491,19 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `401 UNAUTHORIZED`: Missing or invalid access token
 
 ---
 
 #### Update Employee
+
 **Endpoint:** `PATCH /api/hr/employees/{id}`  
 **Access:** ADMIN  
 **Description:** Partial update employee information
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "fullName": "Dr. Nguyen Van Hung - Updated",
@@ -1405,6 +1517,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1431,6 +1544,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • fullName exceeds maximum length (255 characters)
   • role must be one of [DOCTOR, NURSE, RECEPTIONIST, ADMIN]
@@ -1448,11 +1562,13 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Delete Employee (Soft Delete)
+
 **Endpoint:** `DELETE /api/hr/employees/{id}`  
 **Access:** ADMIN only  
 **Description:** Soft delete employee (marks as deleted, preserves audit trail)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1465,12 +1581,14 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Business Rules:**
+
 - Employee record is NOT permanently deleted (soft delete only)
 - Sets `deletedAt` timestamp and `deletedBy` user ID
 - Validates no future appointments exist before deletion
 - Deleted employees excluded from all list queries
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `404 EMPLOYEE_NOT_FOUND`: Employee doesn't exist or already deleted
 - `409 HAS_FUTURE_APPOINTMENTS`: Cannot delete employee with scheduled future appointments
@@ -1478,11 +1596,13 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### List Doctors by Department
+
 **Endpoint:** `GET /api/hr/doctors`  
 **Access:** Authenticated  
 **Description:** List doctors for appointment booking, filtered by department or specialization
 
 **Query Parameters:**
+
 - `departmentId` (string, optional): Filter by department UUID
 - `specialization` (string, optional): Filter by specialization keyword
 - `status` (string, optional): Filter by status (default: ACTIVE only)
@@ -1490,6 +1610,7 @@ X-User-Email: doctor1@hms.com
 - `size` (integer, optional): Page size (default: 20, max: 100)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1519,6 +1640,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Invalid query parameters
   • page must be >= 0
   • size must be between 1 and 100
@@ -1529,11 +1651,13 @@ X-User-Email: doctor1@hms.com
 ### 4.3 Employee Schedule APIs
 
 #### Create Employee Schedule
+
 **Endpoint:** `POST /api/hr/schedules`  
 **Access:** ADMIN only  
 **Description:** Create work schedule for any employee (doctor, nurse, receptionist, admin). Only administrators can create schedules to ensure proper coverage and coordination.
 
 **Request Body:**
+
 ```json
 {
   "employeeId": "emp001",
@@ -1546,11 +1670,13 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `workDate`: Cannot be in the past
 - `startTime` < `endTime`
 - Unique constraint: (employeeId, workDate) - one schedule per employee per day
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -1578,6 +1704,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • employeeId is required
   • workDate is required
@@ -1594,16 +1721,19 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Get Own Schedules
+
 **Endpoint:** `GET /api/hr/schedules/me`  
 **Access:** Authenticated (any employee)  
 **Description:** Get current user's own schedules within date range
 
 **Query Parameters:**
+
 - `startDate` (date, required): Start date (YYYY-MM-DD)
 - `endDate` (date, required): End date (YYYY-MM-DD)
 - `status` (string, optional): Filter by status (AVAILABLE, BOOKED, CANCELLED)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1622,6 +1752,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -1630,17 +1761,20 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Get Employee Availability (Admin)
+
 **Endpoint:** `GET /api/hr/schedules/availability`  
 **Access:** ADMIN only  
 **Description:** Get any employee's schedules within date range. Used for shift management and scheduling oversight.
 
 **Query Parameters:**
+
 - `employeeId` (string, required): Employee ID
 - `startDate` (date, required): Start date (YYYY-MM-DD)
 - `endDate` (date, required): End date (YYYY-MM-DD)
 - `status` (string, optional): Filter by status (AVAILABLE, BOOKED, CANCELLED)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1667,6 +1801,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • employeeId is required
   • startDate is required
@@ -1678,11 +1813,13 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### List Doctor Schedules (for Appointment Booking)
+
 **Endpoint:** `GET /api/hr/schedules/doctors`  
 **Access:** Authenticated  
 **Description:** List available doctor schedules for appointment booking. Filters only DOCTOR role employees.
 
 **Query Parameters:**
+
 - `departmentId` (string, optional): Filter by department
 - `doctorId` (string, optional): Filter by specific doctor
 - `startDate` (date, required): Start date (YYYY-MM-DD)
@@ -1693,6 +1830,7 @@ X-User-Email: doctor1@hms.com
 - `sort` (string, optional): Sort field (default: workDate,asc)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1725,6 +1863,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -1737,11 +1876,13 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Update Employee Schedule
+
 **Endpoint:** `PATCH /api/hr/schedules/{id}`  
 **Access:** ADMIN only  
 **Description:** Update schedule details (employee, time, status, notes). Only administrators can modify schedules.
 
 **Request Body:** (All fields optional)
+
 ```json
 {
   "employeeId": "emp002",
@@ -1754,12 +1895,14 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `employeeId`: Must exist in employees table (if provided)
 - `workDate`: Cannot be in the past (if provided)
 - `startTime` < `endTime` (if either provided)
 - Unique constraint: (employeeId, workDate) - cannot create duplicate
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1789,6 +1932,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • workDate must be valid ISO 8601 date (YYYY-MM-DD)
   • workDate cannot be in the past
@@ -1808,6 +1952,7 @@ X-User-Email: doctor1@hms.com
 ---
 
 #### Delete Employee Schedule
+
 **Endpoint:** `DELETE /api/hr/schedules/{id}`  
 **Access:** ADMIN only  
 **Description:** Delete an employee schedule. Only administrators can delete schedules.
@@ -1815,10 +1960,12 @@ X-User-Email: doctor1@hms.com
 **Response:** `204 No Content`
 
 **Business Rules:**
+
 - Cannot delete schedule with booked appointments (status = BOOKED)
 - Consider setting status to CANCELLED instead
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 - `404 SCHEDULE_NOT_FOUND`: Schedule doesn't exist
 - `409 HAS_APPOINTMENTS`: Cannot delete schedule with booked appointments
@@ -1838,6 +1985,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Book new appointment
 
 **Request Body:**
+
 ```json
 {
   "patientId": "p001",
@@ -1849,6 +1997,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `appointmentTime`: Must be future, during doctor's schedule
 - `type`: One of [CONSULTATION, FOLLOW_UP, EMERGENCY]
 - Doctor must have AVAILABLE schedule for this date
@@ -1858,6 +2007,7 @@ X-User-Email: doctor1@hms.com
   - Prevents double-booking within this window
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -1882,6 +2032,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • patientId is required
   • doctorId is required
@@ -1905,6 +2056,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve appointment details. Patients can only view their own appointments.
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1935,6 +2087,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's appointment
 - `404 APPOINTMENT_NOT_FOUND`: Appointment doesn't exist
 
@@ -1947,6 +2100,7 @@ X-User-Email: doctor1@hms.com
 **Description:** List appointments with filters. Patients can only see their own appointments. Staff can see all.
 
 **Query Parameters:**
+
 - `patientId` (string, optional): Filter by patient (ignored for PATIENT role - uses their own)
 - `doctorId` (string, optional): Filter by doctor
 - `status` (string, optional): Filter by status (SCHEDULED, COMPLETED, CANCELLED, NO_SHOW)
@@ -1957,6 +2111,7 @@ X-User-Email: doctor1@hms.com
 - `sort` (string, optional): Sort field (default: appointmentTime,desc)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -1989,6 +2144,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Invalid query parameters
   • page must be >= 0
   • size must be between 1 and 100
@@ -2005,6 +2161,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Update appointment details (reschedule, add notes)
 
 **Request Body:**
+
 ```json
 {
   "appointmentTime": "2025-12-05T10:00:00",
@@ -2015,6 +2172,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2040,6 +2198,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • appointmentTime must be valid ISO 8601 datetime
   • type must be one of [CONSULTATION, FOLLOW_UP, EMERGENCY]
@@ -2061,6 +2220,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Cancel a scheduled appointment
 
 **Request Body:**
+
 ```json
 {
   "cancelReason": "Patient recovered"
@@ -2068,9 +2228,11 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `cancelReason`: Required, max 500 characters
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2085,10 +2247,12 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Side Effects:**
+
 - Frees up doctor's time slot (makes available for other bookings)
 - Triggers cancellation notification to patient/doctor
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: cancelReason is required
 - `400 CANNOT_CANCEL_COMPLETED`: Cannot cancel completed appointments
 - `400 ALREADY_CANCELLED`: Appointment is already cancelled
@@ -2104,6 +2268,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Mark appointment as completed after consultation
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2118,11 +2283,13 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Side Effects:**
+
 - Updates doctor schedule status
 - Allows creation of medical exam record
 - Triggers completion notification to patient
 
 **Error Codes:**
+
 - `400 APPOINTMENT_ALREADY_COMPLETED`: Appointment already marked as completed
 - `400 APPOINTMENT_CANCELLED`: Cannot complete a cancelled appointment
 - `403 FORBIDDEN`: Only the assigned doctor can complete the appointment
@@ -2141,6 +2308,7 @@ X-User-Email: doctor1@hms.com
 **Endpoint:** `POST /api/exams`  
 **Access:** DOCTOR only  
 **Request Body:**
+
 ```json
 {
   "appointmentId": "apt001",
@@ -2158,10 +2326,12 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `appointmentId`: Must exist and be COMPLETED
 - Unique constraint: One exam per appointment
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -2196,6 +2366,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • appointmentId is required
   • diagnosis is required
@@ -2218,6 +2389,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve medical exam details by exam ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2255,6 +2427,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's exam
 - `404 EXAM_NOT_FOUND`: Medical exam doesn't exist
 
@@ -2267,6 +2440,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve medical exam by appointment ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2303,6 +2477,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's exam
 - `404 APPOINTMENT_NOT_FOUND`: Appointment doesn't exist
 - `404 EXAM_NOT_FOUND`: No exam found for this appointment
@@ -2316,6 +2491,7 @@ X-User-Email: doctor1@hms.com
 **Description:** List medical exams with filters. Patients automatically see only their own exams.
 
 **Query Parameters:**
+
 - `patientId` (string, optional): Filter by patient (ignored for PATIENT role)
 - `doctorId` (string, optional): Filter by doctor
 - `startDate` (date, optional): Filter exams from this date (YYYY-MM-DD)
@@ -2325,6 +2501,7 @@ X-User-Email: doctor1@hms.com
 - `sort` (string, optional): Sort field (default: examDate,desc)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2358,6 +2535,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Invalid query parameters
   • page must be >= 0
   • size must be between 1 and 100
@@ -2371,6 +2549,7 @@ X-User-Email: doctor1@hms.com
 **Endpoint:** `POST /api/exams/{examId}/prescriptions`  
 **Access:** DOCTOR only  
 **Request Body:**
+
 ```json
 {
   "notes": "Take with food, avoid alcohol",
@@ -2394,10 +2573,12 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `medicineId`: Must exist and have sufficient stock
 - `quantity`: Must be > 0 and <= available stock
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -2437,10 +2618,12 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Side Effects:**
+
 - Decrements medicine stock in medicine-service
 - Triggers billing service to auto-generate invoice (adds consultation fee + medicine items)
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • items array is required and cannot be empty
   • items[].medicineId is required
@@ -2461,6 +2644,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve prescription details by prescription ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2501,6 +2685,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's prescription
 - `404 PRESCRIPTION_NOT_FOUND`: Prescription doesn't exist
 
@@ -2513,10 +2698,12 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve all prescriptions for a specific patient
 
 **Query Parameters:**
+
 - `page` (integer, optional): Page number (default: 0)
 - `size` (integer, optional): Page size (default: 20, max: 100)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2546,6 +2733,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's prescriptions
 - `404 PATIENT_NOT_FOUND`: Patient doesn't exist
 
@@ -2562,6 +2750,7 @@ X-User-Email: doctor1@hms.com
 **Endpoint:** `POST /api/billing/invoices/generate`  
 **Access:** Internal (triggered by prescription creation)  
 **Request Body:**
+
 ```json
 {
   "appointmentId": "apt001"
@@ -2569,6 +2758,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Business Logic:**
+
 1. Fetch appointment details
 2. Add consultation fee (based on doctor's department)
 3. Fetch prescription items (required - invoice generated after prescription)
@@ -2576,6 +2766,7 @@ X-User-Email: doctor1@hms.com
 5. Generate invoice number (INV-YYYYMMDD-XXXX)
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -2626,6 +2817,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve invoice details by invoice ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2672,6 +2864,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's invoice
 - `404 INVOICE_NOT_FOUND`: Invoice doesn't exist
 
@@ -2684,6 +2877,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve invoice by appointment ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2711,6 +2905,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's invoice
 - `404 APPOINTMENT_NOT_FOUND`: Appointment doesn't exist
 - `404 INVOICE_NOT_FOUND`: No invoice found for this appointment
@@ -2724,6 +2919,7 @@ X-User-Email: doctor1@hms.com
 **Description:** List all invoices with filters (admin only)
 
 **Query Parameters:**
+
 - `patientId` (string, optional): Filter by patient
 - `status` (string, optional): Filter by status (UNPAID, PARTIALLY_PAID, PAID, OVERDUE, CANCELLED)
 - `startDate` (date, optional): Filter invoices from this date (YYYY-MM-DD)
@@ -2733,6 +2929,7 @@ X-User-Email: doctor1@hms.com
 - `sort` (string, optional): Sort field (default: invoiceDate,desc)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2762,6 +2959,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Invalid query parameters
   • page must be >= 0
   • size must be between 1 and 100
@@ -2777,11 +2975,13 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve all invoices for a specific patient
 
 **Query Parameters:**
+
 - `status` (string, optional): Filter by status
 - `page` (integer, optional): Page number (default: 0)
 - `size` (integer, optional): Page size (default: 20, max: 100)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2807,6 +3007,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's invoices
 - `404 PATIENT_NOT_FOUND`: Patient doesn't exist
 
@@ -2817,6 +3018,7 @@ X-User-Email: doctor1@hms.com
 **Endpoint:** `POST /api/billing/payments`  
 **Access:** ADMIN, PATIENT (own invoices)  
 **Request Body:**
+
 ```json
 {
   "invoiceId": "inv001",
@@ -2828,16 +3030,19 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Validation:**
+
 - `idempotencyKey`: Required, valid UUID format (client-generated to prevent duplicate payments)
 - `method`: One of [CASH, CREDIT_CARD, BANK_TRANSFER, INSURANCE]
 - `amount`: Must be > 0
 
 **Idempotency Pattern:**
+
 - Client generates new UUID per payment attempt (e.g., `crypto.randomUUID()`)
 - On network failure/timeout, retry with SAME UUID
 - Server returns existing payment if idempotency key already exists (prevents duplicate charge)
 
 **Response:** `201 Created`
+
 ```json
 {
   "status": "success",
@@ -2859,10 +3064,12 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Side Effects:**
+
 - Updates invoice status to PAID (if fully paid) or PARTIALLY_PAID
 - Calculates remaining balance
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • invoiceId is required
   • idempotencyKey is required
@@ -2885,6 +3092,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve payment details by payment ID
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2907,6 +3115,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's payment
 - `404 PAYMENT_NOT_FOUND`: Payment doesn't exist
 
@@ -2919,6 +3128,7 @@ X-User-Email: doctor1@hms.com
 **Description:** Retrieve all payments made for a specific invoice
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -2947,6 +3157,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `403 FORBIDDEN`: Patient trying to access another patient's invoice payments
 - `404 INVOICE_NOT_FOUND`: Invoice doesn't exist
 
@@ -2965,11 +3176,13 @@ X-User-Email: doctor1@hms.com
 **Description:** Generate revenue report for specified period
 
 **Query Parameters:**
+
 - `startDate` (date, required): Report start date (YYYY-MM-DD)
 - `endDate` (date, required): Report end date (YYYY-MM-DD)
 - `departmentId` (string, optional): Filter by department
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -3013,6 +3226,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -3031,12 +3245,14 @@ X-User-Email: doctor1@hms.com
 **Description:** Generate appointment statistics report
 
 **Query Parameters:**
+
 - `startDate` (date, required): Report start date (YYYY-MM-DD)
 - `endDate` (date, required): Report end date (YYYY-MM-DD)
 - `departmentId` (string, optional): Filter by department
 - `doctorId` (string, optional): Filter by doctor (DOCTOR can only see own)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -3078,6 +3294,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -3095,11 +3312,13 @@ X-User-Email: doctor1@hms.com
 **Description:** Generate doctor performance metrics report
 
 **Query Parameters:**
+
 - `startDate` (date, required): Report start date (YYYY-MM-DD)
 - `endDate` (date, required): Report end date (YYYY-MM-DD)
 - `departmentId` (string, optional): Filter by department
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -3132,6 +3351,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -3148,10 +3368,12 @@ X-User-Email: doctor1@hms.com
 **Description:** Generate patient activity and demographics report
 
 **Query Parameters:**
+
 - `startDate` (date, required): Report start date (YYYY-MM-DD)
 - `endDate` (date, required): Report end date (YYYY-MM-DD)
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -3186,6 +3408,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: Input validation failed
   • startDate is required
   • endDate is required
@@ -3201,9 +3424,11 @@ X-User-Email: doctor1@hms.com
 **Description:** Clear cached report data to force fresh calculation
 
 **Query Parameters:**
+
 - `reportType` (string, optional): Specific report type to clear (revenue, appointments, doctors, patients). If not provided, clears all caches.
 
 **Response:** `200 OK`
+
 ```json
 {
   "status": "success",
@@ -3216,6 +3441,7 @@ X-User-Email: doctor1@hms.com
 ```
 
 **Error Codes:**
+
 - `400 VALIDATION_ERROR`: reportType must be one of [revenue, appointments, doctors, patients]
 - `403 FORBIDDEN`: User role not authorized (requires ADMIN)
 
@@ -3225,33 +3451,33 @@ X-User-Email: doctor1@hms.com
 
 ### HTTP Status Codes
 
-| Code | Meaning | Usage |
-|------|---------|-------|
-| `200` | OK | Successful GET, PUT, PATCH |
-| `201` | Created | Successful POST (resource created) |
-| `204` | No Content | Successful DELETE |
-| `400` | Bad Request | Validation errors, invalid input |
-| `401` | Unauthorized | Missing/invalid JWT token |
-| `403` | Forbidden | Valid token but insufficient permissions |
-| `404` | Not Found | Resource doesn't exist |
-| `409` | Conflict | Resource conflict (duplicate, constraint violation) |
-| `500` | Internal Server Error | Server-side error |
+| Code  | Meaning               | Usage                                               |
+| ----- | --------------------- | --------------------------------------------------- |
+| `200` | OK                    | Successful GET, PUT, PATCH                          |
+| `201` | Created               | Successful POST (resource created)                  |
+| `204` | No Content            | Successful DELETE                                   |
+| `400` | Bad Request           | Validation errors, invalid input                    |
+| `401` | Unauthorized          | Missing/invalid JWT token                           |
+| `403` | Forbidden             | Valid token but insufficient permissions            |
+| `404` | Not Found             | Resource doesn't exist                              |
+| `409` | Conflict              | Resource conflict (duplicate, constraint violation) |
+| `500` | Internal Server Error | Server-side error                                   |
 
 ### Application Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| `VALIDATION_ERROR` | 400 | Input validation failed |
-| `INVALID_CREDENTIALS` | 401 | Wrong email/password |
-| `INVALID_TOKEN` | 401 | JWT token expired/invalid |
-| `FORBIDDEN` | 403 | Insufficient permissions |
-| `NOT_FOUND` | 404 | Resource not found |
-| `EMAIL_ALREADY_EXISTS` | 409 | Duplicate email |
-| `SCHEDULE_EXISTS` | 409 | Schedule already exists |
-| `INSUFFICIENT_STOCK` | 400 | Not enough medicine |
-| `APPOINTMENT_NOT_COMPLETED` | 400 | Prerequisite not met |
-| `DOCTOR_NOT_AVAILABLE` | 409 | Doctor unavailable |
-| `TIME_SLOT_TAKEN` | 409 | Appointment slot taken |
+| Code                        | HTTP Status | Description               |
+| --------------------------- | ----------- | ------------------------- |
+| `VALIDATION_ERROR`          | 400         | Input validation failed   |
+| `INVALID_CREDENTIALS`       | 401         | Wrong email/password      |
+| `INVALID_TOKEN`             | 401         | JWT token expired/invalid |
+| `FORBIDDEN`                 | 403         | Insufficient permissions  |
+| `NOT_FOUND`                 | 404         | Resource not found        |
+| `EMAIL_ALREADY_EXISTS`      | 409         | Duplicate email           |
+| `SCHEDULE_EXISTS`           | 409         | Schedule already exists   |
+| `INSUFFICIENT_STOCK`        | 400         | Not enough medicine       |
+| `APPOINTMENT_NOT_COMPLETED` | 400         | Prerequisite not met      |
+| `DOCTOR_NOT_AVAILABLE`      | 409         | Doctor unavailable        |
+| `TIME_SLOT_TAKEN`           | 409         | Appointment slot taken    |
 
 ---
 
@@ -3259,24 +3485,26 @@ X-User-Email: doctor1@hms.com
 
 ### Endpoint Count by Service
 
-| Service | Endpoints | Entity Resources |
-|---------|-----------|------------------|
-| **Auth Service** | 5 | Account |
-| **Patient Service** | 5 | Patient |
-| **Medicine Service** | 10 | Medicine, Category |
-| **HR Service** | 15 | Department, Employee, DoctorSchedule |
-| **Appointment Service** | 8 | Appointment |
-| **Medical Exam Service** | 12 | MedicalExam, Prescription, PrescriptionItem |
-| **Billing Service** | 12 | Invoice, InvoiceItem, Payment |
-| **Reports Service** | 5 | ReportCache |
-| **TOTAL** | **~95** | **15 entities** |
+| Service                  | Endpoints | Entity Resources                            |
+| ------------------------ | --------- | ------------------------------------------- |
+| **Auth Service**         | 5         | Account                                     |
+| **Patient Service**      | 5         | Patient                                     |
+| **Medicine Service**     | 10        | Medicine, Category                          |
+| **HR Service**           | 15        | Department, Employee, DoctorSchedule        |
+| **Appointment Service**  | 8         | Appointment                                 |
+| **Medical Exam Service** | 12        | MedicalExam, Prescription, PrescriptionItem |
+| **Billing Service**      | 12        | Invoice, InvoiceItem, Payment               |
+| **Reports Service**      | 5         | ReportCache                                 |
+| **TOTAL**                | **~95**   | **15 entities**                             |
 
 ---
 
 ## 🚀 API Development Guidelines
 
 ### 1. Consistent Response Format
+
 All APIs return JSON with standard structure:
+
 ```json
 {
   "status": "success|error",
@@ -3286,12 +3514,14 @@ All APIs return JSON with standard structure:
 ```
 
 ### 2. Pagination Standards
+
 - Default page size: 20
 - Max page size: 100
 - Page numbers start at 0
 - Sort format: `field,direction` (e.g., `createdAt,desc`)
 
 ### 3. RSQL Search Syntax
+
 - Equality: `field==value`
 - Like: `field=like='*pattern*'`
 - Comparison: `field>value`, `field<value`
@@ -3299,11 +3529,13 @@ All APIs return JSON with standard structure:
 - OR: `,` (e.g., `field==value1,field==value2`)
 
 ### 4. Date/Time Formats
+
 - Date: `YYYY-MM-DD` (ISO 8601)
 - DateTime: `YYYY-MM-DDTHH:mm:ssZ` (ISO 8601 with timezone)
 - Time: `HH:mm` (24-hour format)
 
 ### 5. Security Best Practices
+
 - All endpoints (except auth) require JWT
 - API Gateway validates JWT before routing
 - Services receive user context via headers
@@ -3311,6 +3543,7 @@ All APIs return JSON with standard structure:
 - Log all API calls for audit
 
 ### 6. Error Handling
+
 - Return appropriate HTTP status codes
 - Include detailed error messages
 - Use application error codes for client handling
@@ -3322,11 +3555,13 @@ All APIs return JSON with standard structure:
 
 **Collection Name:** HMS Backend - 3 Week MVP  
 **Variables:**
+
 - `baseUrl`: `http://localhost:8080`
 - `accessToken`: (auto-updated from login)
 - `patientId`, `doctorId`, `appointmentId`: Test data IDs
 
 **Folders:**
+
 1. Auth Service (5 requests)
 2. Patient Service (5 requests)
 3. Medicine Service (10 requests)
@@ -3337,10 +3572,12 @@ All APIs return JSON with standard structure:
 8. Reports Service (5 requests)
 
 **Pre-request Scripts:**
+
 - Auto-inject Authorization header
 - Environment variable management
 
 **Tests:**
+
 - Validate response status
 - Extract and save tokens/IDs
 - Verify response schema
@@ -3350,6 +3587,7 @@ All APIs return JSON with standard structure:
 ## ✅ Ready for Implementation
 
 **All API contracts defined and ready for:**
+
 - ✅ Backend implementation (Spring Boot controllers)
 - ✅ Frontend integration (React/Next.js API client)
 - ✅ API testing (Postman, Jest, Supertest)

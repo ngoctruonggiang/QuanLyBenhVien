@@ -11,6 +11,7 @@ import {
 import DepartmentForm from "../_components/DepartmentForm";
 import { DepartmentRequest } from "@/interfaces/hr";
 import { useCreateDepartment } from "@/hooks/queries/useHr";
+import { toast } from "sonner";
 
 export default function NewDepartmentPage() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function NewDepartmentPage() {
       },
       onError: (error) => {
         console.error("Failed to create department:", error);
-        alert("Failed to create department. Please try again.");
+        toast.error("Failed to create department. Please try again.");
       },
     });
   };

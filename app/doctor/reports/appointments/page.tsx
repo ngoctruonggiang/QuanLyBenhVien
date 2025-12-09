@@ -2,11 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Download, Loader2, Calendar, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import {
+  Download,
+  Loader2,
+  Calendar,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ReportPageHeader } from "@/app/admin/reports/_components/report-page-header";
-import { DateRangePicker, useDateRangePresets } from "@/app/admin/reports/_components/date-range-picker";
+import {
+  DateRangePicker,
+  useDateRangePresets,
+} from "@/app/admin/reports/_components/date-range-picker";
 import { MetricCard } from "@/app/admin/reports/_components/metric-card";
 import { ChartCard } from "@/app/admin/reports/_components/chart-card";
 import { useAppointmentStats } from "@/hooks/queries/useReports";
@@ -23,7 +33,11 @@ const statusColors: Record<string, string> = {
   NO_SHOW: "#f59e0b",
 };
 
-function PieChart({ data }: { data: { name: string; value: number; color: string }[] }) {
+function PieChart({
+  data,
+}: {
+  data: { name: string; value: number; color: string }[];
+}) {
   const total = data.reduce((sum, item) => sum + item.value, 0) || 1;
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8">
@@ -58,7 +72,10 @@ function PieChart({ data }: { data: { name: string; value: number; color: string
       <div className="flex flex-col gap-2">
         {data.map((item, i) => (
           <div key={i} className="flex items-center gap-3 text-sm">
-            <div className="h-3 w-3 rounded-full" style={{ backgroundColor: item.color }} />
+            <div
+              className="h-3 w-3 rounded-full"
+              style={{ backgroundColor: item.color }}
+            />
             <span className="flex-1">{item.name}</span>
             <span className="font-medium">{item.value}</span>
             <span className="w-12 text-right text-muted-foreground">
@@ -82,8 +99,13 @@ function LineChart({ data }: { data: { label: string; value: number }[] }) {
         return (
           <div key={i} className="flex flex-1 flex-col items-center gap-1">
             <span className="text-xs text-muted-foreground">{item.value}</span>
-            <div className="w-full rounded-t bg-primary/80" style={{ height: `${height}%` }} />
-            <span className="text-[10px] text-muted-foreground">{item.label}</span>
+            <div
+              className="w-full rounded-t bg-primary/80"
+              style={{ height: `${height}%` }}
+            />
+            <span className="text-[10px] text-muted-foreground">
+              {item.label}
+            </span>
           </div>
         );
       })}
@@ -93,10 +115,15 @@ function LineChart({ data }: { data: { label: string; value: number }[] }) {
 
 export default function DoctorAppointmentReportsPage() {
   const presets = useDateRangePresets();
-  const [startDate, setStartDate] = useState<Date | undefined>(presets.last30Days.startDate);
-  const [endDate, setEndDate] = useState<Date | undefined>(presets.last30Days.endDate);
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    presets.last30Days.startDate,
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    presets.last30Days.endDate,
+  );
   const [doctorId, setDoctorId] = useState<string | undefined>(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
     return stored || "emp-101";
   });
 
@@ -136,8 +163,12 @@ export default function DoctorAppointmentReportsPage() {
 
   const handleExport = () => {
     const rows: any[] = [];
-    data?.appointmentsByStatus?.forEach((s) => rows.push({ section: "status", status: s.status, count: s.count }));
-    data?.dailyTrend?.forEach((d) => rows.push({ section: "daily", date: d.date, count: d.count }));
+    data?.appointmentsByStatus?.forEach((s) =>
+      rows.push({ section: "status", status: s.status, count: s.count }),
+    );
+    data?.dailyTrend?.forEach((d) =>
+      rows.push({ section: "daily", date: d.date, count: d.count }),
+    );
     exportToCSV(rows, "doctor-appointments-report.csv");
   };
 
@@ -161,7 +192,12 @@ export default function DoctorAppointmentReportsPage() {
         <CardContent className="flex flex-wrap items-end gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Khoảng ngày</label>
-            <DateRangePicker startDate={startDate} endDate={endDate} onStartDateChange={setStartDate} onEndDateChange={setEndDate} />
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+            />
           </div>
           <Button
             onClick={() => {
@@ -177,7 +213,12 @@ export default function DoctorAppointmentReportsPage() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard title="Tổng lịch hẹn" value={data?.totalAppointments?.toLocaleString() ?? "---"} icon={Calendar} loading={isLoading} />
+        <MetricCard
+          title="Tổng lịch hẹn"
+          value={data?.totalAppointments?.toLocaleString() ?? "---"}
+          icon={Calendar}
+          loading={isLoading}
+        />
         <MetricCard
           title="Hoàn thành"
           value={data?.completedCount?.toLocaleString() ?? "---"}
@@ -185,7 +226,12 @@ export default function DoctorAppointmentReportsPage() {
           icon={CheckCircle}
           loading={isLoading}
         />
-        <MetricCard title="Hủy" value={data?.cancelledCount?.toLocaleString() ?? "---"} icon={XCircle} loading={isLoading} />
+        <MetricCard
+          title="Hủy"
+          value={data?.cancelledCount?.toLocaleString() ?? "---"}
+          icon={XCircle}
+          loading={isLoading}
+        />
         <MetricCard
           title="No-show rate"
           value={`${data?.noShowRate?.toFixed(1) ?? "--"}%`}
@@ -196,15 +242,33 @@ export default function DoctorAppointmentReportsPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard title="Theo trạng thái" description="Phân bổ các trạng thái lịch hẹn" loading={isLoading}>
-          {statusPieData.length ? <PieChart data={statusPieData} /> : <EmptyReportState description="No data" />}
+        <ChartCard
+          title="Theo trạng thái"
+          description="Phân bổ các trạng thái lịch hẹn"
+          loading={isLoading}
+        >
+          {statusPieData.length ? (
+            <PieChart data={statusPieData} />
+          ) : (
+            <EmptyReportState description="No data" />
+          )}
         </ChartCard>
-        <ChartCard title="Xu hướng theo ngày" description="Số lượt đặt theo thời gian" loading={isLoading}>
-          {dailyTrendData.length ? <LineChart data={dailyTrendData} /> : <EmptyReportState description="No data" />}
+        <ChartCard
+          title="Xu hướng theo ngày"
+          description="Số lượt đặt theo thời gian"
+          loading={isLoading}
+        >
+          {dailyTrendData.length ? (
+            <LineChart data={dailyTrendData} />
+          ) : (
+            <EmptyReportState description="No data" />
+          )}
         </ChartCard>
       </div>
 
-      {data?.cached && <CacheInfoBanner generatedAt={(data as any).generatedAt} />}
+      {data?.cached && (
+        <CacheInfoBanner generatedAt={(data as any).generatedAt} />
+      )}
     </div>
   );
 }

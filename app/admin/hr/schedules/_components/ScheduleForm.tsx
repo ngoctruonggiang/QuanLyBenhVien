@@ -53,7 +53,7 @@ const formSchema = z
       const todayStart = new Date(
         today.getFullYear(),
         today.getMonth(),
-        today.getDate()
+        today.getDate(),
       );
       if (dateVal < todayStart) {
         ctx.addIssue({

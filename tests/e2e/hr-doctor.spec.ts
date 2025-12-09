@@ -8,10 +8,18 @@ import { test, expect } from "@playwright/test";
 test.describe("HR - Doctor schedules", () => {
   test("Doctor xem lịch và filter", async ({ page }) => {
     await page.goto("/doctor/schedules");
-    await expect(page.getByRole("heading", { name: /Lịch khám của bác sĩ/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Lịch khám của bác sĩ/i }),
+    ).toBeVisible();
 
-    await page.getByText(/Date Range|Từ ngày/i).first().click();
-    await page.getByText(/Hôm nay|Today/i).first().click();
+    await page
+      .getByText(/Date Range|Từ ngày/i)
+      .first()
+      .click();
+    await page
+      .getByText(/Hôm nay|Today/i)
+      .first()
+      .click();
 
     // Status filter nếu có
     const statusFilter = page.getByText(/Status/i).first();

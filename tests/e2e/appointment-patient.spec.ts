@@ -10,13 +10,17 @@ const PATIENT_APT_ID = process.env.PATIENT_APPOINTMENT_ID || "apt-001";
 test.describe("Patient - Appointments", () => {
   test("Xem danh sách My Appointments", async ({ page }) => {
     await page.goto("/patient/appointments");
-    await expect(page.getByRole("heading", { name: /Lịch hẹn của tôi/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Lịch hẹn của tôi/i }),
+    ).toBeVisible();
     await expect(page.getByText(/Chi tiết/i).first()).toBeVisible();
   });
 
   test("Xem chi tiết appointment", async ({ page }) => {
     await page.goto(`/patient/appointments/${PATIENT_APT_ID}`);
-    await expect(page.getByRole("heading", { name: /Chi tiết lịch hẹn/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Chi tiết lịch hẹn/i }),
+    ).toBeVisible();
     await expect(page.getByText(/Bệnh nhân/i)).toBeVisible();
     await expect(page.getByText(/Bác sĩ/i)).toBeVisible();
   });

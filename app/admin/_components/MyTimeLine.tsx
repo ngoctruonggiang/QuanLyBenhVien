@@ -76,7 +76,7 @@ const TimelineItem = ({
         <div
           className={cn(
             "rounded-full w-3 h-3 transition-colors",
-            active ? "bg-app-primary-blue-500" : "bg-gray-300"
+            active ? "bg-app-primary-blue-500" : "bg-gray-300",
           )}
         ></div>
 

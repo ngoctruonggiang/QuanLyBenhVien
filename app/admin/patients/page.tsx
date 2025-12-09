@@ -69,7 +69,10 @@ export default function PatientsPage() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [page, setPage] = useState(0); // 0-based for API
   const [pageSize, setPageSize] = useState(10);
-  const [sort, setSort] = useState<{ field: string; direction: "asc" | "desc" }>({
+  const [sort, setSort] = useState<{
+    field: string;
+    direction: "asc" | "desc";
+  }>({
     field: "fullName",
     direction: "asc",
   });
@@ -82,7 +85,6 @@ export default function PatientsPage() {
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [futureAppointmentsCount, setFutureAppointmentsCount] = useState(0);
-
 
   const params: PatientListParams = {
     page,
@@ -100,24 +102,23 @@ export default function PatientsPage() {
   const totalPages = data?.totalPages ?? 1;
   const totalElements = data?.totalElements ?? 0;
 
-  const toggleSort = useCallback(
-    (field: string) => {
-      setSort((prev) => {
-        if (prev.field === field) {
-          return { field, direction: prev.direction === "asc" ? "desc" : "asc" };
-        }
-        return { field, direction: "asc" };
-      });
-      setPage(0);
-    },
-    []
-  );
+  const toggleSort = useCallback((field: string) => {
+    setSort((prev) => {
+      if (prev.field === field) {
+        return { field, direction: prev.direction === "asc" ? "desc" : "asc" };
+      }
+      return { field, direction: "asc" };
+    });
+    setPage(0);
+  }, []);
 
   const handleDelete = useCallback(async (patient: Patient) => {
     setPatientToDelete(patient);
-    const appointments = await appointmentService.list({ patientId: patient.id });
+    const appointments = await appointmentService.list({
+      patientId: patient.id,
+    });
     const futureAppointments = appointments.content.filter(
-      (appt) => new Date(appt.appointmentTime) > new Date()
+      (appt) => new Date(appt.appointmentTime) > new Date(),
     );
 
     if (futureAppointments.length > 0) {
@@ -132,7 +133,7 @@ export default function PatientsPage() {
     (patient: Patient) => {
       router.push(`/admin/patients/${patient.id}`);
     },
-    [router]
+    [router],
   );
 
   const confirmDelete = useCallback(() => {
@@ -170,7 +171,9 @@ export default function PatientsPage() {
     return (
       <ArrowUpDown
         className="h-4 w-4"
-        style={{ transform: sort.direction === "asc" ? "rotate(180deg)" : "none" }}
+        style={{
+          transform: sort.direction === "asc" ? "rotate(180deg)" : "none",
+        }}
       />
     );
   };
@@ -186,7 +189,7 @@ export default function PatientsPage() {
           ))}
         </TableRow>
       )),
-    []
+    [],
   );
 
   return (
@@ -214,12 +217,18 @@ export default function PatientsPage() {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <PatientFiltersBar filters={filters} onFiltersChange={handleFiltersChange} />
+            <PatientFiltersBar
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
             <div className="flex items-center gap-2">
               <Select
                 value={`${sort.field},${sort.direction}`}
                 onValueChange={(val) => {
-                  const [field, direction] = val.split(",") as [string, "asc" | "desc"];
+                  const [field, direction] = val.split(",") as [
+                    string,
+                    "asc" | "desc",
+                  ];
                   setSort({ field, direction });
                   setPage(0);
                 }}
@@ -228,9 +237,15 @@ export default function PatientsPage() {
                   <SelectValue placeholder="Sort" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="fullName,asc">Sort by Name (A-Z)</SelectItem>
-                  <SelectItem value="createdAt,desc">Sort by Created (newest)</SelectItem>
-                  <SelectItem value="dateOfBirth,asc">Sort by DOB (oldest)</SelectItem>
+                  <SelectItem value="fullName,asc">
+                    Sort by Name (A-Z)
+                  </SelectItem>
+                  <SelectItem value="createdAt,desc">
+                    Sort by Created (newest)
+                  </SelectItem>
+                  <SelectItem value="dateOfBirth,asc">
+                    Sort by DOB (oldest)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <Button
@@ -257,11 +272,18 @@ export default function PatientsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    {["Patient", "Email", "Phone", "Gender", "DOB", "Blood", "Insurance", ""].map(
-                      (h) => (
-                        <TableHead key={h}>{h}</TableHead>
-                      )
-                    )}
+                    {[
+                      "Patient",
+                      "Email",
+                      "Phone",
+                      "Gender",
+                      "DOB",
+                      "Blood",
+                      "Insurance",
+                      "",
+                    ].map((h) => (
+                      <TableHead key={h}>{h}</TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>{tableSkeleton}</TableBody>
@@ -339,7 +361,9 @@ export default function PatientsPage() {
                           onClick={() => handleViewPatient(patient)}
                         >
                           <TableCell>
-                            <span className="font-medium">{patient.fullName}</span>
+                            <span className="font-medium">
+                              {patient.fullName}
+                            </span>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {patient.email || "N/A"}
@@ -383,7 +407,9 @@ export default function PatientsPage() {
                                   View
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/admin/patients/${patient.id}/edit`}>
+                                  <Link
+                                    href={`/admin/patients/${patient.id}/edit`}
+                                  >
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit
                                   </Link>
@@ -417,8 +443,7 @@ export default function PatientsPage() {
         <Card>
           <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
             <p className="text-sm text-muted-foreground">
-              Showing{" "}
-              <span className="font-medium">{page * pageSize + 1}</span>{" "}
+              Showing <span className="font-medium">{page * pageSize + 1}</span>{" "}
               to{" "}
               <span className="font-medium">
                 {Math.min((page + 1) * pageSize, totalElements)}

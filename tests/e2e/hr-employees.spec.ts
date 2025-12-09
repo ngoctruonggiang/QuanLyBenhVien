@@ -8,7 +8,9 @@ import { test, expect } from "@playwright/test";
 test.describe("HR - Employees", () => {
   test("Danh sách + search + filter dept/role/status", async ({ page }) => {
     await page.goto("/admin/hr/employees");
-    await expect(page.getByRole("heading", { name: /Employees/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Employees/i }),
+    ).toBeVisible();
 
     await page.getByPlaceholder(/Search/i).fill("Nguyen");
     await page.waitForTimeout(300);

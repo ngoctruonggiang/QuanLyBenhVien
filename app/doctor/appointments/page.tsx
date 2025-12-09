@@ -4,43 +4,71 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDoctorAppointments, useCompleteAppointment } from "@/hooks/queries/useAppointment";
+import { useDoctorAppointments } from "@/hooks/queries/useAppointment";
 import { AppointmentStatusBadge } from "@/app/admin/appointments/_components/appointment-status-badge";
-import { toast } from "sonner";
-import { format, isToday, isWithinInterval, startOfToday, endOfToday, endOfWeek, add } from "date-fns";
+import {
+  format,
+  isToday,
+  isWithinInterval,
+  startOfToday,
+  endOfWeek,
+} from "date-fns";
 import { Appointment, AppointmentStatus } from "@/interfaces/appointment";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CheckCircle, Clock, Users, XCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function DoctorAppointmentsPage() {
   const { user } = useAuth();
   const [doctorId, setDoctorId] = useState<string | null>(null);
-  const { data: appointments = [], isLoading } = useDoctorAppointments(doctorId || "");
-  const completeMutation = useCompleteAppointment(user?.employeeId, user?.role);
+  const { data: appointments = [], isLoading } = useDoctorAppointments(
+    doctorId || ""
+  );
   const [viewMode, setViewMode] = useState<"today" | "week" | "all">("today");
-  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "ALL">("ALL");
+  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | "ALL">(
+    "ALL"
+  );
 
   useEffect(() => {
-    const id = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    setDoctorId(id || "emp-101"); // fallback mock doctor
-  }, []);
-
-  const handleComplete = async (id: string) => {
-    try {
-      await completeMutation.mutateAsync(id);
-      toast.success("Đã đánh dấu hoàn tất");
-    } catch {
-      toast.error("Không thể hoàn tất lịch hẹn");
+    // Get the doctorId from the authenticated user's employeeId
+    const id = user?.employeeId;
+    if (id) {
+      console.log("[Doctor Appointments] Using employeeId from auth:", id);
+      setDoctorId(id);
+    } else {
+      console.warn(
+        "[Doctor Appointments] No employeeId found in user object. Using fallback."
+      );
+      setDoctorId("emp-101"); // fallback mock doctor
     }
-  };
+  }, [user]);
+
+  // Debug: Log appointments when they change
+  useEffect(() => {
+    if (doctorId && appointments.length > 0) {
+      console.log(
+        `[Doctor Appointments] Loaded ${appointments.length} appointments for doctor ${doctorId}`
+      );
+    } else if (doctorId && appointments.length === 0) {
+      console.log(
+        `[Doctor Appointments] No appointments found for doctor ${doctorId}`
+      );
+    }
+  }, [doctorId, appointments]);
 
   const filtered = useMemo(() => {
     let filteredData = [...appointments];
 
-    // Filter by view mode
     if (viewMode === "today") {
-      filteredData = filteredData.filter((apt) => isToday(new Date(apt.appointmentTime)));
+      filteredData = filteredData.filter((apt) =>
+        isToday(new Date(apt.appointmentTime))
+      );
     } else if (viewMode === "week") {
       const now = new Date();
       const end = endOfWeek(now, { weekStartsOn: 1 });
@@ -48,48 +76,63 @@ export default function DoctorAppointmentsPage() {
         isWithinInterval(new Date(apt.appointmentTime), { start: now, end })
       );
     }
-    
-    // Filter by status
+
     if (statusFilter !== "ALL") {
       filteredData = filteredData.filter((apt) => apt.status === statusFilter);
     }
-    
+
     return filteredData;
   }, [appointments, viewMode, statusFilter]);
-  
+
   const stats = useMemo(() => {
-    const total = filtered.length;
-    const pending = filtered.filter((a) => a.status === "SCHEDULED").length;
-    const completed = filtered.filter((a) => a.status === "COMPLETED").length;
-    const cancelled = filtered.filter((a) => a.status === "CANCELLED").length;
+    const todayApts = appointments.filter((apt) =>
+      isToday(new Date(apt.appointmentTime))
+    );
+    const total = todayApts.length;
+    const pending = todayApts.filter((a) => a.status === "SCHEDULED").length;
+    const completed = todayApts.filter((a) => a.status === "COMPLETED").length;
+    const cancelled = todayApts.filter((a) => a.status === "CANCELLED").length;
     return { total, pending, completed, cancelled };
-  }, [filtered]);
+  }, [appointments]);
 
   const todaySchedule = useMemo(() => {
-    if (viewMode !== 'today') return null;
+    if (viewMode !== "today") return null;
 
-    const grouped = filtered.reduce((acc, apt) => {
-      const time = format(new Date(apt.appointmentTime), "HH:mm");
-      if (!acc[time]) {
-        acc[time] = [];
-      }
-      acc[time].push(apt);
-      return acc;
-    }, {} as Record<string, Appointment[]>);
+    const todayApts = appointments.filter((apt) =>
+      isToday(new Date(apt.appointmentTime))
+    );
 
-    return Object.entries(grouped).sort(([timeA], [timeB]) => timeA.localeCompare(timeB));
-  }, [filtered, viewMode]);
+    const grouped = todayApts.reduce(
+      (acc, apt) => {
+        const time = format(new Date(apt.appointmentTime), "HH:mm");
+        if (!acc[time]) {
+          acc[time] = [];
+        }
+        acc[time].push(apt);
+        return acc;
+      },
+      {} as Record<string, Appointment[]>
+    );
 
+    return Object.entries(grouped).sort(([timeA], [timeB]) =>
+      timeA.localeCompare(timeB)
+    );
+  }, [appointments, viewMode]);
 
   return (
     <div className="page-shell space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">My Appointments</h1>
-          <p className="text-muted-foreground">Today is {format(new Date(), "EEEE, dd MMMM yyyy")}</p>
+          <p className="text-muted-foreground">
+            Today is {format(new Date(), "EEEE, dd MMMM yyyy")}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v: AppointmentStatus | "ALL") => setStatusFilter(v)}
+          >
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>
@@ -127,7 +170,9 @@ export default function DoctorAppointmentsPage() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Today&apos;s Total
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -149,7 +194,9 @@ export default function DoctorAppointmentsPage() {
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {stats.completed}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -158,7 +205,9 @@ export default function DoctorAppointmentsPage() {
             <XCircle className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-destructive">{stats.cancelled}</p>
+            <p className="text-2xl font-bold text-destructive">
+              {stats.cancelled}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -171,57 +220,57 @@ export default function DoctorAppointmentsPage() {
             No appointments for the selected period.
           </CardContent>
         </Card>
-      ) : viewMode === 'today' && todaySchedule ? (
+      ) : viewMode === "today" && todaySchedule ? (
         <div className="space-y-4">
-            {todaySchedule.map(([time, appointments]) => (
-                <div key={time} className="grid grid-cols-[80px_1fr] items-start gap-4">
-                    <div className="text-right">
-                        <p className="font-bold text-lg">{time}</p>
-                    </div>
-                    <div className="space-y-3 border-l-2 pl-4">
-                        {appointments.map(apt => (
-                            <Card key={apt.id}>
-                                <CardHeader className="flex flex-row items-center justify-between p-4">
-                                    <div>
-                                        <CardTitle className="text-base">{apt.patient?.fullName}</CardTitle>
-                                        <p className="text-sm text-muted-foreground">{apt.type}</p>
-                                    </div>
-                                    <AppointmentStatusBadge status={apt.status} />
-                                </CardHeader>
-                                <CardContent className="p-4 pt-0">
-                                    <p className="text-sm text-muted-foreground mb-3">Reason: {apt.reason}</p>
-                                    <div className="flex gap-2 flex-wrap">
-                                        <Button size="sm" variant="outline" asChild>
-                                            <Link href={`/doctor/appointments/${apt.id}`}>View Details</Link>
-                                        </Button>
-                                        {apt.status === "SCHEDULED" && (
-                                            <Button
-                                                size="sm"
-                                                onClick={() => handleComplete(apt.id)}
-                                                disabled={completeMutation.isPending}
-                                            >
-                                                Start Visit
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </div>
-            ))}
+          {todaySchedule.map(([time, appointments]) => (
+            <div
+              key={time}
+              className="grid grid-cols-[80px_1fr] items-start gap-4"
+            >
+              <div className="text-right">
+                <p className="font-bold text-lg">{time}</p>
+              </div>
+              <div className="space-y-3 border-l-2 pl-4">
+                {appointments.map((apt) => (
+                  <Card key={apt.id}>
+                    <CardHeader className="flex flex-row items-center justify-between p-4">
+                      <div>
+                        <CardTitle className="text-base">
+                          {apt.patient?.fullName}
+                        </CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {apt.type}
+                        </p>
+                      </div>
+                      <AppointmentStatusBadge status={apt.status} />
+                    </CardHeader>
+                    <CardContent className="p-4 pt-0">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Reason: {apt.reason}
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/doctor/appointments/${apt.id}`}>
+                            View Details
+                          </Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {filtered.map((apt) => {
-            const isToday = isToday(new Date(apt.appointmentTime));
-            const canComplete = apt.status === "SCHEDULED";
             return (
               <Card key={apt.id}>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-base">
-                      {apt.patient?.fullName} • {apt.patient?.phoneNumber || ""}
+                      {apt.patient?.fullName}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       {new Date(apt.appointmentTime).toLocaleString("vi-VN")}
@@ -230,22 +279,15 @@ export default function DoctorAppointmentsPage() {
                   <AppointmentStatusBadge status={apt.status} />
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">Type: {apt.type}</p>
-                  <p className="text-sm text-muted-foreground">Reason: {apt.reason}</p>
-                  <p className="text-xs font-mono bg-slate-100 p-1 rounded">DEBUG: Status is &quot;{apt.status}&quot;</p>
+                  <p className="text-sm text-muted-foreground">
+                    Reason: {apt.reason}
+                  </p>
                   <div className="flex gap-2 flex-wrap">
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/doctor/appointments/${apt.id}`}>Details</Link>
+                      <Link href={`/doctor/appointments/${apt.id}`}>
+                        Details
+                      </Link>
                     </Button>
-                    {canComplete && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleComplete(apt.id)}
-                        disabled={completeMutation.isPending}
-                      >
-                        Start Visit
-                      </Button>
-                    )}
                   </div>
                 </CardContent>
               </Card>

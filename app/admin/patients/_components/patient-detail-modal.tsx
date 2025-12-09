@@ -74,7 +74,7 @@ export function PatientDetailModal({
 
   const appointments = appointmentsData?.content || [];
   const exams = examsData?.content || [];
-  const invoices = invoicesData || [];
+  const invoices = invoicesData?.data?.content || [];
 
   // Extract prescriptions from exams
   const prescriptions = exams

@@ -3,11 +3,30 @@
 import { useEffect, useState } from "react";
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useDoctorMySchedules } from "@/hooks/queries/useHr";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useDoctorSchedules } from "@/hooks/queries/useHr";
 import { Button } from "@/components/ui/button";
 
 type ScheduleStatus = "AVAILABLE" | "BOOKED" | "CANCELLED";
@@ -25,11 +44,12 @@ export default function MySchedulesPage() {
   });
   const [status, setStatus] = useState<ScheduleStatus | "ALL">("ALL");
   const [doctorId, setDoctorId] = useState<string | undefined>(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
     return stored || undefined;
   });
 
-  const { data, isLoading, refetch } = useDoctorMySchedules({
+  const { data, isLoading, refetch } = useDoctorSchedules({
     startDate: format(dateRange.from, "yyyy-MM-dd"),
     endDate: format(dateRange.to, "yyyy-MM-dd"),
     status: status === "ALL" ? undefined : status,
@@ -40,7 +60,9 @@ export default function MySchedulesPage() {
     <div className="page-shell space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">My Schedules</h1>
-        <p className="text-muted-foreground">Lịch trực và ca khám của bác sĩ.</p>
+        <p className="text-muted-foreground">
+          Lịch trực và ca khám của bác sĩ.
+        </p>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
@@ -60,7 +82,9 @@ export default function MySchedulesPage() {
                   onChange={(e) =>
                     setDateRange((prev) => ({
                       ...prev,
-                      from: e.target.value ? new Date(e.target.value) : prev.from,
+                      from: e.target.value
+                        ? new Date(e.target.value)
+                        : prev.from,
                     }))
                   }
                 />
@@ -84,7 +108,8 @@ export default function MySchedulesPage() {
               mode="range"
               selected={{ from: dateRange.from, to: dateRange.to }}
               onSelect={(range) => {
-                if (range?.from && range?.to) setDateRange({ from: range.from, to: range.to });
+                if (range?.from && range?.to)
+                  setDateRange({ from: range.from, to: range.to });
               }}
               defaultMonth={dateRange.from}
               numberOfMonths={1}
@@ -113,7 +138,8 @@ export default function MySchedulesPage() {
             <div>
               <CardTitle className="text-lg">Lịch của tôi</CardTitle>
               <CardDescription>
-                {format(dateRange.from, "dd/MM/yyyy")} - {format(dateRange.to, "dd/MM/yyyy")}
+                {format(dateRange.from, "dd/MM/yyyy")} -{" "}
+                {format(dateRange.to, "dd/MM/yyyy")}
               </CardDescription>
             </div>
           </CardHeader>
@@ -131,7 +157,10 @@ export default function MySchedulesPage() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-6 text-muted-foreground"
+                      >
                         Đang tải...
                       </TableCell>
                     </TableRow>
@@ -148,20 +177,25 @@ export default function MySchedulesPage() {
                           <Badge
                             variant="secondary"
                             className={`rounded-full px-3 py-1 text-xs font-medium ${
-                              statusTone[schedule.status as ScheduleStatus] || ""
+                              statusTone[schedule.status as ScheduleStatus] ||
+                              ""
                             }`}
                           >
                             {schedule.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {schedule.notes || `${schedule.appointments || 0} appointments`}
+                          {schedule.notes ||
+                            `${schedule.appointments || 0} appointments`}
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={4}
+                        className="py-10 text-center text-muted-foreground"
+                      >
                         Không có lịch
                       </TableCell>
                     </TableRow>

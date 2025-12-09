@@ -159,10 +159,10 @@ export default function RevenueReportPage() {
   const [role, setRole] = useState<string>("ADMIN");
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
-    presets.thisMonth.startDate
+    presets.thisMonth.startDate,
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    presets.thisMonth.endDate
+    presets.thisMonth.endDate,
   );
   const [departmentId, setDepartmentId] = useState<string>("ALL");
   const [paymentMethod, setPaymentMethod] = useState<string>("ALL");

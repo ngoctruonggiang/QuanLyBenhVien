@@ -55,7 +55,7 @@ export const useCreatePatient = () => {
 
   return useMutation({
     mutationFn: (data: CreatePatientRequest) => createPatient(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
       toast.success("Patient registered successfully");
     },
@@ -78,7 +78,7 @@ export const useUpdatePatient = (id: string) => {
 
   return useMutation({
     mutationFn: (data: UpdatePatientRequest) => updatePatient(id, data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: patientKeys.detail(id) });
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
       toast.success("Patient updated successfully");
@@ -120,7 +120,7 @@ export const useDeletePatient = () => {
 
   return useMutation({
     mutationFn: (id: string) => deletePatient(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
       toast.success("Patient deleted successfully");
     },

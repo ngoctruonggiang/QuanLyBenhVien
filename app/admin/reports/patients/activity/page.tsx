@@ -226,10 +226,10 @@ export default function PatientActivityPage() {
   const [role, setRole] = useState<string>("ADMIN");
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
-    presets.thisMonth.startDate
+    presets.thisMonth.startDate,
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    presets.thisMonth.endDate
+    presets.thisMonth.endDate,
   );
   const [status, setStatus] = useState<string>("ALL");
 
@@ -290,19 +290,30 @@ export default function PatientActivityPage() {
 
   const handleExport = () => {
     const rows: any[] = [];
-    data?.demographics?.gender?.forEach((g) =>
-      rows.push({ section: "gender", label: g.gender, value: g.count })
+    data?.patientsByGender?.forEach((g) =>
+      rows.push({ section: "gender", label: g.gender, value: g.count }),
     );
-    data?.demographics?.ageGroups?.forEach((a) =>
-      rows.push({ section: "age", label: a.range, value: a.count })
-    );
+    // data?.demographics?.ageGroups?.forEach((a) =>
+    //   rows.push({ section: "age", label: a.range, value: a.count })
+    // );
     data?.topDiagnoses?.forEach((d) =>
-      rows.push({ section: "diagnosis", label: d.diagnosis, value: d.count })
+      rows.push({ section: "diagnosis", label: d.diagnosis, value: d.count }),
     );
-    data?.activityTrend?.forEach((t) =>
-      rows.push({ section: "trend", date: t.date, value: t.count })
+    data?.registrationTrend?.forEach((t) =>
+      rows.push({ section: "trend", date: t.date, value: t.newPatients }),
     );
     exportToCSV(rows, "patient-activity.csv");
+  };
+
+  const validateRange = () => {
+    if (!startDate || !endDate) return true;
+    const diff = endDate.getTime() - startDate.getTime();
+    const max = 365 * 24 * 60 * 60 * 1000;
+    if (diff > max) {
+      toast.error("Khoảng ngày tối đa 1 năm");
+      return false;
+    }
+    return true;
   };
 
   return (

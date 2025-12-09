@@ -149,10 +149,7 @@ const quickActions = [
   },
 ];
 
-const statusStyles: Record<
-  string,
-  { className: string; icon: LucideIcon }
-> = {
+const statusStyles: Record<string, { className: string; icon: LucideIcon }> = {
   Confirmed: {
     className: "bg-primary/10 text-primary",
     icon: STATUS_ICONS.appointments.confirmed,
@@ -348,17 +345,15 @@ export default function DashboardPage() {
                         {medicine.quantity} / {medicine.threshold}
                       </span>
                     </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      percentage < 30
-                        ? "bg-destructive"
-                        : "bg-primary/40"
-                    }`}
-                    style={{ width: `${Math.min(percentage, 100)}%` }}
-                  />
-                </div>
-              </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          percentage < 30 ? "bg-destructive" : "bg-primary/40"
+                        }`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                      />
+                    </div>
+                  </div>
                 );
               })}
             </div>

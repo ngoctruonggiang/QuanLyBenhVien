@@ -60,8 +60,8 @@
 :root {
   --font-size: 16px;
   --font-sans-var: "Inter", "Poppins", system-ui, -apple-system, sans-serif;
-  --font-mono-var: "JetBrains Mono", "SFMono-Regular", Menlo, Consolas,
-    monospace;
+  --font-mono-var:
+    "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
   --background: var(--color-app-surface);
   --foreground: #0f172a;
   --card: #ffffff;
@@ -151,7 +151,7 @@
 }
 
 @layer base {
-  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
     h1 {
       font-size: var(--text-2xl);
       font-weight: var(--font-weight-medium);
@@ -223,7 +223,10 @@ html {
   }
 
   .landing-cta {
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      background-color 0.2s ease;
   }
 
   .landing-cta:hover {
@@ -232,7 +235,9 @@ html {
   }
 
   .landing-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .landing-card:hover {

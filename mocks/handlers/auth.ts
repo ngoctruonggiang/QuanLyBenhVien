@@ -13,21 +13,20 @@ export const authHandlers = [
     const url = new URL(request.url);
     const search = url.searchParams.get("search")?.toLowerCase() || "";
 
-    const filteredAccounts = accounts.filter(
-      (account) =>
-        account.email.toLowerCase().includes(search)
+    const filteredAccounts = accounts.filter((account) =>
+      account.email.toLowerCase().includes(search),
     );
 
     return HttpResponse.json({
-        status: "success",
-        data: {
-          content: filteredAccounts,
-          page: 0,
-          size: 10,
-          totalElements: filteredAccounts.length,
-          totalPages: 1,
-          last: true,
-        },
-      });
+      status: "success",
+      data: {
+        content: filteredAccounts,
+        page: 0,
+        size: 10,
+        totalElements: filteredAccounts.length,
+        totalPages: 1,
+        last: true,
+      },
+    });
   }),
 ];

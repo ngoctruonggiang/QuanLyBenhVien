@@ -98,7 +98,10 @@ export function PatientForm({
       healthInsuranceNumber: initialData?.healthInsuranceNumber ?? "",
       bloodType: (initialData?.bloodType as BloodType) ?? undefined,
       allergies: initialData?.allergies
-        ? initialData.allergies.split(",").map((s) => s.trim()).filter(Boolean)
+        ? initialData.allergies
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
         : [],
       relativeFullName: initialData?.relativeFullName ?? "",
       relativePhoneNumber: initialData?.relativePhoneNumber ?? "",
@@ -121,7 +124,9 @@ export function PatientForm({
 
   const handleCancel = () => {
     if (confirmOnCancel && form.formState.isDirty) {
-      const confirmed = confirm("Bạn có chắc chắn muốn hủy? Các thay đổi chưa lưu sẽ mất.");
+      const confirmed = confirm(
+        "Bạn có chắc chắn muốn hủy? Các thay đổi chưa lưu sẽ mất.",
+      );
       if (!confirmed) return;
     }
     onCancel();
@@ -333,7 +338,13 @@ export function PatientForm({
                           value={field.value || []}
                           onChange={field.onChange}
                           placeholder="Add allergy and press Enter"
-                          suggestions={["Penicillin", "Peanut", "Seafood", "Dust", "NSAIDs"]}
+                          suggestions={[
+                            "Penicillin",
+                            "Peanut",
+                            "Seafood",
+                            "Dust",
+                            "NSAIDs",
+                          ]}
                         />
                       </FormControl>
                       <FormMessage />
@@ -430,17 +441,15 @@ export function PatientForm({
             <CollapsibleTrigger asChild>
               <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Account Linking (Optional)</CardTitle>
+                  <CardTitle className="text-lg">
+                    Account Linking (Optional)
+                  </CardTitle>
                   <ChevronDown className="h-5 w-5" />
                 </div>
               </CardHeader>
             </CollapsibleTrigger>
             <CollapsibleContent>
               <CardContent className="space-y-4">
-
-
-
-
                 <FormField
                   control={form.control}
                   name="accountId"
@@ -449,7 +458,7 @@ export function PatientForm({
                       <FormLabel>Account ID</FormLabel>
                       <FormControl>
                         <AccountSearchSelect
-                          value={field.value}
+                          value={field.value || null}
                           onChange={field.onChange}
                         />
                       </FormControl>

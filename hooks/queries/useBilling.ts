@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as billingService from "@/services/billing.service";
 import {
-  InvoiceListParams,
-  PatientInvoiceParams,
   CreatePaymentRequest,
   GenerateInvoiceRequest,
-} from "@/services/billing.service"; // Moved here
+} from "@/interfaces/billing";
+import {
+  InvoiceListParams,
+  PatientInvoiceParams,
+} from "@/services/billing.service";
 
 import { toast } from "sonner";
 
@@ -27,7 +29,8 @@ export const billingKeys = {
     [...billingKeys.payments(), "detail", id] as const,
   paymentsByInvoice: (invoiceId: string) =>
     [...billingKeys.payments(), "by-invoice", invoiceId] as const,
-  paymentSummaryCards: () => [...billingKeys.all, "paymentSummaryCards"] as const,
+  paymentSummaryCards: () =>
+    [...billingKeys.all, "paymentSummaryCards"] as const,
 };
 
 // ============ Invoice Hooks ============
@@ -37,7 +40,7 @@ export const useInvoiceList = (params: InvoiceListParams) => {
   return useQuery({
     queryKey: billingKeys.invoiceList(params),
     queryFn: () => billingService.getInvoiceList(params),
-    select: (response) => response.data.data,
+    select: (response) => response.data,
   });
 };
 
@@ -64,7 +67,7 @@ export const useInvoiceByAppointment = (appointmentId: string) => {
 // Get patient invoices
 export const usePatientInvoices = (
   patientId: string,
-  params?: PatientInvoiceParams
+  params?: PatientInvoiceParams,
 ) => {
   return useQuery({
     queryKey: billingKeys.patientInvoices(patientId, params),
@@ -170,7 +173,6 @@ export const usePaymentSummaryCards = () => {
   return useQuery({
     queryKey: billingKeys.paymentSummaryCards(),
     queryFn: billingService.getPaymentSummaryCards,
-    select: (response) => response.data.data,
   });
 };
 
@@ -182,12 +184,20 @@ export const usePayments = (
   method?: string,
   startDate?: string,
   endDate?: string,
-  sort?: string
+  sort?: string,
 ) => {
   return useQuery({
     queryKey: billingKeys.payments(),
     queryFn: () =>
-      billingService.getPayments({ page, limit, search, method, startDate, endDate, sort }),
+      billingService.getPayments({
+        page,
+        limit,
+        search,
+        method,
+        startDate,
+        endDate,
+        sort,
+      }),
     select: (response) => response.data.data,
   });
 };

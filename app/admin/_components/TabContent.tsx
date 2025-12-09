@@ -21,8 +21,8 @@ const TabbedContent = ({ tabs, defaultTabTitle }: TabbedContentProps) => {
   const initialTab = defaultTabTitle
     ? defaultTabTitle
     : tabs.length > 0
-    ? tabs[0].title
-    : "";
+      ? tabs[0].title
+      : "";
 
   // State để theo dõi tab nào đang active, sử dụng title làm key
   const [activeTabTitle, setActiveTabTitle] = useState<string>(initialTab);

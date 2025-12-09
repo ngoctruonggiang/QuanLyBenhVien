@@ -47,14 +47,20 @@ const formSchema = z
     accountId: z.string().optional(),
   })
   .superRefine((values, ctx) => {
-    if ((values.role === "DOCTOR" || values.role === "NURSE") && !values.departmentId) {
+    if (
+      (values.role === "DOCTOR" || values.role === "NURSE") &&
+      !values.departmentId
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["departmentId"],
         message: "Department is required for doctors and nurses",
       });
     }
-    if ((values.role === "DOCTOR" || values.role === "NURSE") && !values.licenseNumber) {
+    if (
+      (values.role === "DOCTOR" || values.role === "NURSE") &&
+      !values.licenseNumber
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["licenseNumber"],
@@ -133,7 +139,12 @@ export default function EmployeeForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <Accordion type="single" collapsible defaultValue="basic" className="space-y-4">
+        <Accordion
+          type="single"
+          collapsible
+          defaultValue="basic"
+          className="space-y-4"
+        >
           <AccordionItem value="basic">
             <AccordionTrigger>1. Basic Information</AccordionTrigger>
             <AccordionContent className="space-y-4 pt-4">
@@ -159,7 +170,11 @@ export default function EmployeeForm({
                     <FormItem>
                       <FormLabel>Email *</FormLabel>
                       <FormControl>
-                        <Input placeholder="john.doe@example.com" type="email" {...field} />
+                        <Input
+                          placeholder="john.doe@example.com"
+                          type="email"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -207,7 +222,10 @@ export default function EmployeeForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Role *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select role" />
@@ -216,7 +234,9 @@ export default function EmployeeForm({
                         <SelectContent>
                           <SelectItem value="DOCTOR">Doctor</SelectItem>
                           <SelectItem value="NURSE">Nurse</SelectItem>
-                          <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
+                          <SelectItem value="RECEPTIONIST">
+                            Receptionist
+                          </SelectItem>
                           <SelectItem value="ADMIN">Admin</SelectItem>
                         </SelectContent>
                       </Select>
@@ -230,8 +250,14 @@ export default function EmployeeForm({
                   name="departmentId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Department {role === "DOCTOR" || role === "NURSE" ? "*" : ""}</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || "none"}>
+                      <FormLabel>
+                        Department{" "}
+                        {role === "DOCTOR" || role === "NURSE" ? "*" : ""}
+                      </FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || "none"}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select department" />
@@ -287,7 +313,10 @@ export default function EmployeeForm({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Status</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select status" />
@@ -330,7 +359,10 @@ export default function EmployeeForm({
                 render={({ field }) => (
                   <FormItem className="max-w-md">
                     <FormLabel>Account ID</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || "none"}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || "none"}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select account" />
@@ -354,7 +386,9 @@ export default function EmployeeForm({
         </Accordion>
 
         {initialData?.updatedAt && (
-          <p className="text-xs text-muted-foreground">Last updated at {initialData.updatedAt}</p>
+          <p className="text-xs text-muted-foreground">
+            Last updated at {initialData.updatedAt}
+          </p>
         )}
 
         <div className="flex justify-end gap-4">

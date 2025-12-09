@@ -154,14 +154,12 @@ Backend MUST validate permissions on ALL endpoints:
 **✅ ALLOWED:**
 
 1. **Patient Management**
-
    - Register new patients (walk-ins)
    - Update basic info: name, phone, address, insurance
    - Search patients by name, phone, ID
    - View contact information
 
 2. **Appointment Management**
-
    - Book appointments for patients
    - Reschedule appointments
    - Cancel appointments
@@ -169,7 +167,6 @@ Backend MUST validate permissions on ALL endpoints:
    - Check appointment conflicts
 
 3. **Billing**
-
    - View unpaid invoices
    - Record cash/card payments
    - Print receipts
@@ -182,14 +179,12 @@ Backend MUST validate permissions on ALL endpoints:
 **❌ RESTRICTED:**
 
 1. Cannot view/edit medical details:
-
    - Diagnosis, symptoms, treatment
    - Medical exam results
    - Prescriptions
    - Medical history
 
 2. Cannot access:
-
    - Reports/Analytics
    - HR management (create/edit employees)
    - System settings

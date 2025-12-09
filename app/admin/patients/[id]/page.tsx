@@ -201,7 +201,7 @@ export default function PatientDetailPage() {
 
   const appointments = appointmentsData?.content || [];
   const exams = examsData?.content || [];
-  const invoices = invoicesData || [];
+  const invoices = invoicesData?.data?.content || [];
   const age = calculateAge(patient.dateOfBirth);
 
   // Extract prescriptions from exams
@@ -241,7 +241,7 @@ export default function PatientDetailPage() {
               Đặt lịch
             </Link>
           </Button>
-          {user?.role !== 'RECEPTIONIST' && (
+          {user?.role !== "RECEPTIONIST" && (
             <Button variant="outline" asChild>
               <Link href={`/admin/patients/${patientId}/history`}>
                 <FileText className="h-4 w-4 mr-2" />
@@ -267,8 +267,9 @@ export default function PatientDetailPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Xóa bệnh nhân</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Bạn có chắc chắn muốn xóa <strong>{patient.fullName}</strong>?
-                    Hành động này không thể hoàn tác.
+                    Bạn có chắc chắn muốn xóa{" "}
+                    <strong>{patient.fullName}</strong>? Hành động này không thể
+                    hoàn tác.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -337,7 +338,7 @@ export default function PatientDetailPage() {
               </Badge>
             )}
           </TabsTrigger>
-          {user?.role !== 'RECEPTIONIST' && (
+          {user?.role !== "RECEPTIONIST" && (
             <>
               <TabsTrigger value="exams" className="flex items-center gap-2">
                 <Activity className="h-4 w-4" />
@@ -371,7 +372,7 @@ export default function PatientDetailPage() {
               </Badge>
             )}
           </TabsTrigger>
-          {user?.role !== 'RECEPTIONIST' && (
+          {user?.role !== "RECEPTIONIST" && (
             <TabsTrigger value="history" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
               <span className="hidden sm:inline">Lịch sử</span>
@@ -782,7 +783,9 @@ export default function PatientDetailPage() {
                 Xem dòng thời gian cuộc hẹn, khám và hóa đơn của bệnh nhân.
               </p>
               <Button asChild>
-                <Link href={`/admin/patients/${patientId}/history`}>Xem lịch sử</Link>
+                <Link href={`/admin/patients/${patientId}/history`}>
+                  Xem lịch sử
+                </Link>
               </Button>
             </CardContent>
           </Card>

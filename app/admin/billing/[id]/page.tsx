@@ -66,7 +66,7 @@ export default function InvoiceDetailPage() {
       setCancelDialogOpen(false);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to cancel invoice"
+        error instanceof Error ? error.message : "Failed to cancel invoice",
       );
     }
   };
@@ -103,16 +103,18 @@ export default function InvoiceDetailPage() {
             <Printer className="mr-2 h-4 w-4" />
             Print
           </Button>
-          {user?.role === "ADMIN" && invoice.status === "UNPAID" && invoice.payments.length === 0 && (
-            <Button
-              variant="outline"
-              className="text-destructive hover:text-destructive"
-              onClick={() => setCancelDialogOpen(true)}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Cancel Invoice
-            </Button>
-          )}
+          {user?.role === "ADMIN" &&
+            invoice.status === "UNPAID" &&
+            invoice.payments.length === 0 && (
+              <Button
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancel Invoice
+              </Button>
+            )}
           {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
             <Button asChild>
               <Link href={`/admin/billing/${invoice.id}/payment`}>
@@ -244,8 +246,6 @@ export default function InvoiceDetailPage() {
               </div>
             </CardContent>
           </Card>
-
-
 
           {/* Payment History */}
           <Card>

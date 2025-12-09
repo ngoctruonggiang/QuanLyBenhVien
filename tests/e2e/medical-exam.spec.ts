@@ -25,11 +25,15 @@ test.describe("Medical Exam - Admin core flow", () => {
 
   test("Edit exam within 24h", async ({ page }) => {
     await page.goto(`/admin/exams/${EXAM_ID}/edit`);
-    await expect(page.getByRole("heading", { name: /Edit Medical Exam/i })).toBeVisible({ timeout: 5000 });
+    await expect(
+      page.getByRole("heading", { name: /Edit Medical Exam/i }),
+    ).toBeVisible({ timeout: 5000 });
     await page.getByLabel(/Diagnosis/i).fill("Updated diagnosis");
     await page.getByRole("button", { name: /Save Medical Exam/i }).click();
     // Expect either toast or stay on page without error
-    await expect(page.getByRole("heading", { name: /Edit Medical Exam/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Edit Medical Exam/i }),
+    ).toBeVisible();
   });
 
   test("View exam detail", async ({ page }) => {
@@ -41,7 +45,10 @@ test.describe("Medical Exam - Admin core flow", () => {
 
   test("Create prescription (validation shown)", async ({ page }) => {
     await page.goto(`/admin/exams/${EXAM_ID}/prescription`);
-    const alreadyHas = await page.getByText(/already has a prescription/i).isVisible().catch(() => false);
+    const alreadyHas = await page
+      .getByText(/already has a prescription/i)
+      .isVisible()
+      .catch(() => false);
     if (alreadyHas) {
       test.skip(true, "Exam already has prescription");
       return;

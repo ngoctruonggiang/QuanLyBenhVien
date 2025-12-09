@@ -17,19 +17,48 @@ import {
   MedicalExamFormValues,
   medicalExamSchema,
 } from "@/lib/schemas/medical-exam";
-import { UserRole } from "@/hooks/use-auth"; // Assuming UserRole is defined here or similar
+import { UserRole } from "@/hooks/use-auth";
+import { Appointment } from "@/interfaces/appointment";
 import { ExamStatus } from "@/interfaces/medical-exam";
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AppointmentSearchSelect } from "@/components/appointment/AppointmentSearchSelect";
+import { User, Briefcase, CalendarClock } from "lucide-react";
+
+const InfoCard = ({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <Card className="bg-muted/50">
+    <CardHeader className="pb-2">
+      <CardTitle className="text-base flex items-center gap-2">
+        {icon} {title}
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="text-sm">{children}</CardContent>
+  </Card>
+);
 
 interface MedicalExamFormProps {
+  appointment?: Appointment | null;
   defaultValues?: Partial<MedicalExamFormValues>;
   onSubmit: (data: MedicalExamFormValues) => void;
   isSubmitting?: boolean;
-  onSubmitWithStatus?: (data: MedicalExamFormValues, status: "PENDING" | "FINALIZED") => void;
-  userRole?: UserRole; // Added userRole prop
-  currentExamStatus?: ExamStatus; // Added currentExamStatus prop
+  onSubmitWithStatus?: (
+    data: MedicalExamFormValues,
+    status: "PENDING" | "FINALIZED",
+  ) => void;
+  userRole?: UserRole;
+  currentExamStatus?: ExamStatus;
 }
 
 export function MedicalExamForm({
+  appointment,
   defaultValues,
   onSubmit,
   isSubmitting,
@@ -37,10 +66,13 @@ export function MedicalExamForm({
   userRole,
   currentExamStatus,
 }: MedicalExamFormProps) {
+  const [selectedAppointment, setSelectedAppointment] =
+    useState<Appointment | null>(appointment || null);
+
   const form = useForm<MedicalExamFormValues>({
     resolver: zodResolver(medicalExamSchema) as any,
     defaultValues: defaultValues || {
-      appointmentId: "",
+      appointmentId: appointment?.id || "",
       temperature: 37,
       bloodPressureSystolic: 120,
       bloodPressureDiastolic: 80,
@@ -54,28 +86,68 @@ export function MedicalExamForm({
     },
   });
 
+  useEffect(() => {
+    if (appointment) {
+      form.setValue("appointmentId", appointment.id);
+    }
+  }, [appointment, form]);
+
+  const handleAppointmentSelect = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    form.setValue("appointmentId", appointment.id, { shouldValidate: true });
+  };
+
   const canFinalize =
     (userRole === "ADMIN" || userRole === "DOCTOR") &&
-    currentExamStatus !== "FINALIZED"; // Allow finalize if not already finalized
+    currentExamStatus !== "FINALIZED";
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="grid gap-6 md:grid-cols-2">
+        {selectedAppointment ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <InfoCard title="Patient" icon={<User className="h-5 w-5" />}>
+              <p className="font-semibold">
+                {selectedAppointment.patient.fullName}
+              </p>
+              <p className="text-muted-foreground">
+                {selectedAppointment.patient.phoneNumber}
+              </p>
+            </InfoCard>
+            <InfoCard title="Doctor" icon={<Briefcase className="h-5 w-5" />}>
+              <p className="font-semibold">
+                {selectedAppointment.doctor.fullName}
+              </p>
+              <p className="text-muted-foreground">
+                {selectedAppointment.doctor.department}
+              </p>
+            </InfoCard>
+            <InfoCard
+              title="Appointment"
+              icon={<CalendarClock className="h-5 w-5" />}
+            >
+              <p className="font-semibold">ID: {selectedAppointment.id}</p>
+              <p className="text-muted-foreground">
+                Time:{" "}
+                {new Date(selectedAppointment.appointmentTime).toLocaleString()}
+              </p>
+            </InfoCard>
+          </div>
+        ) : (
           <FormField
             control={form.control}
             name="appointmentId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Appointment ID</FormLabel>
+                <FormLabel>Find Appointment</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter Appointment ID" {...field} />
+                  <AppointmentSearchSelect onSelect={handleAppointmentSelect} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
+        )}
 
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Vitals</h3>
@@ -231,13 +303,17 @@ export function MedicalExamForm({
 
         {onSubmitWithStatus ? (
           <div className="flex flex-wrap gap-3">
-            {(userRole === "ADMIN" || userRole === "DOCTOR" || userRole === "NURSE") && (
+            {(userRole === "ADMIN" ||
+              userRole === "DOCTOR" ||
+              userRole === "NURSE") && (
               <Button
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
                 onClick={() =>
-                  form.handleSubmit((values) => onSubmitWithStatus(values, "PENDING"))()
+                  form.handleSubmit((values) =>
+                    onSubmitWithStatus(values, "PENDING"),
+                  )()
                 }
               >
                 {isSubmitting ? "Saving..." : "Save Draft"}
@@ -248,7 +324,9 @@ export function MedicalExamForm({
                 type="button"
                 disabled={isSubmitting || !canFinalize}
                 onClick={() =>
-                  form.handleSubmit((values) => onSubmitWithStatus(values, "FINALIZED"))()
+                  form.handleSubmit((values) =>
+                    onSubmitWithStatus(values, "FINALIZED"),
+                  )()
                 }
               >
                 {isSubmitting ? "Finalizing..." : "Save & Finalize"}

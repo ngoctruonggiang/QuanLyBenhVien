@@ -50,11 +50,16 @@ export default function EmployeeViewPage() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Employee Details</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Employee Details
+          </h1>
           <p className="text-muted-foreground">View-only employee profile.</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => router.push("/admin/hr/employees")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/admin/hr/employees")}
+          >
             Back
           </Button>
           <Button onClick={() => router.push(`/admin/hr/employees/${id}/edit`)}>

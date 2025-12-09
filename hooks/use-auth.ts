@@ -8,7 +8,7 @@ export type UserRole =
   | "NURSE"
   | "UNKNOWN";
 
-type AuthUser = {
+export type AuthUser = {
   email: string | null;
   role: UserRole;
   employeeId?: string; // Added employeeId
@@ -41,7 +41,9 @@ function readAuthFromStorage(): AuthUser | null {
 }
 
 export function useAuth() {
-  const [user, setUser] = useState<AuthUser | null>(() => readAuthFromStorage());
+  const [user, setUser] = useState<AuthUser | null>(() =>
+    readAuthFromStorage(),
+  );
   const [isLoading, setIsLoading] = useState(false);
 
   return {

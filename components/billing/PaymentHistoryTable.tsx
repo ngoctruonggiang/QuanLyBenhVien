@@ -62,7 +62,10 @@ export function PaymentHistoryTable({
             <TableRow key={payment.id}>
               <TableCell>{formatDate(payment.paymentDate)}</TableCell>
               <TableCell>
-                <CurrencyDisplay amount={payment.amount} className="font-medium" />
+                <CurrencyDisplay
+                  amount={payment.amount}
+                  className="font-medium"
+                />
               </TableCell>
               <TableCell>
                 <PaymentMethodBadge method={payment.method} />

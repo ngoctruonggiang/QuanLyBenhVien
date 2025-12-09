@@ -8,7 +8,9 @@ import { test, expect } from "@playwright/test";
 test.describe("HR - Schedules", () => {
   test("View calendar week/month và filter", async ({ page }) => {
     await page.goto("/admin/hr/schedules");
-    await expect(page.getByRole("heading", { name: /Schedules/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Schedules/i }),
+    ).toBeVisible();
 
     await page.getByRole("button", { name: /Week/i }).click();
     await expect(page.getByText(/Mon|Tue|Wed/i).first()).toBeVisible();

@@ -57,7 +57,7 @@ export function PaymentForm({
 
   const schema = useMemo(
     () => paymentSchemaWithBalance(maxAmount ?? invoice.balance), // Use invoice.balance for schema
-    [maxAmount, invoice.balance]
+    [maxAmount, invoice.balance],
   );
 
   const form = useForm<PaymentFormValues>({
@@ -73,7 +73,8 @@ export function PaymentForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <InvoiceSummaryCard invoice={invoice} /> {/* Render InvoiceSummaryCard */}
+        <InvoiceSummaryCard invoice={invoice} />{" "}
+        {/* Render InvoiceSummaryCard */}
         <input type="hidden" {...form.register("idempotencyKey")} />
         <FormField
           control={form.control}
@@ -108,7 +109,6 @@ export function PaymentForm({
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="method"
@@ -132,7 +132,6 @@ export function PaymentForm({
             </FormItem>
           )}
         />
-
         <FormField
           control={form.control}
           name="notes"
@@ -149,7 +148,6 @@ export function PaymentForm({
             </FormItem>
           )}
         />
-
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? "Processing..." : "Record Payment"}
         </Button>

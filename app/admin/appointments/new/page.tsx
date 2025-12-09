@@ -49,10 +49,7 @@ const appointmentFormSchema = z.object({
     .string()
     .min(1, "Please enter reason for visit")
     .max(500, "Reason cannot exceed 500 characters"),
-  notes: z
-    .string()
-    .max(1000, "Notes cannot exceed 1000 characters")
-    .optional(),
+  notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional(),
 });
 
 type FormValues = z.infer<typeof appointmentFormSchema>;
@@ -108,7 +105,7 @@ export default function NewAppointmentPage() {
         onSuccess: () => {
           router.push("/admin/appointments");
         },
-      }
+      },
     );
   };
 
@@ -178,7 +175,9 @@ export default function NewAppointmentPage() {
                     <DoctorSearchSelect
                       value={field.value}
                       onChange={field.onChange}
-                      departmentId={departmentId === "ALL" ? undefined : departmentId}
+                      departmentId={
+                        departmentId === "ALL" ? undefined : departmentId
+                      }
                     />
                     <FormMessage />
                   </FormItem>
@@ -207,7 +206,7 @@ export default function NewAppointmentPage() {
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             <CalendarDays className="mr-2 h-4 w-4" />
@@ -241,7 +240,9 @@ export default function NewAppointmentPage() {
                     <FormLabel>Time Slot *</FormLabel>
                     <TimeSlotPicker
                       doctorId={watchedDoctorId}
-                      date={watchedDate ? format(watchedDate, "yyyy-MM-dd") : ""}
+                      date={
+                        watchedDate ? format(watchedDate, "yyyy-MM-dd") : ""
+                      }
                       selectedSlot={field.value}
                       onSelect={field.onChange}
                     />

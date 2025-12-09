@@ -9,6 +9,7 @@ import { usePatientInvoices } from "@/hooks/queries/useBilling";
 import { InvoiceStatusBadge } from "@/app/admin/billing/_components/invoice-status-badge";
 import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard";
+import { Invoice } from "@/interfaces/billing";
 
 export default function PatientInvoiceListPage() {
   const [patientId, setPatientId] = useState<string | null>(() => {
@@ -20,7 +21,7 @@ export default function PatientInvoiceListPage() {
   const [status, setStatus] = useState<string>("ALL");
   const { data: invoices = [], isLoading } = usePatientInvoices(
     patientId || "",
-    status
+    { status: status === "ALL" ? undefined : status },
   );
 
   return (
@@ -57,7 +58,7 @@ export default function PatientInvoiceListPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {invoices.map((invoice) => {
+          {invoices.map((invoice: Invoice) => {
             const isOverdue = invoice.status === "OVERDUE";
             const isPayable =
               invoice.status === "UNPAID" ||
@@ -74,11 +75,13 @@ export default function PatientInvoiceListPage() {
                       Hóa đơn #{invoice.invoiceNumber}
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      {new Date(invoice.invoiceDate).toLocaleDateString("vi-VN")}
+                      {new Date(invoice.invoiceDate).toLocaleDateString(
+                        "vi-VN",
+                      )}
                       {invoice.dueDate &&
-                        ` • Hạn: ${new Date(
-                          invoice.dueDate
-                        ).toLocaleDateString("vi-VN")}`}
+                        ` • Hạn: ${new Date(invoice.dueDate).toLocaleDateString(
+                          "vi-VN",
+                        )}`}
                     </p>
                   </div>
                   <InvoiceStatusBadge status={invoice.status} />
@@ -101,11 +104,11 @@ export default function PatientInvoiceListPage() {
                       </Button>
                     )}
                     <Button size="sm" variant="outline" asChild>
-                      <Link href={`/patient/billing/${invoice.id}`}>Chi tiết</Link>
+                      <Link href={`/patient/billing/${invoice.id}`}>
+                        Chi tiết
+                      </Link>
                     </Button>
-                    {isOverdue && (
-                      <Badge variant="destructive">Quá hạn</Badge>
-                    )}
+                    {isOverdue && <Badge variant="destructive">Quá hạn</Badge>}
                   </div>
                 </CardContent>
               </Card>

@@ -25,7 +25,7 @@ import { Loader2 } from "lucide-react";
 import MyDatePicker from "@/app/admin/_components/MyDatePicker";
 import { Medicine } from "@/interfaces/medicine";
 import { medicineFormSchema, MedicineFormValues } from "@/lib/schemas/medicine";
-import { useCategory } from "@/hooks/queries/useCategory";
+import { useCategories } from "@/hooks/queries/useCategory";
 
 export { medicineFormSchema, type MedicineFormValues };
 
@@ -48,35 +48,26 @@ const unitOptions = [
   { value: "ampule", label: "Ampule" },
 ];
 
-interface FormInputValues {
-  name: string;
-  activeIngredient?: string;
-  unit: string;
-  description?: string;
-  quantity: number;
-  packaging?: string;
-  purchasePrice: number;
-  sellingPrice: number;
-  expiresAt: string;
-  categoryId?: string;
-}
-
 export function MedicineForm({
   initialData,
   onSubmit,
   isSubmitting,
+  onCancel,
+  isLoading,
 }: MedicineFormProps) {
-  const form = useForm<FormInputValues>({
+  const { data: categoriesData } = useCategories();
+  const categories = categoriesData?.data?.content || [];
+  const form = useForm<MedicineFormValues>({
     resolver: zodResolver(medicineFormSchema),
     defaultValues: {
       name: initialData?.name ?? "",
       activeIngredient: initialData?.activeIngredient ?? "",
       unit: initialData?.unit ?? "",
       description: initialData?.description ?? "",
-      quantity: Number(initialData?.quantity ?? 0),
+      quantity: String(initialData?.quantity ?? 0),
       packaging: initialData?.packaging ?? "",
-      purchasePrice: Number(initialData?.purchasePrice ?? 0),
-      sellingPrice: Number(initialData?.sellingPrice ?? 0),
+      purchasePrice: String(initialData?.purchasePrice ?? 0),
+      sellingPrice: String(initialData?.sellingPrice ?? 0),
       expiresAt: initialData?.expiresAt ?? "",
       categoryId: initialData?.categoryId ?? "",
     },
@@ -208,7 +199,7 @@ export function MedicineForm({
                       <SelectContent>
                         {categories?.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
-                            {cat.categoryName}
+                            {cat.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

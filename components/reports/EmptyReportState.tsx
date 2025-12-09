@@ -22,11 +22,13 @@ export function EmptyReportState({
     <div
       className={cn(
         "flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-6 text-center text-muted-foreground",
-        className
+        className,
       )}
     >
       {Icon ? <Icon className="h-10 w-10 opacity-60" /> : null}
-      {title ? <p className="text-sm font-medium text-foreground">{title}</p> : null}
+      {title ? (
+        <p className="text-sm font-medium text-foreground">{title}</p>
+      ) : null}
       {description ? <p className="text-sm">{description}</p> : null}
       {onRetry ? (
         <Button variant="outline" size="sm" onClick={onRetry}>

@@ -28,7 +28,9 @@ export function PatientAvatar({
 
   return (
     <Avatar className={cn(sizeClass, className)}>
-      <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
+      <AvatarFallback className="bg-primary/10 text-primary">
+        {initials}
+      </AvatarFallback>
     </Avatar>
   );
 }

@@ -1,4 +1,3 @@
-import axiosInstance from "@/config/axios";
 import {
   Department,
   DepartmentRequest,
@@ -14,7 +13,32 @@ const BASE_URL = "/api/hr";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // Local mutable copies for mocks
-const deptData: Department[] = [...mockDepartments];
+const LOCAL_STORAGE_DEPARTMENTS_KEY = "mockDeptData";
+
+const loadDepartmentsFromLocalStorage = (): Department[] => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem(LOCAL_STORAGE_DEPARTMENTS_KEY);
+    if (stored) {
+      try {
+        return JSON.parse(stored) as Department[];
+      } catch (e) {
+        console.error("Error parsing stored departments from localStorage", e);
+      }
+    }
+  }
+  return [...mockDepartments];
+};
+
+const saveDepartmentsToLocalStorage = (departments: Department[]) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(
+      LOCAL_STORAGE_DEPARTMENTS_KEY,
+      JSON.stringify(departments),
+    );
+  }
+};
+
+const deptData: Department[] = loadDepartmentsFromLocalStorage();
 const employeeData: Employee[] = [...mockEmployees];
 const scheduleData: (EmployeeSchedule & {
   departmentId?: string;
@@ -30,65 +54,55 @@ export const hrService = {
     status?: string;
     search?: string;
   }) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/departments`, {
-    //   params,
-    // });
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/departments`, {
-        params,
-      });
-      return response.data;
-    }
-
     await delay(500);
     let filtered = [...deptData];
     if (params?.search) {
       const lowerSearch = params.search.toLowerCase();
       filtered = filtered.filter((d) =>
-        d.name.toLowerCase().includes(lowerSearch)
+        d.name.toLowerCase().includes(lowerSearch),
       );
     }
     if (params?.status) {
       filtered = filtered.filter((d) => d.status === params.status);
     }
 
+    // Sorting logic
+    if (params?.sort) {
+      const [field, direction] = params.sort.split(',');
+      filtered.sort((a, b) => {
+        const valA = a[field as keyof Department];
+        const valB = b[field as keyof Department];
+        
+        if (valA === undefined || valB === undefined) return 0;
+
+        if (direction === 'asc') {
+          return valA < valB ? -1 : 1;
+        } else {
+          return valA > valB ? -1 : 1;
+        }
+      });
+    }
+
+    const page = params?.page || 0;
+    const size = params?.size || 10;
+    const start = page * size;
+    const end = start + size;
+    
     return {
-      content: filtered,
-      totalPages: 1,
+      content: filtered.slice(start, end),
+      totalPages: Math.ceil(filtered.length / size),
       totalElements: filtered.length,
-      size: params?.size || 10,
-      number: params?.page || 0,
+      size: size,
+      number: page,
     };
   },
 
   getDepartment: async (id: string) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/departments/${id}`);
-    // return response.data.data;
-
-    await delay(300);
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/departments/${id}`);
-      return response.data;
-    }
-
     await delay(300);
     return deptData.find((d) => d.id === id);
   },
 
   createDepartment: async (data: DepartmentRequest) => {
-    // const response = await axiosInstance.post(`${BASE_URL}/departments`, data);
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.post(
-        `${BASE_URL}/departments`,
-        data
-      );
-      return response.data;
-    }
-
     await delay(500);
     const newDept: Department = {
       id: Math.random().toString(36).substr(2, 9),
@@ -97,45 +111,38 @@ export const hrService = {
       updatedAt: new Date().toISOString(),
     };
     deptData.push(newDept);
+    saveDepartmentsToLocalStorage(deptData); // Save to localStorage
     return newDept;
   },
 
   updateDepartment: async (id: string, data: Partial<DepartmentRequest>) => {
-    // const response = await axiosInstance.patch(
-    //   `${BASE_URL}/departments/${id}`,
-    //   data
-    // );
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.patch(
-        `${BASE_URL}/departments/${id}`,
-        data
-      );
-      return response.data;
-    }
-
     await delay(500);
     const index = deptData.findIndex((d) => d.id === id);
     if (index !== -1) {
-      deptData[index] = { ...deptData[index], ...data };
+      const updatedData = { ...data };
+      
+      // If headDoctorId is being updated, also update headDoctorName
+      if (data.headDoctorId) {
+        const headDoctor = employeeData.find(e => e.id === data.headDoctorId);
+        updatedData.headDoctorName = headDoctor?.fullName;
+      } else if (data.headDoctorId === undefined || data.headDoctorId === null) {
+        // Handle case where head doctor is removed
+        updatedData.headDoctorName = undefined;
+      }
+
+      deptData[index] = { ...deptData[index], ...updatedData };
+      saveDepartmentsToLocalStorage(deptData); // Save to localStorage
       return deptData[index];
     }
     throw new Error("Department not found");
   },
 
   deleteDepartment: async (id: string) => {
-    // await axiosInstance.delete(`${BASE_URL}/departments/${id}`);
-
-    if (!USE_MOCK) {
-      await axiosInstance.delete(`${BASE_URL}/departments/${id}`);
-      return;
-    }
-
     await delay(500);
     const index = deptData.findIndex((d) => d.id === id);
     if (index !== -1) {
       deptData.splice(index, 1);
+      saveDepartmentsToLocalStorage(deptData); // Save to localStorage
     }
   },
 
@@ -149,18 +156,6 @@ export const hrService = {
     status?: string;
     search?: string;
   }) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/employees`, {
-    //   params,
-    // });
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/employees`, {
-        params,
-      });
-      return response.data;
-    }
-
     await delay(500);
     let filtered = [...employeeData];
     if (params?.search) {
@@ -168,7 +163,7 @@ export const hrService = {
       filtered = filtered.filter(
         (e) =>
           e.fullName.toLowerCase().includes(lowerSearch) ||
-          e.email.toLowerCase().includes(lowerSearch)
+          e.email.toLowerCase().includes(lowerSearch),
       );
     }
     if (params?.departmentId) {
@@ -197,16 +192,6 @@ export const hrService = {
     page?: number;
     size?: number;
   }) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/doctors`, { params });
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/doctors`, {
-        params,
-      });
-      return response.data;
-    }
-
     await delay(500);
     let filtered = employeeData.filter((e) => e.role === "DOCTOR");
     if (params?.departmentId) {
@@ -220,27 +205,11 @@ export const hrService = {
   },
 
   getEmployee: async (id: string) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/employees/${id}`);
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/employees/${id}`);
-      return response.data;
-    }
-
     await delay(300);
     return employeeData.find((e) => e.id === id);
   },
 
   createEmployee: async (data: EmployeeRequest) => {
-    // const response = await axiosInstance.post(`${BASE_URL}/employees`, data);
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.post(`${BASE_URL}/employees`, data);
-      return response.data.data;
-    }
-
     await delay(500);
     const newEmp: Employee = {
       id: Math.random().toString(36).substr(2, 9),
@@ -253,20 +222,6 @@ export const hrService = {
   },
 
   updateEmployee: async (id: string, data: Partial<EmployeeRequest>) => {
-    // const response = await axiosInstance.patch(
-    //   `${BASE_URL}/employees/${id}`,
-    //   data
-    // );
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.patch(
-        `${BASE_URL}/employees/${id}`,
-        data
-      );
-      return response.data.data;
-    }
-
     await delay(500);
     const index = employeeData.findIndex((e) => e.id === id);
     if (index !== -1) {
@@ -277,14 +232,6 @@ export const hrService = {
   },
 
   deleteEmployee: async (id: string) => {
-    // const response = await axiosInstance.delete(`${BASE_URL}/employees/${id}`);
-    // return response.data.data; // Returns deleted info
-
-    if (!USE_MOCK) {
-      await axiosInstance.delete(`${BASE_URL}/employees/${id}`);
-      return;
-    }
-
     await delay(500);
     const index = employeeData.findIndex((e) => e.id === id);
     if (index !== -1) {
@@ -302,19 +249,6 @@ export const hrService = {
     page?: number;
     size?: number;
   }) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/schedules/doctors`, {
-    //   params,
-    // });
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(
-        `${BASE_URL}/schedules/doctors`,
-        { params }
-      );
-      return response.data.data;
-    }
-
     await delay(500);
     let filtered = [...scheduleData];
     if (params.startDate) {
@@ -325,7 +259,7 @@ export const hrService = {
     }
     if (params.departmentId) {
       filtered = filtered.filter(
-        (s) => (s as any).departmentId === params.departmentId
+        (s) => (s as any).departmentId === params.departmentId,
       );
     }
     if (params.doctorId) {
@@ -350,18 +284,6 @@ export const hrService = {
     status?: string;
     doctorId?: string;
   }) => {
-    // const response = await axiosInstance.get(`${BASE_URL}/schedules/me`, {
-    //   params,
-    // });
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/schedules/me`, {
-        params,
-      });
-      return response.data.data;
-    }
-
     await delay(500);
     // Mocking "me" as employee 101 (override with doctorId if provided)
     const myId = params.doctorId || "emp-101";
@@ -378,14 +300,6 @@ export const hrService = {
   },
 
   createSchedule: async (data: ScheduleRequest) => {
-    // const response = await axiosInstance.post(`${BASE_URL}/schedules`, data);
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.post(`${BASE_URL}/schedules`, data);
-      return response.data.data;
-    }
-
     await delay(500);
     const employee = employeeData.find((e) => e.id === data.employeeId);
     const newSchedule: EmployeeSchedule & { departmentId?: string } = {
@@ -404,20 +318,6 @@ export const hrService = {
   // but usually exist. I'll add them if needed later or assume standard REST.
   // Assuming standard REST for now based on pattern:
   updateSchedule: async (id: string, data: Partial<ScheduleRequest>) => {
-    // const response = await axiosInstance.patch(
-    //   `${BASE_URL}/schedules/${id}`,
-    //   data
-    // );
-    // return response.data.data;
-
-    if (!USE_MOCK) {
-      const response = await axiosInstance.patch(
-        `${BASE_URL}/schedules/${id}`,
-        data
-      );
-      return response.data.data;
-    }
-
     await delay(500);
     const index = scheduleData.findIndex((s) => s.id === id);
     if (index !== -1) {
@@ -428,13 +328,6 @@ export const hrService = {
   },
 
   deleteSchedule: async (id: string) => {
-    // await axiosInstance.delete(`${BASE_URL}/schedules/${id}`);
-
-    if (!USE_MOCK) {
-      await axiosInstance.delete(`${BASE_URL}/schedules/${id}`);
-      return;
-    }
-
     await delay(500);
     const index = scheduleData.findIndex((s) => s.id === id);
     if (index !== -1) {

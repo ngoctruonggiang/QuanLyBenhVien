@@ -30,7 +30,7 @@ export function Header({ isScrolled, logoText = "HMS" }: HeaderProps) {
         "fixed inset-x-0 top-0 z-30 transition-all duration-300",
         showScrolled
           ? "bg-white/95 shadow-md backdrop-blur supports-[backdrop-filter]:bg-white/80"
-          : "bg-transparent"
+          : "bg-transparent",
       )}
     >
       <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 md:px-8">
@@ -39,16 +39,26 @@ export function Header({ isScrolled, logoText = "HMS" }: HeaderProps) {
             {logoText}
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-semibold text-slate-900">Hospital Management</p>
+            <p className="text-sm font-semibold text-slate-900">
+              Hospital Management
+            </p>
             <p className="text-xs text-slate-500">Healthcare System</p>
           </div>
         </div>
 
         <div className="hidden items-center gap-2 sm:flex">
-          <Button variant="ghost" size="sm" onClick={() => router.push("/login")}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/login")}
+          >
             Dang nhap
           </Button>
-          <Button variant="outline" size="sm" onClick={() => router.push("/signup")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push("/signup")}
+          >
             Dang ky
           </Button>
         </div>

@@ -3,12 +3,17 @@ import { test, expect } from "@playwright/test";
 test.describe("Patient Self-Service Profile", () => {
   test("View my profile", async ({ page }) => {
     await page.goto("/profile");
-    const hasProfile = await page.getByText(/Hồ sơ của tôi|My Profile/i).isVisible().catch(() => false);
+    const hasProfile = await page
+      .getByText(/Hồ sơ của tôi|My Profile/i)
+      .isVisible()
+      .catch(() => false);
     if (!hasProfile) {
       test.skip(true, "Profile page not available");
     }
     await expect(page.getByText(/Thông tin cá nhân|Personal/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Chỉnh sửa|Edit Profile/i })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Chỉnh sửa|Edit Profile/i }),
+    ).toBeVisible();
   });
 
   test("Edit limited fields", async ({ page }) => {

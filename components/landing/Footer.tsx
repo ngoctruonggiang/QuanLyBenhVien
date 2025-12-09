@@ -47,13 +47,15 @@ export function Footer({
         "bg-slate-900 text-slate-200",
         "border-t border-slate-800",
         "px-6 py-12 md:px-8",
-        className
+        className,
       )}
     >
       <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-3">
         <div>
           <h3 className="text-lg font-semibold text-white">{hospitalName}</h3>
-          <p className="mt-3 text-sm text-slate-300">Dia chi: {contact.address}</p>
+          <p className="mt-3 text-sm text-slate-300">
+            Dia chi: {contact.address}
+          </p>
           <p className="text-sm text-slate-300">Dien thoai: {contact.phone}</p>
           <p className="text-sm text-slate-300">Email: {contact.email}</p>
         </div>
@@ -82,7 +84,9 @@ export function Footer({
       </div>
 
       <div className="mx-auto mt-10 flex max-w-6xl items-center justify-center border-t border-slate-800 pt-6">
-        <p className="text-xs text-slate-400">© 2025 Hospital Management System. All rights reserved.</p>
+        <p className="text-xs text-slate-400">
+          © 2025 Hospital Management System. All rights reserved.
+        </p>
       </div>
     </footer>
   );

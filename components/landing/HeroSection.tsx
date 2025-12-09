@@ -27,7 +27,10 @@ export function HeroSection({
 }: HeroSectionProps) {
   return (
     <section className="landing-hero-bg relative isolate flex min-h-screen items-center justify-center overflow-hidden px-6 py-24 text-white">
-      <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/20 to-black/30" aria-hidden="true" />
+      <div
+        className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/20 to-black/30"
+        aria-hidden="true"
+      />
       {backgroundImage ? (
         <div className="absolute inset-0">
           <Image
@@ -91,7 +94,10 @@ export function HeroSection({
         </div>
       </div>
 
-      <div className="absolute bottom-10 left-1/2 h-10 w-px -translate-x-1/2 bg-white/50" aria-hidden="true" />
+      <div
+        className="absolute bottom-10 left-1/2 h-10 w-px -translate-x-1/2 bg-white/50"
+        aria-hidden="true"
+      />
     </section>
   );
 }

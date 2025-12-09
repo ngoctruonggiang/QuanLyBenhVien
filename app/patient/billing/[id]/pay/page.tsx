@@ -5,7 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useInvoice, useCreatePayment } from "@/hooks/queries/useBilling";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { PaymentForm } from "@/app/admin/billing/_components/payment-form";
 import { PaymentFormValues } from "@/lib/schemas/billing";
 import { toast } from "sonner";
@@ -39,7 +45,8 @@ export default function PatientPaymentPage() {
     }
   };
 
-  if (isLoading) return <p className="p-6 text-muted-foreground">Đang tải...</p>;
+  if (isLoading)
+    return <p className="p-6 text-muted-foreground">Đang tải...</p>;
   if (!invoice) return <p className="p-6">Không tìm thấy hóa đơn</p>;
   if (patientId && invoice.patientId !== patientId)
     return (
@@ -60,7 +67,9 @@ export default function PatientPaymentPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Thanh toán hóa đơn</h1>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Thanh toán hóa đơn
+          </h1>
           <p className="text-muted-foreground">
             Hóa đơn #{invoice.invoiceNumber} • Còn nợ{" "}
             {new Intl.NumberFormat("vi-VN", {
@@ -75,11 +84,13 @@ export default function PatientPaymentPage() {
         <CardHeader>
           <CardTitle>Thông tin thanh toán</CardTitle>
           <CardDescription>
-            Nhập số tiền và phương thức thanh toán. Bạn có thể thanh toán một phần.
+            Nhập số tiền và phương thức thanh toán. Bạn có thể thanh toán một
+            phần.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <PaymentForm
+            invoice={invoice}
             onSubmit={onSubmit}
             isSubmitting={isPending}
             defaultAmount={invoice.balance}

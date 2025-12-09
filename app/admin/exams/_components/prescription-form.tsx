@@ -40,15 +40,17 @@ import { useState } from "react";
 interface PrescriptionFormProps {
   onSubmit: (data: PrescriptionFormValues) => void;
   isSubmitting?: boolean;
+  defaultValues?: Partial<PrescriptionFormValues>;
 }
 
 export function PrescriptionForm({
   onSubmit,
   isSubmitting,
+  defaultValues,
 }: PrescriptionFormProps) {
   const form = useForm<PrescriptionFormValues>({
     resolver: zodResolver(prescriptionSchema) as any,
-    defaultValues: {
+    defaultValues: defaultValues || {
       items: [
         {
           medicineId: "",
@@ -118,12 +120,12 @@ export function PrescriptionForm({
                               role="combobox"
                               className={cn(
                                 "w-full justify-between",
-                                !field.value && "text-muted-foreground"
+                                !field.value && "text-muted-foreground",
                               )}
                             >
                               {field.value
                                 ? medicines.find(
-                                    (m) => m.id.toString() === field.value
+                                    (m) => m.id.toString() === field.value,
                                   )?.name
                                 : "Select medicine"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -143,7 +145,7 @@ export function PrescriptionForm({
                                     onSelect={() => {
                                       form.setValue(
                                         `items.${index}.medicineId`,
-                                        medicine.id.toString()
+                                        medicine.id.toString(),
                                       );
                                       setOpenMedicine(null);
                                     }}
@@ -153,7 +155,7 @@ export function PrescriptionForm({
                                         "mr-2 h-4 w-4",
                                         medicine.id.toString() === field.value
                                           ? "opacity-100"
-                                          : "opacity-0"
+                                          : "opacity-0",
                                       )}
                                     />
                                     {medicine.name}
@@ -268,7 +270,7 @@ export function PrescriptionForm({
         />
 
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Create Prescription"}
+          {isSubmitting ? "Saving..." : "Save Prescription"}
         </Button>
       </form>
     </Form>

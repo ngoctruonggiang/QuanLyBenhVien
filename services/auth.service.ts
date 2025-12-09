@@ -25,7 +25,7 @@ export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post<LoginRequest, LoginResponse>(
       "/auth-service/auth/login",
-      credentials
+      credentials,
     );
     return response;
   },
@@ -37,20 +37,18 @@ export const authService = {
   register: async (credentials: LoginRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post<LoginRequest, LoginResponse>(
       "/auth-service/auth/register",
-      credentials
+      credentials,
     );
     return response;
   },
 
-  getAccounts: async (
-    search?: string
-  ): Promise<PaginatedResponse<Account>> => {
-    const response = await axiosInstance.get<
-      never,
-      PaginatedResponse<Account>
-    >("/auth-service/auth/accounts", {
-      params: { search },
-    });
+  getAccounts: async (search?: string): Promise<PaginatedResponse<Account>> => {
+    const response = await axiosInstance.get<never, PaginatedResponse<Account>>(
+      "/auth-service/auth/accounts",
+      {
+        params: { search },
+      },
+    );
     return response;
   },
 };

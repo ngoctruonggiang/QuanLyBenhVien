@@ -4,13 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { CalendarClock, FileText, Stethoscope, Wallet } from "lucide-react";
 import appointmentService from "@/services/appointment.service";
 import { getMedicalExams } from "@/services/medical-exam.service";
 import { getPatientInvoices } from "@/services/billing.service";
-
 
 type TimelineEvent = {
   id: string;
@@ -29,7 +34,9 @@ export default function PatientHistoryPage() {
 
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState<"ALL" | TimelineEvent["type"]>("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | TimelineEvent["type"]>(
+    "ALL",
+  );
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
@@ -39,14 +46,24 @@ export default function PatientHistoryPage() {
       setLoading(true);
       try {
         const [apptRes, examRes, invoiceRes] = await Promise.all([
-          appointmentService.list({ patientId, page: 0, size: 50, sort: "appointmentTime,desc" }),
-          getMedicalExams({ patientId, page: 0, size: 50, sort: "examDate,desc" }),
+          appointmentService.list({
+            patientId,
+            page: 0,
+            size: 50,
+            sort: "appointmentTime,desc",
+          }),
+          getMedicalExams({
+            patientId,
+            page: 0,
+            size: 50,
+            sort: "examDate,desc",
+          }),
           getPatientInvoices(patientId),
         ]);
 
-        const apptContent = apptRes?.data?.data?.content || apptRes?.content || [];
-        const examContent = examRes?.content || examRes?.data?.data?.content || [];
-        const invoiceContent = invoiceRes?.data?.data || invoiceRes?.data || [];
+        const apptContent = apptRes?.content || [];
+        const examContent = examRes?.content || [];
+        const invoiceContent = invoiceRes?.data?.content || [];
 
         const mapped: TimelineEvent[] = [
           ...apptContent.map((a: any) => ({
@@ -117,84 +134,100 @@ export default function PatientHistoryPage() {
   };
 
   return (
-        <div className="page-shell space-y-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold">Lịch sử bệnh nhân</h1>
-              <p className="text-muted-foreground">Dòng thời gian cuộc hẹn, khám và hóa đơn.</p>
+    <div className="page-shell space-y-6">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Lịch sử bệnh nhân</h1>
+          <p className="text-muted-foreground">
+            Dòng thời gian cuộc hẹn, khám và hóa đơn.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => router.push(`/admin/patients/${patientId}`)}
+        >
+          Quay lại hồ sơ
+        </Button>
+      </div>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Bộ lọc</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          <Select
+            value={typeFilter}
+            onValueChange={(v) => setTypeFilter(v as any)}
+          >
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Loại sự kiện" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả</SelectItem>
+              <SelectItem value="APPOINTMENT">Cuộc hẹn</SelectItem>
+              <SelectItem value="EXAM">Khám bệnh</SelectItem>
+              <SelectItem value="INVOICE">Hóa đơn</SelectItem>
+            </SelectContent>
+          </Select>
+          <InputDate
+            label="Từ ngày"
+            value={startDate}
+            onChange={setStartDate}
+          />
+          <InputDate label="Đến ngày" value={endDate} onChange={setEndDate} />
+        </CardContent>
+      </Card>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Dòng thời gian</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {loading ? (
+            <p className="text-muted-foreground text-sm">Đang tải...</p>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              Không có sự kiện trong khoảng thời gian này.
             </div>
-            <Button variant="outline" onClick={() => router.push(`/admin/patients/${patientId}`)}>
-              Quay lại hồ sơ
-            </Button>
-          </div>
-    
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Bộ lọc</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-3">
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as any)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Loại sự kiện" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Tất cả</SelectItem>
-                  <SelectItem value="APPOINTMENT">Cuộc hẹn</SelectItem>
-                  <SelectItem value="EXAM">Khám bệnh</SelectItem>
-                  <SelectItem value="INVOICE">Hóa đơn</SelectItem>
-                </SelectContent>
-              </Select>
-              <InputDate label="Từ ngày" value={startDate} onChange={setStartDate} />
-              <InputDate label="Đến ngày" value={endDate} onChange={setEndDate} />
-            </CardContent>
-          </Card>
-    
-          <Card className="shadow-sm">
-            <CardHeader>
-              <CardTitle>Dòng thời gian</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {loading ? (
-                <p className="text-muted-foreground text-sm">Đang tải...</p>
-              ) : filtered.length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  Không có sự kiện trong khoảng thời gian này.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {filtered.map((e) => (
-                    <div
-                      key={`${e.type}-${e.id}`}
-                      className="border rounded-lg p-4 flex flex-col gap-2 hover:bg-muted/40 transition"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          {iconFor(e.type)}
-                          <p className="text-sm font-medium">{e.title}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(e.date).toLocaleString("vi-VN")}
-                        </p>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{e.summary}</p>
-                      {e.status && (
-                        <p className="text-xs text-muted-foreground">
-                          Trạng thái: <span className="font-medium text-foreground">{e.status}</span>
-                        </p>
-                      )}
-                      <Separator />
-                      <div className="flex justify-end">
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={e.url}>Xem chi tiết</a>
-                        </Button>
-                      </div>
+          ) : (
+            <div className="space-y-4">
+              {filtered.map((e) => (
+                <div
+                  key={`${e.type}-${e.id}`}
+                  className="border rounded-lg p-4 flex flex-col gap-2 hover:bg-muted/40 transition"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      {iconFor(e.type)}
+                      <p className="text-sm font-medium">{e.title}</p>
                     </div>
-                  ))}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(e.date).toLocaleString("vi-VN")}
+                    </p>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{e.summary}</p>
+                  {e.status && (
+                    <p className="text-xs text-muted-foreground">
+                      Trạng thái:{" "}
+                      <span className="font-medium text-foreground">
+                        {e.status}
+                      </span>
+                    </p>
+                  )}
+                  <Separator />
+                  <div className="flex justify-end">
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={e.url}>Xem chi tiết</a>
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>  );
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 function InputDate({

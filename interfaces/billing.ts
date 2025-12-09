@@ -4,6 +4,7 @@ export type InvoiceStatus =
   | "PAID"
   | "OVERDUE"
   | "CANCELLED";
+export type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
 export type PaymentMethod =
   | "CASH"
   | "CREDIT_CARD"
@@ -28,7 +29,7 @@ export interface Payment {
   invoiceId: string;
   amount: number;
   method: PaymentMethod;
-  status: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
+  status: PaymentStatus;
   paymentDate: string;
   notes?: string;
   createdAt?: string;
@@ -63,4 +64,16 @@ export interface CreatePaymentRequest {
   method: PaymentMethod;
   notes?: string;
   idempotencyKey?: string;
+}
+
+export interface GenerateInvoiceRequest {
+  appointmentId: string;
+  items: {
+    type: "CONSULTATION" | "MEDICINE" | "TEST" | "PROCEDURE" | "OTHER";
+    description: string;
+    referenceId?: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+  notes?: string;
 }

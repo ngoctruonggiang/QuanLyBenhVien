@@ -7,7 +7,6 @@
 ### ✅ ĐÃ SỬA (Iteration 2)
 
 1. **CRITICAL: Response Data Structure** (25 locations fixed)
-
    - appointment.service.ts: 7 chỗ
    - reports.service.ts: 4 chỗ
    - patient.service.ts: 7 chỗ
@@ -21,12 +20,10 @@
 ### ✅ ĐÃ SỬA (Iteration 1)
 
 3. **Axios Interceptor**
-
    - ✅ Trả về `response` (không phải `response.data`)
    - ✅ Error handler giữ `error` object
 
 4. **Appointment Service**
-
    - ✅ Export `AppointmentResponse` type
    - ✅ Pagination 0-based
    - ✅ Doctor schedule validation (check HR schedules)
@@ -192,7 +189,7 @@ const editSchema = z.object({
 ```typescript
 // create() method
 const doctorSchedule = mockSchedules.find(
-  (s) => s.employeeId === data.doctorId && s.workDate === appointmentDate
+  (s) => s.employeeId === data.doctorId && s.workDate === appointmentDate,
 );
 
 if (!doctorSchedule) {
@@ -203,7 +200,7 @@ const isSlotTaken = mockAppointments.some(
   (a) =>
     a.doctor.id === data.doctorId &&
     a.status !== "CANCELLED" &&
-    a.appointmentTime === data.appointmentTime
+    a.appointmentTime === data.appointmentTime,
 );
 
 if (isSlotTaken) {
@@ -300,7 +297,7 @@ export const mockSchedules = [
 ```typescript
 // getTimeSlots() now checks schedules
 const doctorSchedule = mockSchedules.find(
-  (s) => s.employeeId === doctorId && s.workDate === date
+  (s) => s.employeeId === doctorId && s.workDate === date,
 );
 
 if (!doctorSchedule) {
@@ -312,7 +309,7 @@ return generateTimeSlotsWithSchedule(
   doctorSchedule.startTime,
   doctorSchedule.endTime,
   bookedTimes,
-  currentTime
+  currentTime,
 );
 ```
 
@@ -323,13 +320,11 @@ return generateTimeSlotsWithSchedule(
 ### Low Priority
 
 1. **Export PDF for Reports**
-
    - Spec yêu cầu nhưng chưa implement
    - Đề xuất: Dùng `jsPDF` library
    - Impact: Medium (nice-to-have feature)
 
 2. **Error Boundary for Reports**
-
    - Spec yêu cầu xử lý 403/404/partial data
    - Hiện tại: Basic toast error only
    - Impact: Low (UX enhancement)
@@ -460,11 +455,9 @@ return generateTimeSlotsWithSchedule(
 ## Next Steps (Optional Enhancements)
 
 1. **High Priority:**
-
    - None (all critical issues fixed)
 
 2. **Medium Priority:**
-
    - Add PDF export for reports
    - Implement comprehensive error boundaries
 

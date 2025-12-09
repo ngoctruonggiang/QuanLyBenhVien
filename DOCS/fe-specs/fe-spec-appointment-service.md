@@ -897,7 +897,7 @@ const appointmentService = {
   getList: (params: AppointmentListParams) =>
     api.get<{ status: string; data: PaginatedResponse<Appointment> }>(
       BASE_URL,
-      { params }
+      { params },
     ),
 
   // Update appointment (reschedule)
@@ -908,13 +908,13 @@ const appointmentService = {
   cancel: (id: string, data: AppointmentCancelRequest) =>
     api.patch<{ status: string; data: Appointment }>(
       `${BASE_URL}/${id}/cancel`,
-      data
+      data,
     ),
 
   // Complete appointment (doctor only)
   complete: (id: string) =>
     api.patch<{ status: string; data: Appointment }>(
-      `${BASE_URL}/${id}/complete`
+      `${BASE_URL}/${id}/complete`,
     ),
 };
 
@@ -2183,7 +2183,7 @@ import { toast } from "sonner";
 
 export function handleApiError(
   error: any,
-  defaultMessage = "An error occurred"
+  defaultMessage = "An error occurred",
 ) {
   const errorCode = error.response?.data?.error?.code;
   const errorMessage = error.response?.data?.error?.message;

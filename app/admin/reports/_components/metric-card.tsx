@@ -37,7 +37,7 @@ export function MetricCard({
         className={cn(
           "transition-all hover:shadow-md",
           onClick && "cursor-pointer hover:border-primary/50",
-          className
+          className,
         )}
       >
         <CardContent className="p-6">
@@ -59,7 +59,7 @@ export function MetricCard({
       className={cn(
         "transition-all hover:shadow-md",
         onClick && "cursor-pointer hover:border-primary/50",
-        className
+        className,
       )}
       onClick={onClick}
     >
@@ -78,7 +78,7 @@ export function MetricCard({
                 <span
                   className={cn(
                     "text-xs font-medium",
-                    isPositiveTrend ? "text-emerald-500" : "text-red-500"
+                    isPositiveTrend ? "text-emerald-500" : "text-red-500",
                   )}
                 >
                   {isPositiveTrend ? "+" : ""}

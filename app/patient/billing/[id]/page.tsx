@@ -63,7 +63,9 @@ export default function PatientInvoiceDetailPage() {
     <div className="page-shell space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Hóa đơn #{invoice.invoiceNumber}</h1>
+          <h1 className="text-2xl font-semibold">
+            Hóa đơn #{invoice.invoiceNumber}
+          </h1>
           <p className="text-muted-foreground">
             Ngày: {new Date(invoice.invoiceDate).toLocaleDateString("vi-VN")}
             {invoice.dueDate &&

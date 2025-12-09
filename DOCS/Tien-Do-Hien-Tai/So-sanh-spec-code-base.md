@@ -309,6 +309,7 @@ export type Role = "ADMIN" | "DOCTOR" | "NURSE" | "RECEPTIONIST" | "PATIENT";
 **File: `app/admin/layout.tsx`**
 
 **Sửa line ~46-50 (Appointments):**
+
 ```typescript
 // HIỆN TẠI:
 {
@@ -328,6 +329,7 @@ export type Role = "ADMIN" | "DOCTOR" | "NURSE" | "RECEPTIONIST" | "PATIENT";
 ```
 
 **Sửa line ~73-77 (Billing):**
+
 ```typescript
 // HIỆN TẠI:
 {
@@ -347,6 +349,7 @@ export type Role = "ADMIN" | "DOCTOR" | "NURSE" | "RECEPTIONIST" | "PATIENT";
 ```
 
 **Sửa cuối file (RoleGuard allowedRoles):**
+
 ```typescript
 // HIỆN TẠI:
 <RoleGuard allowedRoles={["ADMIN", "DOCTOR", "NURSE"]}>
@@ -415,10 +418,12 @@ const { user } = useAuth();
 #### **4. Appointment Detail Pages - Hide Complete button cho non-DOCTOR**
 
 **Kiểm tra các files:**
+
 - `app/admin/appointments/[id]/page.tsx`
 - `app/doctor/appointments/[id]/page.tsx`
 
 **Pattern cần check:**
+
 ```typescript
 // Complete button chỉ show cho DOCTOR assigned
 {user?.role === "DOCTOR" && appointment.doctor.id === user.employeeId && (
@@ -435,10 +440,12 @@ const { user } = useAuth();
 #### **5. Medical Exam Pages - Đảm bảo RECEPTIONIST không access**
 
 **Files cần check:**
+
 - `app/admin/exams/**/*.tsx`
 - Routes `/admin/exams/*` không nên show trong nav cho RECEPTIONIST (đã đúng ở layout)
 
 **Verify RoleGuard:**
+
 ```typescript
 // Exam pages nên có:
 <RoleGuard allowedRoles={["ADMIN", "DOCTOR", "NURSE"]}>
@@ -451,10 +458,12 @@ const { user } = useAuth();
 #### **6. Reports Pages - Đảm bảo RECEPTIONIST không access**
 
 **Files cần check:**
+
 - `app/admin/reports/**/*.tsx`
 - Routes `/admin/reports/*` không nên show trong nav cho RECEPTIONIST (đã đúng ở layout)
 
 **Current (đúng):**
+
 ```typescript
 {
   title: "Reports",
@@ -469,9 +478,11 @@ const { user } = useAuth();
 #### **7. HR Management - Verify read-only access**
 
 **Files cần check:**
+
 - `app/admin/hr/**/*.tsx`
 
 **Current (đúng):**
+
 ```typescript
 {
   title: "HR Management",
@@ -490,11 +501,13 @@ const { user } = useAuth();
 #### **8. Service Permission Checks**
 
 **Files cần verify:**
+
 - `services/patient.service.ts` - Delete operation
 - `services/appointment.service.ts` - Complete operation
 - `services/medical-exam.service.ts` - No RECEPTIONIST access
 
 **Pattern nên có:**
+
 ```typescript
 // In patient.service.ts delete method
 export const deletePatient = async (id: string) => {
@@ -512,11 +525,13 @@ export const deletePatient = async (id: string) => {
 #### **9. React Query Hooks Permissions**
 
 **Files cần verify:**
+
 - `hooks/queries/usePatient.ts`
 - `hooks/queries/useAppointment.ts`
 - `hooks/queries/useBilling.ts`
 
 **Pattern:**
+
 ```typescript
 // useDeletePatient nên check role
 export const useDeletePatient = () => {
@@ -539,16 +554,16 @@ export const useDeletePatient = () => {
 
 ### 🎯 **TÓM TẮT CHANGES CẦN LÀM:**
 
-| File | Changes | Priority | Estimate Time |
-|------|---------|----------|---------------|
-| `app/admin/layout.tsx` | Add RECEPTIONIST to Appointments & Billing nav | 🔴 HIGH | 5 min |
-| `app/admin/patients/[id]/page.tsx` | Hide Delete button | 🔴 HIGH | 10 min |
-| `app/admin/patients/_components/patient-card.tsx` | Hide Delete menu item | 🔴 HIGH | 10 min |
-| `app/admin/appointments/[id]/page.tsx` | Verify Complete button logic | 🟡 MEDIUM | 15 min |
-| `app/admin/exams/**` | Verify no RECEPTIONIST access | 🟡 MEDIUM | 10 min |
-| `app/admin/reports/**` | Verify no RECEPTIONIST access | 🟡 MEDIUM | 10 min |
-| `services/patient.service.ts` | Add role check in delete | 🟢 LOW | 10 min |
-| `hooks/queries/usePatient.ts` | Add role check in useDeletePatient | 🟢 LOW | 10 min |
+| File                                              | Changes                                        | Priority  | Estimate Time |
+| ------------------------------------------------- | ---------------------------------------------- | --------- | ------------- |
+| `app/admin/layout.tsx`                            | Add RECEPTIONIST to Appointments & Billing nav | 🔴 HIGH   | 5 min         |
+| `app/admin/patients/[id]/page.tsx`                | Hide Delete button                             | 🔴 HIGH   | 10 min        |
+| `app/admin/patients/_components/patient-card.tsx` | Hide Delete menu item                          | 🔴 HIGH   | 10 min        |
+| `app/admin/appointments/[id]/page.tsx`            | Verify Complete button logic                   | 🟡 MEDIUM | 15 min        |
+| `app/admin/exams/**`                              | Verify no RECEPTIONIST access                  | 🟡 MEDIUM | 10 min        |
+| `app/admin/reports/**`                            | Verify no RECEPTIONIST access                  | 🟡 MEDIUM | 10 min        |
+| `services/patient.service.ts`                     | Add role check in delete                       | 🟢 LOW    | 10 min        |
+| `hooks/queries/usePatient.ts`                     | Add role check in useDeletePatient             | 🟢 LOW    | 10 min        |
 
 **Total Estimate:** ~1.5 - 2 hours
 
@@ -559,6 +574,7 @@ export const useDeletePatient = () => {
 Sau khi sửa xong, test với RECEPTIONIST account:
 
 **✅ Should Have Access:**
+
 - [ ] View `/admin/patients` (list)
 - [ ] View `/admin/patients/:id` (detail) - but NO delete button
 - [ ] Access `/admin/patients/new` (register)
@@ -572,6 +588,7 @@ Sau khi sửa xong, test với RECEPTIONIST account:
 - [ ] Access `/admin/billing/:id/payment` (record payment)
 
 **❌ Should NOT Have Access:**
+
 - [ ] Delete patients (button hidden)
 - [ ] Complete appointments (doctor only)
 - [ ] `/admin/exams` (medical data)

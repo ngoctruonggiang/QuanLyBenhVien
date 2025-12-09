@@ -1,6 +1,6 @@
 // components/billing/PaymentStatusBadge.tsx
 import { cn } from "@/lib/utils"; // Assuming cn utility
-import { PaymentStatus } from "@/services/billing.service"; // Assuming PaymentStatus is exported or define here
+import { PaymentStatus } from "@/interfaces/billing"; // Assuming PaymentStatus is exported or define here
 
 interface Props {
   status: PaymentStatus;
@@ -43,7 +43,7 @@ export function PaymentStatusBadge({ status, size = "md" }: Props) {
       className={cn(
         "inline-flex items-center gap-1 rounded-full border font-medium",
         config.className,
-        sizeClasses[size]
+        sizeClasses[size],
       )}
     >
       <span>{config.icon}</span>

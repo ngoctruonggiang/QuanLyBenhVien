@@ -6,9 +6,7 @@ const basePaymentSchema = z.object({
     message: "Please select a payment method",
   }),
   notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional(),
-  idempotencyKey: z
-    .string()
-    .uuid("Idempotency key must be a valid UUID"),
+  idempotencyKey: z.string().uuid("Idempotency key must be a valid UUID"),
 });
 
 export const paymentSchema = basePaymentSchema;

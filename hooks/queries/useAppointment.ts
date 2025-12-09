@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import appointmentService from "@/services/appointment.service";
 import {
+  Appointment,
   AppointmentCreateRequest,
   AppointmentUpdateRequest,
   AppointmentCancelRequest,
@@ -57,6 +58,21 @@ export const useAppointmentList = (params: AppointmentListParams) => {
   });
 };
 
+// Search for appointments (for select components)
+export const useAppointmentSearch = (searchTerm: string) => {
+  return useQuery({
+    queryKey: appointmentKeys.list({ search: searchTerm, status: "SCHEDULED" }),
+    queryFn: () =>
+      appointmentService.list({
+        search: searchTerm,
+        status: "SCHEDULED",
+        size: 10,
+      }),
+    select: (data) => data.content,
+    enabled: !!searchTerm,
+  });
+};
+
 export const usePatientAppointments = (patientId?: string) => {
   return useQuery({
     queryKey: appointmentKeys.list({ patientId } as AppointmentListParams),
@@ -67,8 +83,7 @@ export const usePatientAppointments = (patientId?: string) => {
         size: 20,
         sort: "appointmentTime,desc",
       }),
-    enabled: !!patientId,
-    select: (res: PaginatedResponse<any>) => res?.content ?? [],
+    select: (res: PaginatedResponse<Appointment>) => res?.content ?? [],
   });
 };
 
@@ -83,7 +98,7 @@ export const useDoctorAppointments = (doctorId?: string) => {
         sort: "appointmentTime,asc",
       }),
     enabled: !!doctorId,
-    select: (res: PaginatedResponse<any>) => res?.content ?? [],
+    select: (res: PaginatedResponse<Appointment>) => res?.content ?? [],
   });
 };
 
@@ -100,7 +115,7 @@ export const useAppointment = (id: string) => {
 export const useTimeSlots = (
   doctorId: string,
   date: string,
-  excludeAppointmentId?: string
+  excludeAppointmentId?: string,
 ) => {
   return useQuery({
     queryKey: appointmentKeys.timeSlots(doctorId, date),
@@ -117,7 +132,7 @@ export const useCreateAppointment = () => {
   return useMutation({
     mutationFn: (data: AppointmentCreateRequest) =>
       appointmentService.create(data),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
       toast.success("Appointment booked successfully");
     },
@@ -157,7 +172,7 @@ export const useUpdateAppointment = () => {
 // Cancel appointment
 export const useCancelAppointment = (
   currentUserId?: string,
-  currentUserRole?: string
+  currentUserRole?: string,
 ) => {
   const queryClient = useQueryClient();
 
@@ -185,7 +200,7 @@ export const useCancelAppointment = (
 // Complete appointment
 export const useCompleteAppointment = (
   currentUserId?: string,
-  currentUserRole?: string
+  currentUserRole?: string,
 ) => {
   const queryClient = useQueryClient();
 

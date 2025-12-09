@@ -1,64 +1,49 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  getMedicalExams,
-  createMedicalExam,
-  getMedicalExam,
-  updateMedicalExam,
-  createPrescriptionMock,
-  getMedicalExamByAppointment,
-} from "@/services/medical-exam.service";
+import medicalExamService from "@/services/medical-exam.service";
 import {
   MedicalExamCreateRequest,
   MedicalExamUpdateRequest,
   MedicalExamListParams,
   PrescriptionCreateRequest,
 } from "@/interfaces/medical-exam";
+import {
+  getMedicalExamErrorMessage,
+  getPrescriptionErrorMessage,
+} from "@/lib/utils/error";
 
-// Query Keys
 export const medicalExamKeys = {
-  all: ["medicalExams"] as const,
+  all: ["medical-exam"] as const,
   lists: () => [...medicalExamKeys.all, "list"] as const,
   list: (params: MedicalExamListParams) =>
     [...medicalExamKeys.lists(), params] as const,
   details: () => [...medicalExamKeys.all, "detail"] as const,
   detail: (id: string) => [...medicalExamKeys.details(), id] as const,
   byAppointment: (appointmentId: string) =>
-    [...medicalExamKeys.all, "appointment", appointmentId] as const,
-  prescriptions: () => ["prescriptions"] as const,
-  prescription: (examId: string) =>
-    [...medicalExamKeys.prescriptions(), "exam", examId] as const,
-  prescriptionById: (id: string) =>
-    [...medicalExamKeys.prescriptions(), "detail", id] as const,
-  prescriptionsByPatient: (patientId: string) =>
-    [...medicalExamKeys.prescriptions(), "patient", patientId] as const,
+    [...medicalExamKeys.details(), "by-appointment", appointmentId] as const,
+
+  // Prescription Keys
+  prescriptions: () => [...medicalExamKeys.all, "prescriptions"] as const,
+  prescription: (examId: string) => [...medicalExamKeys.prescriptions(), "exam", examId] as const,
+  prescriptionById: (id: string) => [...medicalExamKeys.prescriptions(), 'detail', id] as const,
+  prescriptionsByPatient: (patientId: string) => [...medicalExamKeys.prescriptions(), 'patient', patientId] as const,
 };
 
 // Get exam list
 export const useMedicalExamList = (params: MedicalExamListParams) => {
   return useQuery({
     queryKey: medicalExamKeys.list(params),
-    queryFn: () => getMedicalExams(params),
+    queryFn: () => medicalExamService.getList(params),
   });
 };
 
-// Legacy hook for backwards compatibility
-export const useMedicalExams = (
-  page: number,
-  size: number,
-  search?: string
-) => {
-  return useQuery({
-    queryKey: ["medical-exams", page, size, search],
-    queryFn: () => getMedicalExams({ page: page - 1, size }),
-  });
-};
+// ... (other query hooks are unchanged)
 
 // Get exam by ID
 export const useMedicalExam = (id: string) => {
   return useQuery({
     queryKey: medicalExamKeys.detail(id),
-    queryFn: () => getMedicalExam(id),
+    queryFn: () => medicalExamService.getById(id),
     enabled: !!id,
   });
 };
@@ -66,7 +51,7 @@ export const useMedicalExam = (id: string) => {
 export const useMedicalExamByAppointment = (appointmentId: string) => {
   return useQuery({
     queryKey: medicalExamKeys.byAppointment(appointmentId),
-    queryFn: () => getMedicalExamByAppointment(appointmentId),
+    queryFn: () => medicalExamService.getByAppointment(appointmentId),
     enabled: !!appointmentId,
   });
 };
@@ -76,14 +61,16 @@ export const useCreateMedicalExam = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: MedicalExamCreateRequest) => createMedicalExam(data),
-    onSuccess: () => {
+    mutationFn: (data: MedicalExamCreateRequest) =>
+      medicalExamService.create(data),
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: medicalExamKeys.lists() });
       toast.success("Medical exam created successfully");
+      return response.data;
     },
     onError: (error: any) => {
       const message = getMedicalExamErrorMessage(
-        error.response?.data?.error?.code || error.message
+        error.response?.data?.error?.code || error.message,
       );
       toast.error(message);
     },
@@ -101,7 +88,7 @@ export const useUpdateMedicalExam = () => {
     }: {
       id: string;
       data: MedicalExamUpdateRequest;
-    }) => updateMedicalExam(id, data),
+    }) => medicalExamService.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: medicalExamKeys.detail(variables.id),
@@ -111,10 +98,41 @@ export const useUpdateMedicalExam = () => {
     },
     onError: (error: any) => {
       const message = getMedicalExamErrorMessage(
-        error.response?.data?.error?.code || error.message
+        error.response?.data?.error?.code || error.message,
       );
       toast.error(message);
     },
+  });
+};
+
+// Get prescription by exam
+export const usePrescriptionByExam = (examId: string) => {
+  return useQuery({
+    queryKey: medicalExamKeys.prescription(examId),
+    queryFn: () => medicalExamService.getPrescriptionByExam(examId),
+    enabled: !!examId,
+  });
+};
+
+// Get prescription by ID
+export const usePrescriptionById = (id: string) => {
+  return useQuery({
+    queryKey: medicalExamKeys.prescriptionById(id),
+    queryFn: () => medicalExamService.getPrescriptionById(id),
+    enabled: !!id,
+  });
+};
+
+// Get prescriptions by patient
+export const usePrescriptionsByPatient = (
+  patientId: string,
+  params?: { page?: number; size?: number },
+) => {
+  return useQuery({
+    queryKey: medicalExamKeys.prescriptionsByPatient(patientId),
+    queryFn: () =>
+      medicalExamService.getPrescriptionsByPatient(patientId, params),
+    enabled: !!patientId,
   });
 };
 
@@ -129,7 +147,7 @@ export const useCreatePrescription = () => {
     }: {
       examId: string;
       data: PrescriptionCreateRequest;
-    }) => createPrescriptionMock(examId, data),
+    }) => medicalExamService.createPrescription(examId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: medicalExamKeys.prescription(variables.examId),
@@ -138,56 +156,42 @@ export const useCreatePrescription = () => {
         queryKey: medicalExamKeys.detail(variables.examId),
       });
       toast.success(
-        "Prescription created successfully. Invoice has been generated."
+        "Prescription created successfully. Invoice has been generated.",
       );
     },
     onError: (error: any) => {
       const message = getPrescriptionErrorMessage(
-        error.response?.data?.error?.code || error.message
+        error.response?.data?.error?.code || error.message,
       );
       toast.error(message);
     },
   });
 };
 
-// Error message mappings
-function getMedicalExamErrorMessage(errorCode: string): string {
-  const errorMessages: Record<string, string> = {
-    VALIDATION_ERROR: "Please check the form for errors",
-    APPOINTMENT_NOT_FOUND: "Appointment not found",
-    APPOINTMENT_NOT_COMPLETED:
-      "Appointment must be completed before creating an exam",
-    EXAM_EXISTS: "A medical exam already exists for this appointment",
-    EXAM_ALREADY_EXISTS: "A medical exam already exists for this appointment",
-    EXAM_NOT_FOUND: "Medical exam not found",
-    EXAM_NOT_MODIFIABLE: "Cannot modify exam after 24 hours",
-    EXAM_NOT_EDITABLE: "Cannot modify exam after 24 hours",
-    "Cannot modify exam after 24 hours": "Cannot modify exam after 24 hours",
-    APPOINTMENT_OWNER_MISMATCH: "You are not allowed to create an exam for this appointment",
-    FORBIDDEN: "You do not have permission to perform this action",
-    UNAUTHORIZED: "Please log in to continue",
-  };
-  return (
-    errorMessages[errorCode] ||
-    "An unexpected error occurred. Please try again."
-  );
-}
+// Update prescription
+export const useUpdatePrescription = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      examId,
+      data,
+    }: {
+      examId: string;
+      data: PrescriptionCreateRequest;
+    }) => medicalExamService.updatePrescription(examId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: medicalExamKeys.detail(variables.examId),
+      });
+      toast.success("Prescription updated successfully.");
+    },
+    onError: (error: any) => {
+      const message = getPrescriptionErrorMessage(
+        error.response?.data?.error?.code || error.message,
+      );
+      toast.error(message);
+    },
+  });
+};
 
-function getPrescriptionErrorMessage(errorCode: string): string {
-  const errorMessages: Record<string, string> = {
-    VALIDATION_ERROR: "Please check the prescription for errors",
-    EXAM_NOT_FOUND: "Medical exam not found",
-    MEDICINE_NOT_FOUND: "One or more medicines not found",
-    INSUFFICIENT_STOCK: "Insufficient stock for one or more medicines",
-    PRESCRIPTION_EXISTS: "A prescription already exists for this exam",
-    "Prescription already exists for this exam":
-      "A prescription already exists for this exam",
-    PRESCRIPTION_NOT_FOUND: "Prescription not found",
-    FORBIDDEN: "You do not have permission to create this prescription",
-    UNAUTHORIZED: "Please log in to continue",
-  };
-  return (
-    errorMessages[errorCode] ||
-    "An unexpected error occurred. Please try again."
-  );
-}
+// ... (Error message mappings are unchanged)

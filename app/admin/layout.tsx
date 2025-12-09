@@ -111,23 +111,21 @@ export default function AdminLayout({
 
   // Filter navigation items based on user role
   const navItems = allNavItems.filter(
-    (item) => user && item.roles.includes(user.role)
+    (item) => user && item.roles.includes(user.role),
   );
 
   return (
     <RoleGuard allowedRoles={["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"]}>
       <SidebarProvider>
         <div className="bg-muted/40 text-foreground flex min-h-screen w-screen">
-          <Sidebar className="border-r bg-muted/40" collapsible="icon">
+          <Sidebar className="border-r !bg-gray-200" collapsible="icon">
             <SidebarHeader className="gap-2 px-4 py-4">
               <div className="bg-primary text-primary-foreground grid h-10 w-10 place-items-center rounded-lg text-sm font-semibold">
                 HMS
               </div>
               <div className="leading-tight">
                 <p className="text-sm font-semibold">Health Management</p>
-                <p className="text-xs text-muted-foreground">
-                  Hospital System
-                </p>
+                <p className="text-xs text-muted-foreground">Hospital System</p>
               </div>
             </SidebarHeader>
             <SidebarContent>
@@ -221,5 +219,4 @@ export default function AdminLayout({
       </SidebarProvider>
     </RoleGuard>
   );
-
 }

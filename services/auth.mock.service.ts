@@ -133,7 +133,7 @@ export const mockAuthService = {
 
     // Check if user already exists by email
     const existingUserByEmail = MOCK_USERS.find(
-      (u) => u.email === credentials.email
+      (u) => u.email === credentials.email,
     );
     if (existingUserByEmail) {
       throw new Error("Email already exists");
@@ -141,7 +141,7 @@ export const mockAuthService = {
 
     // Check if username already exists
     const existingUserByUsername = MOCK_USERS.find(
-      (u) => u.username === credentials.username
+      (u) => u.username === credentials.username,
     );
     if (existingUserByUsername) {
       throw new Error("Username already exists");

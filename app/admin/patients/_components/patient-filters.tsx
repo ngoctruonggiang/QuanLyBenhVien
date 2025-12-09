@@ -63,7 +63,7 @@ export function PatientFiltersBar({
         gender: value === "all" ? undefined : (value as Gender),
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const handleBloodTypeChange = useCallback(
@@ -73,7 +73,7 @@ export function PatientFiltersBar({
         bloodType: value === "all" ? undefined : (value as BloodType),
       });
     },
-    [filters, onFiltersChange]
+    [filters, onFiltersChange],
   );
 
   const clearFilters = useCallback(() => {

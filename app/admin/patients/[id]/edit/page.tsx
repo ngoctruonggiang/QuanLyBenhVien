@@ -31,13 +31,33 @@ export default function EditPatientPage() {
       ["dateOfBirth", patient.dateOfBirth, data.dateOfBirth || null],
       ["gender", patient.gender, data.gender || null],
       ["address", patient.address, data.address || null],
-      ["identificationNumber", patient.identificationNumber, data.identificationNumber || null],
-      ["healthInsuranceNumber", patient.healthInsuranceNumber, data.healthInsuranceNumber || null],
+      [
+        "identificationNumber",
+        patient.identificationNumber,
+        data.identificationNumber || null,
+      ],
+      [
+        "healthInsuranceNumber",
+        patient.healthInsuranceNumber,
+        data.healthInsuranceNumber || null,
+      ],
       ["bloodType", patient.bloodType, data.bloodType || null],
       ["allergies", patient.allergies, allergyString],
-      ["relativeFullName", patient.relativeFullName, data.relativeFullName || null],
-      ["relativePhoneNumber", patient.relativePhoneNumber, data.relativePhoneNumber || null],
-      ["relativeRelationship", patient.relativeRelationship, data.relativeRelationship || null],
+      [
+        "relativeFullName",
+        patient.relativeFullName,
+        data.relativeFullName || null,
+      ],
+      [
+        "relativePhoneNumber",
+        patient.relativePhoneNumber,
+        data.relativePhoneNumber || null,
+      ],
+      [
+        "relativeRelationship",
+        patient.relativeRelationship,
+        data.relativeRelationship || null,
+      ],
       ["accountId", patient.accountId, data.accountId || null],
     ];
 
@@ -88,7 +108,8 @@ export default function EditPatientPage() {
           <AlertCircle className="h-12 w-12 text-destructive mb-4" />
           <h3 className="text-lg font-medium">Patient not found</h3>
           <p className="text-muted-foreground mb-4">
-            The patient you are trying to edit does not exist or has been deleted.
+            The patient you are trying to edit does not exist or has been
+            deleted.
           </p>
           <Button asChild>
             <Link href="/admin/patients">Back to Patients</Link>

@@ -12,34 +12,170 @@ import {
 // Export for mock usage
 export type AppointmentResponse = Appointment;
 import { USE_MOCK } from "@/lib/mocks/toggle";
-import { mockSchedules } from "@/lib/mocks";
+import { mockSchedules, mockPatients, mockEmployees } from "@/lib/mocks";
+import { subDays, addDays, set } from "date-fns";
 
 const BASE_URL = "/api/appointments";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const today = new Date();
+const drNewTest = mockEmployees.find((e) => e.id === "emp-new-doctor-001")!;
+const drJohnSmith = mockEmployees.find((e) => e.id === "emp-101")!;
+const patient1 = mockPatients.find((p) => p.id === "p001")!;
+const patient2 = mockPatients.find((p) => p.id === "p002")!;
+const patient3 = mockPatients.find((p) => p.id === "p003")!;
+const patient4 = mockPatients.find((p) => p.id === "p004")!;
+
 const initialMockAppointments: Appointment[] = [
+  // === Appointments for Dr. New Test (emp-new-doctor-001) ===
   {
-    id: "apt-001",
-    patient: { id: "p001", fullName: "Nguyen Van An", phoneNumber: "0901234567" },
-    doctor: { id: "emp-101", fullName: "Dr. John Smith", department: "Cardiology", specialization: "Cardiology" },
-    appointmentTime: "2025-12-08T09:00:00",
+    id: "appt-nt-001",
+    patient: { id: patient1.id, fullName: patient1.fullName },
+    doctor: {
+      id: drNewTest.id,
+      fullName: drNewTest.fullName,
+      department: drNewTest.departmentName,
+    },
+    appointmentTime: set(addDays(today, 5), {
+      hours: 10,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
     status: "SCHEDULED",
     type: "CONSULTATION",
-    reason: "Chest pain and shortness of breath",
-    notes: "",
-    createdAt: "2025-12-02T10:30:00Z",
-    updatedAt: "2025-12-02T10:30:00Z",
+    reason: "Annual check-up.",
+    notes: "Patient is generally healthy. Discuss preventive care.",
+    createdAt: subDays(today, 2).toISOString(),
+    updatedAt: subDays(today, 2).toISOString(),
   },
   {
-    id: "apt-002",
-    patient: { id: "p002", fullName: "Tran Thi Mai", phoneNumber: "0912345678" },
-    doctor: { id: "emp-102", fullName: "Dr. Sarah Johnson", department: "Pediatrics", specialization: "Pediatrics" },
-    appointmentTime: "2025-12-08T10:30:00",
-    status: "SCHEDULED",
+    id: "appt-nt-002",
+    patient: { id: patient2.id, fullName: patient2.fullName },
+    doctor: {
+      id: drNewTest.id,
+      fullName: drNewTest.fullName,
+      department: drNewTest.departmentName,
+    },
+    appointmentTime: set(subDays(today, 14), {
+      hours: 14,
+      minutes: 30,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "COMPLETED",
     type: "FOLLOW_UP",
-    reason: "Follow-up after flu treatment",
-    createdAt: "2025-12-01T14:00:00Z",
-    updatedAt: "2025-12-01T14:00:00Z",
+    reason: "Follow-up on blood pressure medication.",
+    notes:
+      "Patient's blood pressure is now stable. Continue current medication. Next check-up in 6 months.",
+    createdAt: subDays(today, 20).toISOString(),
+    updatedAt: subDays(today, 14).toISOString(),
+  },
+  {
+    id: "appt-nt-003",
+    patient: { id: patient3.id, fullName: patient3.fullName },
+    doctor: {
+      id: drNewTest.id,
+      fullName: drNewTest.fullName,
+      department: drNewTest.departmentName,
+    },
+    appointmentTime: set(subDays(today, 3), {
+      hours: 11,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "CANCELLED",
+    type: "CONSULTATION",
+    reason: "Flu-like symptoms.",
+    cancelReason: "Patient cancelled due to conflicting schedule.",
+    cancelledAt: subDays(today, 4).toISOString(),
+    createdAt: subDays(today, 10).toISOString(),
+    updatedAt: subDays(today, 4).toISOString(),
+  },
+  {
+    id: "appt-nt-004",
+    patient: { id: patient4.id, fullName: patient4.fullName },
+    doctor: {
+      id: drNewTest.id,
+      fullName: drNewTest.fullName,
+      department: drNewTest.departmentName,
+    },
+    appointmentTime: set(today, {
+      hours: 15,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "SCHEDULED",
+    type: "EMERGENCY",
+    reason: "Minor injury, requires stitches.",
+    createdAt: today.toISOString(),
+    updatedAt: today.toISOString(),
+  },
+  {
+    id: "appt-nt-005",
+    patient: { id: patient1.id, fullName: patient1.fullName },
+    doctor: {
+      id: drNewTest.id,
+      fullName: drNewTest.fullName,
+      department: drNewTest.departmentName,
+    },
+    appointmentTime: set(addDays(today, 25), {
+      hours: 9,
+      minutes: 30,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "SCHEDULED",
+    type: "CONSULTATION",
+    reason: "Discuss lab results.",
+    notes: "",
+    createdAt: subDays(today, 1).toISOString(),
+    updatedAt: subDays(today, 1).toISOString(),
+  },
+
+  // === Appointments for other doctors (to test filtering) ===
+  {
+    id: "appt-js-001",
+    patient: { id: patient4.id, fullName: patient4.fullName },
+    doctor: {
+      id: drJohnSmith.id,
+      fullName: drJohnSmith.fullName,
+      department: drJohnSmith.departmentName,
+    },
+    appointmentTime: set(addDays(today, 2), {
+      hours: 11,
+      minutes: 30,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "SCHEDULED",
+    type: "CONSULTATION",
+    reason: "Heart palpitations.",
+    createdAt: subDays(today, 1).toISOString(),
+    updatedAt: subDays(today, 1).toISOString(),
+  },
+  {
+    id: "appt-js-002",
+    patient: { id: patient2.id, fullName: patient2.fullName },
+    doctor: {
+      id: drJohnSmith.id,
+      fullName: drJohnSmith.fullName,
+      department: drJohnSmith.departmentName,
+    },
+    appointmentTime: set(subDays(today, 30), {
+      hours: 10,
+      minutes: 0,
+      seconds: 0,
+      milliseconds: 0,
+    }).toISOString(),
+    status: "COMPLETED",
+    type: "CONSULTATION",
+    reason: "Initial consultation for chest pain.",
+    notes: "ECG normal. Prescribed stress test.",
+    createdAt: subDays(today, 35).toISOString(),
+    updatedAt: subDays(today, 30).toISOString(),
   },
 ];
 
@@ -53,27 +189,34 @@ const getMockAppointments = (): Appointment[] => {
     console.log(`DEBUG: Parsed ${data.length} appointments from localStorage.`);
     return data;
   } else {
-    console.log("DEBUG: No data in localStorage, initializing with default mock data.");
-    localStorage.setItem("mock_appointments", JSON.stringify(initialMockAppointments));
+    console.log(
+      "DEBUG: No data in localStorage, initializing with default mock data.",
+    );
+    localStorage.setItem(
+      "mock_appointments",
+      JSON.stringify(initialMockAppointments),
+    );
     return initialMockAppointments;
   }
 };
 
 const saveMockAppointments = (appointments: Appointment[]) => {
   if (typeof window !== "undefined") {
-    console.log(`DEBUG: Saving ${appointments.length} appointments to localStorage.`);
+    console.log(
+      `DEBUG: Saving ${appointments.length} appointments to localStorage.`,
+    );
     localStorage.setItem("mock_appointments", JSON.stringify(appointments));
   }
 };
 // ---------------------------------------------
 
-
 // Generate time slots based on doctor's schedule (30-min intervals)
 const generateTimeSlotsWithSchedule = (
+  date: string, // ADDED: date parameter
   startTime: string, // "07:00"
   endTime: string, // "12:00"
   bookedTimes: string[],
-  currentTime?: string
+  currentTime?: string,
 ): TimeSlot[] => {
   const slots: TimeSlot[] = [];
   const [startHour, startMin] = startTime.split(":").map(Number);
@@ -91,7 +234,6 @@ const generateTimeSlotsWithSchedule = (
       .padStart(2, "0")}`;
     slots.push({
       time,
-      datetime: `${date}T${time}:00`, // Added datetime
       available: !bookedTimes.includes(time),
       current: time === currentTime,
     });
@@ -110,7 +252,7 @@ const generateTimeSlotsWithSchedule = (
 export const appointmentService = {
   // List appointments with filters and pagination
   list: async (
-    params: AppointmentListParams
+    params: AppointmentListParams,
   ): Promise<PaginatedResponse<Appointment>> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(BASE_URL, { params });
@@ -127,7 +269,7 @@ export const appointmentService = {
       filtered = filtered.filter(
         (a) =>
           a.patient.fullName.toLowerCase().includes(term) ||
-          a.doctor.fullName.toLowerCase().includes(term)
+          a.doctor.fullName.toLowerCase().includes(term),
       );
     }
 
@@ -152,26 +294,26 @@ export const appointmentService = {
     }
     if (params.endDate) {
       filtered = filtered.filter(
-        (a) => a.appointmentTime <= params.endDate! + "T23:59:59"
+        (a) => a.appointmentTime <= params.endDate! + "T23:59:59",
       );
     }
 
     // Sort
     const sortField = params.sort?.split(",")[0] || "appointmentTime";
     const sortDir = params.sort?.split(",")[1] || "desc";
-    
+
     filtered.sort((a, b) => {
       let aVal: any, bVal: any;
 
-      if (sortField.includes('.')) {
-        const [obj, prop] = sortField.split('.');
+      if (sortField.includes(".")) {
+        const [obj, prop] = sortField.split(".");
         aVal = (a as any)[obj][prop];
         bVal = (b as any)[obj][prop];
       } else {
         aVal = (a as any)[sortField];
         bVal = (b as any)[sortField];
       }
-      
+
       if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
       if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
       return 0;
@@ -228,7 +370,7 @@ export const appointmentService = {
     // Check if doctor has schedule on this date
     const doctorSchedule = mockSchedules.find(
       (s: any) =>
-        s.employeeId === data.doctorId && s.workDate === appointmentDate
+        s.employeeId === data.doctorId && s.workDate === appointmentDate,
     );
 
     if (!doctorSchedule) {
@@ -252,7 +394,7 @@ export const appointmentService = {
       (a) =>
         a.doctor.id === data.doctorId &&
         a.status !== "CANCELLED" &&
-        a.appointmentTime === data.appointmentTime
+        a.appointmentTime === data.appointmentTime,
     );
 
     if (isSlotTaken) {
@@ -274,7 +416,7 @@ export const appointmentService = {
     try {
       const patientsResult = await getPatients({ page: 0, size: 100 });
       const patient = patientsResult.content.find(
-        (p) => p.id === data.patientId
+        (p) => p.id === data.patientId,
       );
       if (patient) {
         patientName = patient.fullName;
@@ -296,11 +438,11 @@ export const appointmentService = {
         role: "DOCTOR",
       });
       const doctor = doctorsResult.content.find(
-        (d: any) => d.id === data.doctorId
+        (d: any) => d.id === data.doctorId,
       );
       if (doctor) {
         doctorName = doctor.fullName;
-        doctorDept = doctor.departmentName;
+        doctorDept = doctor.departmentName ?? "General";
         doctorSpec = doctor.specialization || "General";
       } else {
         throw {
@@ -342,7 +484,7 @@ export const appointmentService = {
   // Update appointment (reschedule)
   update: async (
     id: string,
-    data: AppointmentUpdateRequest
+    data: AppointmentUpdateRequest,
   ): Promise<Appointment> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.patch(`${BASE_URL}/${id}`, data);
@@ -378,7 +520,7 @@ export const appointmentService = {
       const doctorSchedule = mockSchedules.find(
         (s: any) =>
           s.employeeId === appointment.doctor.id &&
-          s.workDate === appointmentDate
+          s.workDate === appointmentDate,
       );
 
       if (!doctorSchedule) {
@@ -403,7 +545,7 @@ export const appointmentService = {
           a.id !== id &&
           a.doctor.id === appointment.doctor.id &&
           a.status !== "CANCELLED" &&
-          a.appointmentTime === data.appointmentTime
+          a.appointmentTime === data.appointmentTime,
       );
 
       if (isSlotTaken) {
@@ -428,12 +570,12 @@ export const appointmentService = {
     id: string,
     data: AppointmentCancelRequest,
     currentUserId?: string, // For permission check
-    currentUserRole?: string
+    currentUserRole?: string,
   ): Promise<Appointment> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.patch(
         `${BASE_URL}/${id}/cancel`,
-        data
+        data,
       );
       return response.data;
     }
@@ -484,7 +626,7 @@ export const appointmentService = {
   complete: async (
     id: string,
     currentUserId?: string, // For permission check - should be doctor's employee ID
-    currentUserRole?: string
+    currentUserRole?: string,
   ): Promise<Appointment> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.patch(`${BASE_URL}/${id}/complete`);
@@ -531,7 +673,7 @@ export const appointmentService = {
       status: "COMPLETED",
       updatedAt: new Date().toISOString(),
     };
-    
+
     saveMockAppointments(mockAppointments);
     return mockAppointments[index];
   },
@@ -540,7 +682,7 @@ export const appointmentService = {
   getTimeSlots: async (
     doctorId: string,
     date: string,
-    excludeAppointmentId?: string
+    excludeAppointmentId?: string,
   ): Promise<TimeSlot[]> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(`${BASE_URL}/slots`, {
@@ -552,15 +694,29 @@ export const appointmentService = {
     await delay(200);
     const mockAppointments = getMockAppointments();
 
-    // Check doctor's schedule for this date
+    console.log("DEBUG getTimeSlots called with:", { doctorId, date });
+    console.log("DEBUG Total mockSchedules:", mockSchedules.length);
     const doctorSchedule = mockSchedules.find(
-      (s: any) => s.employeeId === doctorId && s.workDate === date
+      (s: any) => s.employeeId === doctorId && s.workDate === date,
     );
 
-    // If no schedule, return empty array
     if (!doctorSchedule) {
+      console.log("DEBUG No doctorSchedule found for:", { doctorId, date });
+      // Log some sample schedules for the doctor to see if any exist
+      const doctorSpecificSchedules = mockSchedules.filter(
+        (s: any) => s.employeeId === doctorId,
+      );
+      if (doctorSpecificSchedules.length > 0) {
+        console.log(
+          "DEBUG Found doctor-specific schedules (first 5):",
+          doctorSpecificSchedules.slice(0, 5),
+        );
+      } else {
+        console.log("DEBUG No schedules found for this doctor ID at all.");
+      }
       return [];
     }
+    console.log("DEBUG Found doctorSchedule:", doctorSchedule);
 
     // Get booked times for this doctor on this date
     const bookedTimes = mockAppointments
@@ -580,7 +736,7 @@ export const appointmentService = {
     let currentTime: string | undefined;
     if (excludeAppointmentId) {
       const current = mockAppointments.find(
-        (a) => a.id === excludeAppointmentId
+        (a) => a.id === excludeAppointmentId,
       );
       if (current) {
         const aptDate = current.appointmentTime.split("T")[0];
@@ -592,10 +748,11 @@ export const appointmentService = {
 
     // Generate slots only within doctor's schedule hours
     return generateTimeSlotsWithSchedule(
+      date, // ADDED: date parameter
       doctorSchedule.startTime,
       doctorSchedule.endTime,
       bookedTimes,
-      currentTime
+      currentTime,
     );
   },
 };

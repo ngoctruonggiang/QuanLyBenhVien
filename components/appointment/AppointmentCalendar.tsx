@@ -24,7 +24,7 @@ export function AppointmentCalendar({
       (d) =>
         d.getFullYear() === day.getFullYear() &&
         d.getMonth() === day.getMonth() &&
-        d.getDate() === day.getDate()
+        d.getDate() === day.getDate(),
     );
 
   return (
@@ -41,7 +41,9 @@ export function AppointmentCalendar({
       />
       <div className="flex justify-between items-center text-sm text-muted-foreground">
         <span>
-          {selected ? `Đã chọn: ${format(selected, "dd/MM/yyyy")}` : "Chưa chọn ngày"}
+          {selected
+            ? `Đã chọn: ${format(selected, "dd/MM/yyyy")}`
+            : "Chưa chọn ngày"}
         </span>
         {selected && (
           <Button

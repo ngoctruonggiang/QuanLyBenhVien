@@ -101,7 +101,7 @@ page: 0, // 0-based pagination per spec
 ```typescript
 // Kiểm tra lịch bác sĩ
 const doctorSchedule = mockSchedules.find(
-  (s) => s.employeeId === data.doctorId && s.workDate === appointmentDate
+  (s) => s.employeeId === data.doctorId && s.workDate === appointmentDate,
 );
 
 if (!doctorSchedule) {
@@ -118,7 +118,7 @@ const isSlotTaken = mockAppointments.some(
   (a) =>
     a.doctor.id === data.doctorId &&
     a.status !== "CANCELLED" &&
-    a.appointmentTime === data.appointmentTime
+    a.appointmentTime === data.appointmentTime,
 );
 
 if (isSlotTaken) {
@@ -135,7 +135,7 @@ Tương tự logic validation khi thay đổi `appointmentTime`
 ```typescript
 // Kiểm tra lịch bác sĩ
 const doctorSchedule = mockSchedules.find(
-  (s) => s.employeeId === doctorId && s.workDate === date
+  (s) => s.employeeId === doctorId && s.workDate === date,
 );
 
 if (!doctorSchedule) {
@@ -147,7 +147,7 @@ return generateTimeSlotsWithSchedule(
   doctorSchedule.startTime,
   doctorSchedule.endTime,
   bookedTimes,
-  currentTime
+  currentTime,
 );
 ```
 
@@ -158,7 +158,7 @@ const generateTimeSlotsWithSchedule = (
   startTime: string, // "07:00"
   endTime: string, // "12:00"
   bookedTimes: string[],
-  currentTime?: string
+  currentTime?: string,
 ): TimeSlot[] => {
   // Generate 30-min slots chỉ trong khung startTime-endTime
 };

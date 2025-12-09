@@ -1,9 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Reports - Doctor Portal", () => {
-  test("Doctor appointment stats page loads and renders chart", async ({ page }) => {
+  test("Doctor appointment stats page loads and renders chart", async ({
+    page,
+  }) => {
     await page.goto("/doctor/reports/appointments");
-    const headingVisible = await page.getByRole("heading", { name: /Appointments|Reports/i }).isVisible().catch(() => false);
+    const headingVisible = await page
+      .getByRole("heading", { name: /Appointments|Reports/i })
+      .isVisible()
+      .catch(() => false);
     if (!headingVisible) {
       test.skip(true, "Doctor reports page not available");
     }

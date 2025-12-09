@@ -1241,7 +1241,7 @@ async function fetchPatientHistory(patientId: string, dateRange: DateRange) {
   ];
 
   return events.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 }
 ```
@@ -1434,7 +1434,7 @@ export function apiToFormValues(patient: Patient): PatientFormValues {
 
 // Transform form state to API request
 export function formValuesToRequest(
-  values: PatientFormValues
+  values: PatientFormValues,
 ): CreatePatientRequest {
   return {
     fullName: values.fullName.trim(),
@@ -1458,7 +1458,7 @@ export function formValuesToRequest(
 // Get only changed fields for PUT request (partial update)
 export function getChangedFields(
   original: PatientFormValues,
-  current: PatientFormValues
+  current: PatientFormValues,
 ): Partial<UpdatePatientRequest> {
   const changes: Partial<UpdatePatientRequest> = {};
 
@@ -1470,7 +1470,7 @@ export function getChangedFields(
     if (Array.isArray(originalValue) && Array.isArray(currentValue)) {
       if (JSON.stringify(originalValue) !== JSON.stringify(currentValue)) {
         changes[key as keyof UpdatePatientRequest] = currentValue.join(
-          ", "
+          ", ",
         ) as any;
       }
     } else if (originalValue !== currentValue) {
@@ -1524,7 +1524,7 @@ const patientValidationSchema = z.object({
     .min(1, "Date of birth is required")
     .refine(
       (val) => new Date(val) < new Date(),
-      "Date of birth cannot be in the future"
+      "Date of birth cannot be in the future",
     ),
 
   gender: z.enum(["MALE", "FEMALE", "OTHER"]).optional().nullable(),
@@ -1564,7 +1564,7 @@ function handlePatientError(
   error: ApiErrorResponse,
   options?: {
     setFieldErrors?: (errors: Record<string, string>) => void;
-  }
+  },
 ) {
   const { code, message, details } = error.error;
 
@@ -1593,10 +1593,13 @@ function handlePatientError(
 
     case "VALIDATION_ERROR":
       if (details && options?.setFieldErrors) {
-        const fieldErrors = details.reduce((acc, err) => {
-          acc[err.field] = err.message;
-          return acc;
-        }, {} as Record<string, string>);
+        const fieldErrors = details.reduce(
+          (acc, err) => {
+            acc[err.field] = err.message;
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
         options.setFieldErrors(fieldErrors);
       } else {
         toast.error(message || "Validation failed");
@@ -1620,7 +1623,7 @@ function handlePatientError(
     case "HAS_FUTURE_APPOINTMENTS":
       const count = details?.[0]?.message.match(/\d+/)?.[0] || "some";
       toast.error(
-        `Cannot delete: Patient has ${count} scheduled appointments. Cancel them first.`
+        `Cannot delete: Patient has ${count} scheduled appointments. Cancel them first.`,
       );
       break;
 
@@ -2015,7 +2018,6 @@ interface PatientHistoryState {
 ### B.1 Components
 
 - [ ] **PatientListPage** (`app/admin/patients/page.tsx`)
-
   - [ ] Data table with pagination
   - [ ] Search by name/phone/email/ID
   - [ ] Gender filter dropdown
@@ -2028,7 +2030,6 @@ interface PatientHistoryState {
   - [ ] Loading skeleton
 
 - [ ] **PatientFormPage** (`app/admin/patients/new/page.tsx`, `app/admin/patients/[id]/edit/page.tsx`)
-
   - [ ] Collapsible sections
   - [ ] Personal Information section
   - [ ] Health Information section
@@ -2041,7 +2042,6 @@ interface PatientHistoryState {
   - [ ] Cancel button
 
 - [ ] **PatientDetailPage** (`app/admin/patients/[id]/page.tsx`)
-
   - [ ] Header with avatar and actions
   - [ ] Tab navigation
   - [ ] Overview tab content
@@ -2053,7 +2053,6 @@ interface PatientHistoryState {
   - [ ] Loading skeleton
 
 - [ ] **PatientHistoryPage** (`app/admin/patients/[id]/history/page.tsx`)
-
   - [ ] Timeline component
   - [ ] Event type filter
   - [ ] Date range picker
@@ -2062,7 +2061,6 @@ interface PatientHistoryState {
   - [ ] Empty state
 
 - [ ] **MyProfilePage** (`app/profile/page.tsx`)
-
   - [ ] Profile card
   - [ ] Contact information section
   - [ ] Personal details section
@@ -2081,29 +2079,24 @@ interface PatientHistoryState {
 ### B.2 Shared Components
 
 - [ ] **PatientAvatar** (`components/patients/PatientAvatar.tsx`)
-
   - [ ] Initials generation
   - [ ] Color from name hash
   - [ ] Size variants
 
 - [ ] **GenderBadge** (`components/patients/GenderBadge.tsx`)
-
   - [ ] Color coding (blue/pink/gray)
   - [ ] Icon support
 
 - [ ] **BloodTypeBadge** (`components/patients/BloodTypeBadge.tsx`)
-
   - [ ] Color coding by type
   - [ ] Size variants
 
 - [ ] **AllergyTags** (`components/patients/AllergyTags.tsx`)
-
   - [ ] Tag display
   - [ ] Max visible with "+N more"
   - [ ] Remove capability (if editable)
 
 - [ ] **PatientSearchSelect** (`components/patients/PatientSearchSelect.tsx`)
-
   - [ ] Debounced search
   - [ ] Patient result display
   - [ ] Selection handling
@@ -2116,7 +2109,6 @@ interface PatientHistoryState {
 ### B.3 Hooks
 
 - [ ] **usePatients** (`hooks/queries/usePatients.ts`)
-
   - [ ] List patients query
   - [ ] Get patient by ID query
   - [ ] Get my profile query
@@ -2143,7 +2135,6 @@ interface PatientHistoryState {
 ### B.5 Utilities
 
 - [ ] **Patient utils** (`lib/patient-utils.ts`)
-
   - [ ] apiToFormValues transformer
   - [ ] formValuesToRequest transformer
   - [ ] getChangedFields helper

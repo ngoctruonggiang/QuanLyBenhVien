@@ -257,7 +257,7 @@ const mockPatientActivity: PatientActivity = {
 export const reportsService = {
   // Revenue Report
   getRevenueReport: async (
-    params: RevenueReportParams
+    params: RevenueReportParams,
   ): Promise<RevenueReport> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(`${BASE_URL}/revenue`, {
@@ -272,7 +272,7 @@ export const reportsService = {
 
   // Appointment Statistics
   getAppointmentStats: async (
-    params: AppointmentStatsParams
+    params: AppointmentStatsParams,
   ): Promise<AppointmentStats> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(`${BASE_URL}/appointments`, {
@@ -287,12 +287,12 @@ export const reportsService = {
 
   // Doctor Performance
   getDoctorPerformance: async (
-    params: DoctorPerformanceParams
+    params: DoctorPerformanceParams,
   ): Promise<DoctorPerformance> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(
         `${BASE_URL}/doctors/performance`,
-        { params }
+        { params },
       );
       return response.data;
     }
@@ -318,7 +318,7 @@ export const reportsService = {
     // Filter by department
     if (params.departmentId) {
       sortedDoctors = sortedDoctors.filter(
-        (d) => d.departmentId === params.departmentId
+        (d) => d.departmentId === params.departmentId,
       );
     }
 
@@ -331,12 +331,12 @@ export const reportsService = {
 
   // Patient Activity
   getPatientActivity: async (
-    params: PatientActivityParams
+    params: PatientActivityParams,
   ): Promise<PatientActivity> => {
     if (!USE_MOCK) {
       const response = await axiosInstance.get(
         `${BASE_URL}/patients/activity`,
-        { params }
+        { params },
       );
       return response.data;
     }
@@ -362,14 +362,14 @@ export const reportsService = {
   // Export to CSV
   exportToCSV: async (
     reportType: string,
-    params: Record<string, string>
+    params: Record<string, string>,
   ): Promise<Blob> => {
     const response = await axiosInstance.get(
       `${BASE_URL}/${reportType}/export/csv`,
       {
         params,
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   },
@@ -377,14 +377,14 @@ export const reportsService = {
   // Export to PDF
   exportToPDF: async (
     reportType: string,
-    params: Record<string, string>
+    params: Record<string, string>,
   ): Promise<Blob> => {
     const response = await axiosInstance.get(
       `${BASE_URL}/${reportType}/export/pdf`,
       {
         params,
         responseType: "blob",
-      }
+      },
     );
     return response.data;
   },

@@ -1,4 +1,7 @@
-export function exportToCSV(rows: Record<string, any>[], filename = "export.csv") {
+export function exportToCSV(
+  rows: Record<string, any>[],
+  filename = "export.csv",
+) {
   if (!rows || rows.length === 0) {
     console.warn("No data to export");
     return;
@@ -8,7 +11,7 @@ export function exportToCSV(rows: Record<string, any>[], filename = "export.csv"
     rows.reduce((set, row) => {
       Object.keys(row || {}).forEach((k) => set.add(k));
       return set;
-    }, new Set<string>())
+    }, new Set<string>()),
   );
 
   const escape = (value: any) => {
@@ -17,9 +20,9 @@ export function exportToCSV(rows: Record<string, any>[], filename = "export.csv"
     return `"${str}"`;
   };
 
-  const csv = [headers.map(escape).join(",")].concat(
-    rows.map((row) => headers.map((h) => escape(row[h])).join(","))
-  ).join("\n");
+  const csv = [headers.map(escape).join(",")]
+    .concat(rows.map((row) => headers.map((h) => escape(row[h])).join(",")))
+    .join("\n");
 
   if (typeof window === "undefined") {
     return csv;

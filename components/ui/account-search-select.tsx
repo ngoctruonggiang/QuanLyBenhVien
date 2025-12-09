@@ -53,8 +53,8 @@ export function AccountSearchSelect({
           {isLoading
             ? "Searching..."
             : debouncedSearch && accounts.length === 0
-            ? "No accounts found."
-            : "Type to search for an account."}
+              ? "No accounts found."
+              : "Type to search for an account."}
         </CommandEmpty>
 
         {accounts.map((account) => (

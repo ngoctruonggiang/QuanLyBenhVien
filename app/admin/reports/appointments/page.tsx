@@ -195,13 +195,14 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AppointmentStatsPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const presets = useDateRangePresets();
   const [startDate, setStartDate] = useState<Date | undefined>(
-    presets.last30Days.startDate
+    presets.last30Days.startDate,
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    presets.last30Days.endDate
+    presets.last30Days.endDate,
   );
   const [departmentId, setDepartmentId] = useState<string>("ALL");
   const [doctorId, setDoctorId] = useState<string>("ALL");
@@ -274,20 +275,20 @@ export default function AppointmentStatsPage() {
   const handleExport = () => {
     const rows: any[] = [];
     data?.appointmentsByStatus?.forEach((s) =>
-      rows.push({ section: "status", status: s.status, count: s.count })
+      rows.push({ section: "status", status: s.status, count: s.count }),
     );
     data?.appointmentsByType?.forEach((t) =>
-      rows.push({ section: "type", type: t.type, count: t.count })
+      rows.push({ section: "type", type: t.type, count: t.count }),
     );
     data?.appointmentsByDepartment?.forEach((d) =>
       rows.push({
         section: "department",
         department: d.departmentName,
         count: d.count,
-      })
+      }),
     );
     data?.dailyTrend?.forEach((d) =>
-      rows.push({ section: "daily", date: d.date, count: d.count })
+      rows.push({ section: "daily", date: d.date, count: d.count }),
     );
     exportToCSV(rows, "appointments-report.csv");
   };
@@ -373,12 +374,13 @@ export default function AppointmentStatsPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={() => refetch()} disabled={isLoading}>
-              onClick=
-              {() => {
+            <Button
+              onClick={() => {
                 if (!validateRange()) return;
                 refetch();
               }}
+              disabled={isLoading}
+            >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Generate Report
             </Button>

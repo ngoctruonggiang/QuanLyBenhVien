@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { Column, ColumnDef } from "@tanstack/react-table";
 import { Appointment } from "@/interfaces/appointment";
 import { AppointmentStatusBadge } from "./appointment-status-badge";
 import { AppointmentTypeBadge } from "./appointment-type-badge";
@@ -12,9 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Eye, Pencil, XCircle } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Pencil,
+  XCircle,
+  ArrowUpDown,
+} from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import React from "react";
 
 interface ColumnActionsProps {
   appointment: Appointment;
@@ -65,13 +72,34 @@ function ColumnActions({ appointment, onCancel }: ColumnActionsProps) {
   );
 }
 
+// Helper component for sortable headers
+const SortableHeader = <TData,>({
+  column,
+  children,
+}: {
+  column: Column<TData, unknown>;
+  children: React.ReactNode;
+}) => {
+  return (
+    <Button
+      variant="ghost"
+      onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    >
+      {children}
+      <ArrowUpDown className="ml-2 h-4 w-4" />
+    </Button>
+  );
+};
+
 export function getAppointmentColumns(
-  onCancel: (appointment: Appointment) => void
+  onCancel: (appointment: Appointment) => void,
 ): ColumnDef<Appointment>[] {
   return [
     {
-      accessorKey: "patient",
-      header: "Patient",
+      accessorKey: "patient.fullName",
+      header: ({ column }) => (
+        <SortableHeader column={column}>Patient</SortableHeader>
+      ),
       cell: ({ row }) => {
         const patient = row.original.patient;
         return (
@@ -87,8 +115,10 @@ export function getAppointmentColumns(
       },
     },
     {
-      accessorKey: "doctor",
-      header: "Doctor",
+      accessorKey: "doctor.fullName",
+      header: ({ column }) => (
+        <SortableHeader column={column}>Doctor</SortableHeader>
+      ),
       cell: ({ row }) => {
         const doctor = row.original.doctor;
         return (
@@ -105,7 +135,9 @@ export function getAppointmentColumns(
     },
     {
       accessorKey: "appointmentTime",
-      header: "Date & Time",
+      header: ({ column }) => (
+        <SortableHeader column={column}>Date & Time</SortableHeader>
+      ),
       cell: ({ row }) => {
         const dateTime = new Date(row.getValue("appointmentTime"));
         return (
@@ -125,7 +157,9 @@ export function getAppointmentColumns(
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: ({ column }) => (
+        <SortableHeader column={column}>Status</SortableHeader>
+      ),
       cell: ({ row }) => (
         <AppointmentStatusBadge status={row.getValue("status")} />
       ),

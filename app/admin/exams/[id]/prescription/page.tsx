@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import {
   useCreatePrescription,
+  useUpdatePrescription,
   useMedicalExam,
 } from "@/hooks/queries/useMedicalExam";
 import { PrescriptionForm } from "../../_components/prescription-form";
@@ -18,33 +19,42 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-export default function CreatePrescriptionPage() {
+export default function ManagePrescriptionPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+
   const { data: exam, isLoading } = useMedicalExam(id);
-  const { mutateAsync: createPrescription, isPending } =
+  const { mutateAsync: createPrescription, isPending: isCreating } =
     useCreatePrescription();
+  const { mutateAsync: updatePrescription, isPending: isUpdating } =
+    useUpdatePrescription();
+
+  const isEditing = !!exam?.prescription;
 
   const onSubmit = async (data: PrescriptionFormValues) => {
+    const payload = {
+      items: data.items.map((item) => ({
+        medicineId: item.medicineId,
+        quantity: item.quantity,
+        dosage: item.dosage,
+        duration: item.duration,
+        notes: item.notes,
+      })),
+      notes: data.notes,
+    };
+
     try {
-      await createPrescription({
-        examId: id,
-        data: {
-          items: data.items.map((item) => ({
-            medicineId: item.medicineId,
-            quantity: item.quantity,
-            dosage: item.dosage,
-            durationDays: parseInt(item.duration) || undefined,
-            instructions: item.notes,
-          })),
-          notes: data.notes,
-        },
-      });
-      toast.success("Prescription created successfully");
+      if (isEditing) {
+        await updatePrescription({ examId: id, data: payload });
+        toast.success("Prescription updated successfully");
+      } else {
+        await createPrescription({ examId: id, data: payload });
+        toast.success("Prescription created successfully");
+      }
       router.push(`/admin/exams/${id}`);
     } catch (error) {
-      toast.error("Failed to create prescription");
+      // The hook's onError will show the toast
       console.error(error);
     }
   };
@@ -71,22 +81,15 @@ export default function CreatePrescriptionPage() {
     );
   }
 
-  // Check if prescription already exists
-  if (exam.prescription) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <p className="text-muted-foreground">
-          This exam already has a prescription
-        </p>
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/admin/exams/${id}`)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> View Exam
-        </Button>
-      </div>
-    );
-  }
+  const defaultValues = exam.prescription
+    ? {
+        ...exam.prescription,
+        items: exam.prescription.items.map((item) => ({
+          ...item,
+          medicineId: item.medicineId.toString(),
+        })),
+      }
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -96,42 +99,27 @@ export default function CreatePrescriptionPage() {
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            Create Prescription
+            {isEditing ? "Manage Prescription" : "Create Prescription"}
           </h1>
-          <p className="text-muted-foreground">
-            Patient: {exam.patient.fullName} • Doctor: {exam.doctor.fullName}
-          </p>
+          <p className="text-muted-foreground">For Exam ID: {exam.id}</p>
         </div>
       </div>
 
-      {/* Exam Summary */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Exam Summary</CardTitle>
-          <CardDescription>
-            Reference information from the examination
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <p className="text-sm text-muted-foreground">Diagnosis</p>
-            <p className="font-medium">{exam.diagnosis || "—"}</p>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Treatment</p>
-            <p className="font-medium">{exam.treatment || "—"}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Prescription Form */}
       <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Prescription Details</CardTitle>
-          <CardDescription>Add medicines to the prescription</CardDescription>
+          <CardDescription>
+            {isEditing
+              ? "Edit the medicines on this prescription."
+              : "Add medicines to the prescription."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <PrescriptionForm onSubmit={onSubmit} isSubmitting={isPending} />
+          <PrescriptionForm
+            onSubmit={onSubmit}
+            isSubmitting={isCreating || isUpdating}
+            defaultValues={defaultValues}
+          />
         </CardContent>
       </Card>
     </div>

@@ -24,7 +24,10 @@ const calcAge = (dob?: string | null) => {
 export default function MyProfilePage() {
   const { data: profile, isLoading, error } = useMyProfile();
 
-  const age = useMemo(() => calcAge(profile?.dateOfBirth), [profile?.dateOfBirth]);
+  const age = useMemo(
+    () => calcAge(profile?.dateOfBirth),
+    [profile?.dateOfBirth],
+  );
 
   if (isLoading) {
     return <p className="p-6 text-muted-foreground">Đang tải hồ sơ...</p>;
@@ -33,20 +36,29 @@ export default function MyProfilePage() {
   if (error || !profile) {
     return (
       <div className="page-shell py-10 space-y-3 text-center">
-        <p className="text-lg font-semibold text-destructive">Không tải được hồ sơ</p>
+        <p className="text-lg font-semibold text-destructive">
+          Không tải được hồ sơ
+        </p>
         <p className="text-sm text-muted-foreground">Vui lòng thử lại sau.</p>
       </div>
     );
   }
 
-  const allergies = profile.allergies ? profile.allergies.split(",").map((s) => s.trim()).filter(Boolean) : [];
+  const allergies = profile.allergies
+    ? profile.allergies
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : [];
 
   return (
     <div className="page-shell space-y-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Hồ sơ của tôi</h1>
-          <p className="text-muted-foreground">Thông tin cá nhân và liên hệ khẩn cấp.</p>
+          <p className="text-muted-foreground">
+            Thông tin cá nhân và liên hệ khẩn cấp.
+          </p>
         </div>
         <Button asChild>
           <Link href="/profile/edit">Chỉnh sửa</Link>
@@ -61,11 +73,20 @@ export default function MyProfilePage() {
           <InfoRow label="Họ tên" value={profile.fullName} />
           <InfoRow label="Email" value={profile.email || "Không có"} />
           <InfoRow label="Số điện thoại" value={profile.phoneNumber} />
-          <InfoRow label="Ngày sinh" value={`${formatDate(profile.dateOfBirth)}${age ? ` (${age} tuổi)` : ""}`} />
+          <InfoRow
+            label="Ngày sinh"
+            value={`${formatDate(profile.dateOfBirth)}${age ? ` (${age} tuổi)` : ""}`}
+          />
           <InfoRow label="Giới tính" value={profile.gender || "Không có"} />
           <InfoRow label="Địa chỉ" value={profile.address || "Không có"} />
-          <InfoRow label="Số BHYT" value={profile.healthInsuranceNumber || "Không có"} />
-          <InfoRow label="CMND/CCCD" value={profile.identificationNumber || "Không có"} />
+          <InfoRow
+            label="Số BHYT"
+            value={profile.healthInsuranceNumber || "Không có"}
+          />
+          <InfoRow
+            label="CMND/CCCD"
+            value={profile.identificationNumber || "Không có"}
+          />
         </CardContent>
       </Card>
 
@@ -101,8 +122,14 @@ export default function MyProfilePage() {
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <InfoRow label="Tên" value={profile.relativeFullName || "Không có"} />
-          <InfoRow label="Số điện thoại" value={profile.relativePhoneNumber || "Không có"} />
-          <InfoRow label="Quan hệ" value={profile.relativeRelationship || "Không có"} />
+          <InfoRow
+            label="Số điện thoại"
+            value={profile.relativePhoneNumber || "Không có"}
+          />
+          <InfoRow
+            label="Quan hệ"
+            value={profile.relativeRelationship || "Không có"}
+          />
         </CardContent>
       </Card>
 
