@@ -151,7 +151,7 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
   );
 
   // Permission checks
-  const canCreate = role === "ADMIN" || role === "NURSE";
+  const canCreate = role === "ADMIN" || role === "NURSE" || role === "DOCTOR";
   const canFilterByDoctor = role === "ADMIN" || role === "NURSE";
   const canFilterByStatus = true; // All roles can filter by status
 
@@ -177,7 +177,13 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
         </div>
         {canCreate && (
           <Button asChild>
-            <Link href={`/${role.toLowerCase()}/appointments/new`}>
+            <Link
+              href={
+                role === "DOCTOR"
+                  ? "/admin/appointments/new"
+                  : `/${role.toLowerCase()}/appointments/new`
+              }
+            >
               <Plus className="mr-2 h-4 w-4" />
               Book Appointment
             </Link>

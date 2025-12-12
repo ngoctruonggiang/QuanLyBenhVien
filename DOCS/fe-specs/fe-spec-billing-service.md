@@ -68,7 +68,7 @@ The Billing Service manages patient invoices and payment processing. It provides
     └── /{id}/pay (make payment - online payment flow)
 ```
 
-### 1.6 Invoice Status Flow /chưa thể kiểm thử alternative/
+### 1.6 Invoice Status Flow
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -105,7 +105,7 @@ The Billing Service manages patient invoices and payment processing. It provides
 
 ## 2. User Flows & Acceptance Criteria
 
-### 2.1 Flow: View Invoice List (Admin) /chưa phân role/
+### 2.1 Flow: View Invoice List (Admin)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -137,7 +137,7 @@ The Billing Service manages patient invoices and payment processing. It provides
 
 ---
 
-### 2.2 Flow: View Invoice Detail (Admin) /chưa role/
+### 2.2 Flow: View Invoice Detail (Admin)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

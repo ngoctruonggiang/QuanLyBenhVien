@@ -43,7 +43,7 @@ const allNavItems = [
     title: "Appointments",
     href: "/admin/appointments",
     icon: NAV_ICONS.appointments,
-    roles: ["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"],
+    roles: ["ADMIN", "NURSE", "RECEPTIONIST"],
   },
   {
     title: "Examinations",
