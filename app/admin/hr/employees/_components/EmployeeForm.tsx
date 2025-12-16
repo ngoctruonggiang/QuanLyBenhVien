@@ -31,6 +31,7 @@ import { Employee, EmployeeRequest } from "@/interfaces/hr";
 import { useDepartments } from "@/hooks/queries/useHr";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
+import { User, Briefcase, Link2 } from "lucide-react";
 
 const formSchema = z
   .object({
@@ -139,251 +140,250 @@ export default function EmployeeForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <Accordion
-          type="single"
-          collapsible
-          defaultValue="basic"
-          className="space-y-4"
-        >
-          <AccordionItem value="basic">
-            <AccordionTrigger>1. Basic Information</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Full Name *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* Basic Information Section */}
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <User className="h-5 w-5 text-sky-500" />
+            Basic Information
+          </div>
+          <div className="form-grid">
+            <FormField
+              control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Full Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="John Doe" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email *</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="john.doe@example.com"
-                          type="email"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="john.doe@example.com"
+                      type="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="phoneNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone (10-15 digits)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="0901234567" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="phoneNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Phone (10-15 digits)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0901234567" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Street, city" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Address</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Street, city" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
-          <AccordionItem value="employment">
-            <AccordionTrigger>2. Employment Details</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="DOCTOR">Doctor</SelectItem>
-                          <SelectItem value="NURSE">Nurse</SelectItem>
-                          <SelectItem value="RECEPTIONIST">
-                            Receptionist
-                          </SelectItem>
-                          <SelectItem value="ADMIN">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* Employment Details Section */}
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Briefcase className="h-5 w-5 text-violet-500" />
+            Employment Details
+          </div>
+          <div className="form-grid">
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Role</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="DOCTOR">Doctor</SelectItem>
+                      <SelectItem value="NURSE">Nurse</SelectItem>
+                      <SelectItem value="RECEPTIONIST">
+                        Receptionist
+                      </SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="departmentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Department{" "}
-                        {role === "DOCTOR" || role === "NURSE" ? "*" : ""}
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value || "none"}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select department" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          {departmentsData?.content?.map((dept: any) => (
-                            <SelectItem key={dept.id} value={dept.id}>
-                              {dept.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="departmentId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">
+                    Department{" "}
+                    {role === "DOCTOR" || role === "NURSE" ? "*" : ""}
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || "none"}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {departmentsData?.content?.map((dept: any) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="specialization"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Specialization</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Cardiology" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <FormField
+              control={form.control}
+              name="specialization"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Specialization</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Cardiology" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                {(role === "DOCTOR" || role === "NURSE") && (
-                  <FormField
-                    control={form.control}
-                    name="licenseNumber"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>License Number *</FormLabel>
-                        <FormControl>
-                          <Input placeholder="LIC-12345" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Status</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="ACTIVE">Active</SelectItem>
-                          <SelectItem value="ON_LEAVE">On Leave</SelectItem>
-                          <SelectItem value="RESIGNED">Resigned</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="hiredAt"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Hire Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          <AccordionItem value="account">
-            <AccordionTrigger>3. Account Linking (Optional)</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-4">
+            {(role === "DOCTOR" || role === "NURSE") && (
               <FormField
                 control={form.control}
-                name="accountId"
+                name="licenseNumber"
                 render={({ field }) => (
-                  <FormItem className="max-w-md">
-                    <FormLabel>Account ID</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || "none"}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select account" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="none">Unlinked</SelectItem>
-                        {availableAccounts.map((acct) => (
-                          <SelectItem key={acct.id} value={acct.id}>
-                            {acct.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">License Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="LIC-12345" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            )}
+
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Status</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">Active</SelectItem>
+                      <SelectItem value="ON_LEAVE">On Leave</SelectItem>
+                      <SelectItem value="RESIGNED">Resigned</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="hiredAt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Hire Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Account Linking Section */}
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Link2 className="h-5 w-5 text-emerald-500" />
+            Account Linking (Optional)
+          </div>
+          <FormField
+            control={form.control}
+            name="accountId"
+            render={({ field }) => (
+              <FormItem className="max-w-md">
+                <FormLabel className="form-label">Account ID</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || "none"}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select account" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="none">Unlinked</SelectItem>
+                    {availableAccounts.map((acct) => (
+                      <SelectItem key={acct.id} value={acct.id}>
+                        {acct.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         {initialData?.updatedAt && (
           <p className="text-xs text-muted-foreground">
@@ -391,11 +391,15 @@ export default function EmployeeForm({
           </p>
         )}
 
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <div className="flex justify-end gap-4 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={() => router.back()} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             {initialData ? "Update Employee" : "Create Employee"}
           </Button>

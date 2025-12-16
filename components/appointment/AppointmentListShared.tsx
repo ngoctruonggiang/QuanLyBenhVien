@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, Plus, Search } from "lucide-react";
+import { CalendarDays, Plus, Search, Calendar, List, LayoutGrid } from "lucide-react";
 import { format } from "date-fns";
 import { SortingState } from "@tanstack/react-table";
 import Link from "next/link";
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -25,6 +25,9 @@ import {
 } from "@/components/ui/popover";
 import { DataTable } from "@/components/ui/data-table";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
+import { ListEmptyState } from "@/components/ui/list-empty-state";
 
 import { AppointmentStatus, Appointment } from "@/interfaces/appointment";
 import {
@@ -37,6 +40,7 @@ import { useEmployees } from "@/hooks/queries/useHr";
 import { useAuth } from "@/contexts/AuthContext";
 import { CancelAppointmentDialog } from "@/app/admin/appointments/_components/cancel-appointment-dialog";
 import { getAppointmentColumnsByRole } from "@/components/appointment/AppointmentColumnsShared";
+import { AppointmentScheduleView } from "@/components/appointment/AppointmentScheduleView";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
@@ -72,6 +76,7 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "schedule">("list");
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -164,190 +169,249 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
   const totalPages = data?.totalPages || 0;
   const totalElements = data?.totalElements || 0;
 
+  // Calculate stats
+  const scheduledCount = useMemo(() => appointments.filter(a => a.status === "SCHEDULED").length, [appointments]);
+  const completedCount = useMemo(() => appointments.filter(a => a.status === "COMPLETED").length, [appointments]);
+  const cancelledCount = useMemo(() => appointments.filter(a => a.status === "CANCELLED").length, [appointments]);
+
   return (
     <div className="w-full space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {role === "PATIENT" ? "My Appointments" : "Appointments"}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {role === "DOCTOR"
-              ? "Manage your scheduled appointments"
-              : role === "PATIENT"
-                ? "View and manage your appointments"
-                : "Manage all patient appointments"}
-          </p>
-        </div>
-        {canCreate && (
-          <Button asChild>
-            <Link
-              href={
-                role === "DOCTOR"
-                  ? "/admin/appointments/new"
-                  : `/${role.toLowerCase()}/appointments/new`
+      {/* Enhanced Header */}
+      <ListPageHeader
+        title={role === "PATIENT" ? "My Appointments" : "Appointments"}
+        description={
+          role === "DOCTOR"
+            ? "Manage your scheduled appointments"
+            : role === "PATIENT"
+            ? "View and manage your appointments"
+            : "Manage all patient appointments"
+        }
+        theme="violet"
+        icon={<Calendar className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Total", value: totalElements },
+          { label: "Scheduled", value: scheduledCount },
+          { label: "Completed", value: completedCount },
+        ]}
+        primaryAction={
+          canCreate
+            ? {
+                label: "Book Appointment",
+                href:
+                  role === "DOCTOR"
+                    ? "/admin/appointments/new"
+                    : `/${role.toLowerCase()}/appointments/new`,
               }
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Book Appointment
-            </Link>
+            : undefined
+        }
+      />
+
+      {/* Quick Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "ALL", label: "All", count: totalElements },
+          { id: "SCHEDULED", label: "Scheduled", count: scheduledCount, countColor: "success" },
+          { id: "COMPLETED", label: "Completed", count: completedCount },
+          { id: "CANCELLED", label: "Cancelled", count: cancelledCount, countColor: cancelledCount > 0 ? "danger" : "default" },
+          { id: "NO_SHOW", label: "No Show" },
+        ]}
+        activeFilter={status}
+        onFilterChange={(id) => {
+          setStatus(id as AppointmentStatus | "ALL");
+          setPage(0);
+        }}
+      />
+
+      {/* View Toggle & Filters Row */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* View Toggle */}
+        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+          <Button
+            variant={viewMode === "list" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+            className="h-8 px-3"
+          >
+            <List className="h-4 w-4 mr-1" />
+            List
+          </Button>
+          <Button
+            variant={viewMode === "schedule" ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setViewMode("schedule")}
+            className="h-8 px-3"
+          >
+            <LayoutGrid className="h-4 w-4 mr-1" />
+            Schedule
+          </Button>
+        </div>
+
+        <div className="h-6 w-px bg-slate-200" />
+
+        {/* Search */}
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={
+              role === "PATIENT"
+                ? "Search by doctor name..."
+                : "Search by patient name..."
+            }
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Doctor Filter - Only for ADMIN/NURSE */}
+        {canFilterByDoctor && (
+          <Select
+            value={doctorId}
+            onValueChange={(value) => {
+              setDoctorId(value);
+              setPage(0);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Doctor" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Doctors</SelectItem>
+              {doctors.map((doctor) => (
+                <SelectItem key={doctor.id} value={doctor.id}>
+                  {doctor.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Date Range */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-[140px] justify-start">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {startDate ? format(startDate, "MMM dd") : "Start date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <CalendarComponent
+              mode="single"
+              selected={startDate}
+              onSelect={(date) => {
+                setStartDate(date);
+                setPage(0);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className="w-[140px] justify-start">
+              <CalendarDays className="mr-2 h-4 w-4" />
+              {endDate ? format(endDate, "MMM dd") : "End date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <CalendarComponent
+              mode="single"
+              selected={endDate}
+              onSelect={(date) => {
+                setEndDate(date);
+                setPage(0);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
+
+        {(startDate || endDate) && (
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setStartDate(undefined);
+              setEndDate(undefined);
+              setPage(0);
+            }}
+            className="h-8 px-2 lg:px-3"
+          >
+            Clear
           </Button>
         )}
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {/* Search */}
-            <div className="relative flex-1 sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder={
-                  role === "PATIENT"
-                    ? "Search by doctor name..."
-                    : "Search by patient name..."
+      {/* Content based on view mode */}
+      {viewMode === "schedule" ? (
+        <AppointmentScheduleView
+          appointments={appointments}
+          onAppointmentClick={(apt) => {
+            const basePath =
+              role === "DOCTOR"
+                ? "/doctor/appointments"
+                : role === "PATIENT"
+                ? "/patient/appointments"
+                : "/admin/appointments";
+            router.push(`${basePath}/${apt.id}`);
+          }}
+          onEmptySlotClick={
+            canCreate
+              ? (date) => {
+                  const basePath =
+                    role === "DOCTOR"
+                      ? "/admin/appointments/new"
+                      : `/${role.toLowerCase()}/appointments/new`;
+                  router.push(`${basePath}?date=${format(date, "yyyy-MM-dd")}&time=${format(date, "HH:mm")}`);
                 }
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
+              : undefined
+          }
+          isLoading={isLoading}
+        />
+      ) : (
+        <>
+          {/* Table Card */}
+          <Card className="border-2 border-slate-200 shadow-md rounded-xl">
+            <CardContent className="p-0">
+              <DataTable
+                columns={columns}
+                data={appointments}
+                sorting={sorting}
+                onSortingChange={setSorting}
+                onRowClick={(apt) => {
+                  const basePath =
+                    role === "DOCTOR"
+                      ? "/doctor/appointments"
+                      : role === "PATIENT"
+                      ? "/patient/appointments"
+                      : "/admin/appointments";
+                  router.push(`${basePath}/${apt.id}`);
+                }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Pagination */}
+          {totalElements > 0 && (
+            <div className="border-t px-4 py-3">
+              <DataTablePagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                showRowsPerPage={true}
+                rowsPerPageOptions={PAGE_SIZE_OPTIONS}
+                rowsPerPage={pageSize}
+                onRowsPerPageChange={(newSize) => {
+                  setPageSize(newSize);
                   setPage(0);
                 }}
-                className="pl-9"
               />
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Status Filter */}
-              {canFilterByStatus && (
-                <Select
-                  value={status}
-                  onValueChange={(value) => {
-                    setStatus(value as AppointmentStatus | "ALL");
-                    setPage(0);
-                  }}
-                >
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Status</SelectItem>
-                    <SelectItem value="SCHEDULED">Scheduled</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                    <SelectItem value="NO_SHOW">No Show</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* Doctor Filter - Only for ADMIN/NURSE */}
-              {canFilterByDoctor && (
-                <Select
-                  value={doctorId}
-                  onValueChange={(value) => {
-                    setDoctorId(value);
-                    setPage(0);
-                  }}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Doctor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Doctors</SelectItem>
-                    {doctors.map((doctor) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.fullName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              {/* Date Range */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[140px] justify-start">
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    {startDate ? format(startDate, "MMM dd") : "Start date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={startDate}
-                    onSelect={(date) => {
-                      setStartDate(date);
-                      setPage(0);
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-[140px] justify-start">
-                    <CalendarDays className="mr-2 h-4 w-4" />
-                    {endDate ? format(endDate, "MMM dd") : "End date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    onSelect={(date) => {
-                      setEndDate(date);
-                      setPage(0);
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-
-              {(startDate || endDate) && (
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setStartDate(undefined);
-                    setEndDate(undefined);
-                    setPage(0);
-                  }}
-                  className="h-8 px-2 lg:px-3"
-                >
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={appointments}
-            sorting={sorting}
-            onSortingChange={setSorting}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Pagination */}
-      {totalElements > 0 && (
-        <div className="border-t px-4 py-3">
-          <DataTablePagination
-            currentPage={page}
-            totalPages={totalPages}
-            totalElements={totalElements}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            showRowsPerPage={true}
-            rowsPerPageOptions={PAGE_SIZE_OPTIONS}
-            rowsPerPage={pageSize}
-            onRowsPerPageChange={(newSize) => {
-              setPageSize(newSize);
-              setPage(0);
-            }}
-          />
-        </div>
+          )}
+        </>
       )}
 
       {/* Cancel Dialog */}

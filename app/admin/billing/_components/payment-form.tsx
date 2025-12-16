@@ -25,8 +25,9 @@ import {
   PaymentFormValues,
   paymentSchemaWithBalance,
 } from "@/lib/schemas/billing";
-import { Invoice } from "@/interfaces/billing"; // Import Invoice interface
-import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard"; // Import InvoiceSummaryCard
+import { Invoice } from "@/interfaces/billing";
+import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard";
+import { CreditCard } from "lucide-react";
 
 interface PaymentFormProps {
   invoice: Invoice; // Add invoice prop
@@ -73,82 +74,97 @@ export function PaymentForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <InvoiceSummaryCard invoice={invoice} />{" "}
-        {/* Render InvoiceSummaryCard */}
-        <input type="hidden" {...form.register("idempotencyKey")} />
-        <FormField
-          control={form.control}
-          name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Payment Amount</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                />
-              </FormControl>
-              <FormMessage />
-              {maxAmount !== undefined && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() =>
-                    form.setValue("amount", maxAmount, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    })
-                  }
-                >
-                  Pay full balance
-                </Button>
+        <InvoiceSummaryCard invoice={invoice} />
+        
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <CreditCard className="h-5 w-5 text-emerald-500" />
+            Payment Details
+          </div>
+          <div className="space-y-4">
+            <input type="hidden" {...form.register("idempotencyKey")} />
+            <div className="form-grid">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Payment Amount</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    {maxAmount !== undefined && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 text-emerald-600 hover:text-emerald-700"
+                        onClick={() =>
+                          form.setValue("amount", maxAmount, {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        Pay full balance
+                      </Button>
+                    )}
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="method"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select payment method" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="CASH">Cash</SelectItem>
+                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
+                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                        <SelectItem value="INSURANCE">Insurance</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Transaction ID, reference number, etc."
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
               )}
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="method"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Payment Method</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select payment method" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="CASH">Cash</SelectItem>
-                  <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                  <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                  <SelectItem value="INSURANCE">Insurance</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes (Optional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Transaction ID, reference number, etc."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+            />
+          </div>
+        </div>
+        
+        <Button 
+          type="submit" 
+          className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white border-0" 
+          disabled={isSubmitting}
+        >
           {isSubmitting ? "Processing..." : "Record Payment"}
         </Button>
       </form>

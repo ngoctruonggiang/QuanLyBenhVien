@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Select,
@@ -34,15 +33,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, LayoutGrid, List, Users, ArrowUpDown } from "lucide-react";
+import { Plus, LayoutGrid, List, Users, ArrowUpDown, UserPlus } from "lucide-react";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { Patient, PatientListParams } from "@/interfaces/patient";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { appointmentService } from "@/services/appointment.service";
 import { Spinner } from "@/components/ui/spinner";
+import { BloodTypeBadge } from "@/components/ui/blood-type-badge";
+import { GenderBadge } from "@/components/ui/gender-badge";
+import { EmptyValue } from "@/components/ui/empty-value";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
+import { ListEmptyState } from "@/components/ui/list-empty-state";
 
 type ViewMode = "table" | "grid";
 
@@ -69,6 +74,7 @@ export default function PatientsPage() {
   const [patientToDelete, setPatientToDelete] = useState<Patient | null>(null);
   const [showWarningDialog, setShowWarningDialog] = useState(false);
   const [futureAppointmentsCount, setFutureAppointmentsCount] = useState(0);
+  const [quickFilter, setQuickFilter] = useState<string>("all");
 
   const params: PatientListParams = {
     page,
@@ -137,7 +143,7 @@ export default function PatientsPage() {
   }, []);
 
   const formatDate = (date: string | null) => {
-    if (!date) return "N/A";
+    if (!date) return null;
     try {
       return format(new Date(date), "dd/MM/yyyy");
     } catch {
@@ -145,9 +151,13 @@ export default function PatientsPage() {
     }
   };
 
-  const getGenderLabel = (gender: string | null) => {
-    if (!gender) return "N/A";
-    return gender.charAt(0) + gender.slice(1).toLowerCase();
+  const calculateAge = (dateOfBirth: string | null) => {
+    if (!dateOfBirth) return null;
+    try {
+      return differenceInYears(new Date(), new Date(dateOfBirth));
+    } catch {
+      return null;
+    }
   };
 
   const renderSortIcon = (field: string) => {
@@ -178,78 +188,93 @@ export default function PatientsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Patients
-          </h1>
-          <p className="text-muted-foreground">
-            Manage patient records and information
-          </p>
-        </div>
-        <Button asChild size="lg" className="rounded-lg">
-          <Link href="/admin/patients/new">
-            <Plus className="h-4 w-4 mr-2" />
-            New Patient
-          </Link>
+      {/* Enhanced Header */}
+      <ListPageHeader
+        title="Patients"
+        description="Manage patient records and information"
+        theme="sky"
+        icon={<Users className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Total Patients", value: totalElements },
+          { label: "This Page", value: patients.length },
+        ]}
+        primaryAction={{
+          label: "New Patient",
+          href: "/admin/patients/new",
+          icon: <UserPlus className="h-4 w-4 mr-2" />,
+        }}
+      />
+
+      {/* Quick Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "all", label: "All", count: totalElements },
+          { id: "male", label: "Male", count: patients.filter(p => p.gender?.toUpperCase() === "MALE").length },
+          { id: "female", label: "Female", count: patients.filter(p => p.gender?.toUpperCase() === "FEMALE").length },
+        ]}
+        activeFilter={quickFilter}
+        onFilterChange={(id) => {
+          setQuickFilter(id);
+          if (id === "all") {
+            setFilters(prev => ({ ...prev, gender: undefined }));
+          } else if (id === "male") {
+            setFilters(prev => ({ ...prev, gender: "MALE" }));
+          } else if (id === "female") {
+            setFilters(prev => ({ ...prev, gender: "FEMALE" }));
+          }
+        }}
+      />
+
+      {/* Filters Row - not inside Card */}
+      <div className="flex flex-wrap items-center gap-4">
+        <PatientFiltersBar
+          filters={filters}
+          onFiltersChange={handleFiltersChange}
+        />
+        <Select
+          value={`${sort.field},${sort.direction}`}
+          onValueChange={(val) => {
+            const [field, direction] = val.split(",") as [
+              string,
+              "asc" | "desc",
+            ];
+            setSort({ field, direction });
+            setPage(0);
+          }}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fullName,asc">
+              Sort by Name (A-Z)
+            </SelectItem>
+            <SelectItem value="createdAt,desc">
+              Sort by Created (newest)
+            </SelectItem>
+            <SelectItem value="dateOfBirth,asc">
+              Sort by DOB (oldest)
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant={viewMode === "table" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setViewMode("table")}
+        >
+          <List className="h-4 w-4" />
+        </Button>
+        <Button
+          variant={viewMode === "grid" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setViewMode("grid")}
+        >
+          <LayoutGrid className="h-4 w-4" />
         </Button>
       </div>
 
-      {/* Filters & View Toggle */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <PatientFiltersBar
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-            />
-            <div className="flex items-center gap-2">
-              <Select
-                value={`${sort.field},${sort.direction}`}
-                onValueChange={(val) => {
-                  const [field, direction] = val.split(",") as [
-                    string,
-                    "asc" | "desc",
-                  ];
-                  setSort({ field, direction });
-                  setPage(0);
-                }}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Sort" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fullName,asc">
-                    Sort by Name (A-Z)
-                  </SelectItem>
-                  <SelectItem value="createdAt,desc">
-                    Sort by Created (newest)
-                  </SelectItem>
-                  <SelectItem value="dateOfBirth,asc">
-                    Sort by DOB (oldest)
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                variant={viewMode === "table" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-
+      {/* Table Card */}
+      <Card className="border-2 border-slate-200 shadow-md rounded-xl">
         <CardContent className="p-0">
           {isLoading ? (
             <div className="border-t">
@@ -319,15 +344,14 @@ export default function PatientsPage() {
                         {renderSortIcon("fullName")}
                       </div>
                     </TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Phone</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead>Gender</TableHead>
                     <TableHead
                       className="cursor-pointer"
                       onClick={() => toggleSort("dateOfBirth")}
                     >
                       <div className="flex items-center gap-1">
-                        Date of Birth
+                        Age / DOB
                         {renderSortIcon("dateOfBirth")}
                       </div>
                     </TableHead>
@@ -342,47 +366,67 @@ export default function PatientsPage() {
                     : patients.map((patient) => (
                         <TableRow
                           key={patient.id}
-                          className="cursor-pointer hover:bg-muted/50"
+                          className="cursor-pointer hover:bg-sky-50/50 border-b border-slate-100"
                           onClick={() => handleViewPatient(patient)}
                         >
                           <TableCell>
                             <Avatar className="h-9 w-9">
-                              <AvatarFallback className="bg-primary/10 text-primary">
+                              <AvatarFallback className="bg-gradient-to-br from-sky-400 to-teal-400 text-white font-semibold">
                                 {patient.fullName.charAt(0).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
                           </TableCell>
                           <TableCell>
-                            <span className="font-medium">
-                              {patient.fullName}
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-900">
+                                {patient.fullName}
+                              </span>
+                              <span className="text-sm text-slate-500">
+                                {patient.email || <EmptyValue text="No email" />}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-slate-700">
+                              {patient.phoneNumber || <EmptyValue text="—" />}
                             </span>
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {patient.email || "N/A"}
-                          </TableCell>
-                          <TableCell>{patient.phoneNumber}</TableCell>
                           <TableCell>
-                            {patient.gender && (
-                              <Badge variant="secondary">
-                                {getGenderLabel(patient.gender)}
-                              </Badge>
+                            {patient.gender ? (
+                              <GenderBadge gender={patient.gender} />
+                            ) : (
+                              <EmptyValue text="—" />
                             )}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {formatDate(patient.dateOfBirth)}
-                          </TableCell>
                           <TableCell>
-                            {patient.bloodType && (
-                              <Badge
-                                variant="destructive"
-                                className="bg-red-100 text-red-700"
-                              >
-                                {patient.bloodType}
-                              </Badge>
+                            {patient.dateOfBirth ? (
+                              <div className="flex flex-col">
+                                <span className="font-medium text-slate-900">
+                                  {calculateAge(patient.dateOfBirth)} yrs
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {formatDate(patient.dateOfBirth)}
+                                </span>
+                              </div>
+                            ) : (
+                              <EmptyValue text="—" />
                             )}
                           </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {patient.healthInsuranceNumber || "N/A"}
+                          <TableCell>
+                            {patient.bloodType ? (
+                              <BloodTypeBadge bloodType={patient.bloodType} />
+                            ) : (
+                              <EmptyValue text="—" />
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {patient.healthInsuranceNumber ? (
+                              <span className="font-mono text-sm text-slate-600">
+                                {patient.healthInsuranceNumber}
+                              </span>
+                            ) : (
+                              <EmptyValue text="Not insured" />
+                            )}
                           </TableCell>
                           <TableCell
                             onClick={(e) => e.stopPropagation()}
@@ -423,7 +467,7 @@ export default function PatientsPage() {
 
       {/* Pagination */}
       {patients.length > 0 && (
-        <Card>
+        <Card className="border-2 border-slate-200 shadow-sm rounded-xl">
           <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
             <p className="text-sm text-muted-foreground">
               Showing <span className="font-medium">{page * pageSize + 1}</span>{" "}

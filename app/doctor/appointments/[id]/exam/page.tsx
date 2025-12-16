@@ -32,11 +32,19 @@ export default function CreateExamFromAppointmentPage() {
     status: "PENDING" | "FINALIZED"
   ) => {
     createMutation.mutate(
-      { ...data, status },
+      {
+        data: { ...data, status },
+        doctorInfo: user?.employeeId
+          ? { id: user.employeeId, fullName: user.fullName || "Doctor" }
+          : undefined,
+        patientInfo: appointment?.patient
+          ? { id: appointment.patient.id, fullName: appointment.patient.fullName }
+          : undefined,
+      },
       {
         onSuccess: (createdExam) => {
-          // Redirect to the new exam's detail page
-          router.push(`/admin/exams/${createdExam.id}`);
+          // Redirect to the new exam's detail page in doctor portal
+          router.push(`/doctor/exams/${createdExam.id}`);
         },
       }
     );

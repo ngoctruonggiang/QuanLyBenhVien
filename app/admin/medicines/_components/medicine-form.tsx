@@ -26,6 +26,7 @@ import { Medicine } from "@/interfaces/medicine";
 import { medicineFormSchema, MedicineFormValues } from "@/lib/schemas/medicine";
 import { useCategories } from "@/hooks/queries/useCategory";
 import { Spinner } from "@/components/ui/spinner";
+import { Package2, DollarSign } from "lucide-react";
 
 export { medicineFormSchema, type MedicineFormValues };
 
@@ -77,45 +78,48 @@ export function MedicineForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Basic Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter medicine name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Package2 className="h-5 w-5 text-teal-500" />
+            Basic Information
+          </div>
+          <div className="space-y-4">
+            <div className="form-grid">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter medicine name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="activeIngredient"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Active Ingredient</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter active ingredient" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="activeIngredient"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Active Ingredient</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter active ingredient" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel className="form-label">Description</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="Enter description"
@@ -128,13 +132,13 @@ export function MedicineForm({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="form-grid-3">
               <FormField
                 control={form.control}
                 name="unit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Unit *</FormLabel>
+                    <FormLabel className="form-label form-label-required">Unit</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -159,7 +163,7 @@ export function MedicineForm({
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Quantity *</FormLabel>
+                    <FormLabel className="form-label form-label-required">Quantity</FormLabel>
                     <FormControl>
                       <Input type="number" min={0} {...field} />
                     </FormControl>
@@ -173,7 +177,7 @@ export function MedicineForm({
                 name="packaging"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Packaging</FormLabel>
+                    <FormLabel className="form-label">Packaging</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Box of 10 strips" {...field} />
                     </FormControl>
@@ -183,13 +187,13 @@ export function MedicineForm({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-grid">
               <FormField
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="form-label">Category</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -214,7 +218,7 @@ export function MedicineForm({
                 name="expiresAt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Expiry Date *</FormLabel>
+                    <FormLabel className="form-label form-label-required">Expiry Date</FormLabel>
                     <FormControl>
                       <MyDatePicker
                         value={field.value ? new Date(field.value) : undefined}
@@ -228,53 +232,56 @@ export function MedicineForm({
                 )}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Pricing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Pricing</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="purchasePrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Purchase Price (VND) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <DollarSign className="h-5 w-5 text-emerald-500" />
+            Pricing
+          </div>
+          <div className="form-grid">
+            <FormField
+              control={form.control}
+              name="purchasePrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Purchase Price (VND)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="sellingPrice"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Selling Price (VND) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min={0} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
+            <FormField
+              control={form.control}
+              name="sellingPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Selling Price (VND)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         {/* Action buttons */}
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={onCancel} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             {initialData ? "Update Medicine" : "Create Medicine"}
           </Button>

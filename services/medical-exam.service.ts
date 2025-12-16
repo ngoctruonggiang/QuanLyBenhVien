@@ -8,6 +8,7 @@ import {
   ExamStatus,
 } from "@/interfaces/medical-exam";
 import { mockMedicalExams } from "@/lib/mocks/data/medical-exams"; // IMPORT THE CENTRAL MOCK DATA
+import { invoices } from "@/mocks/handlers/billing"; // Import invoices for auto-generation
 
 // Helper to simulate delay
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -72,7 +73,11 @@ export const getMedicalExamByAppointment = async (appointmentId: string) => {
   return mockMedicalExams.find((e) => e.appointment.id === appointmentId);
 };
 
-export const createMedicalExam = async (data: MedicalExamCreateRequest) => {
+export const createMedicalExam = async (
+  data: MedicalExamCreateRequest,
+  doctorInfo?: { id: string; fullName: string },
+  patientInfo?: { id: string; fullName: string }
+) => {
   await delay(500);
   const status: ExamStatus = data.status || "PENDING";
   const newExam: MedicalExam = {
@@ -81,8 +86,8 @@ export const createMedicalExam = async (data: MedicalExamCreateRequest) => {
       id: data.appointmentId,
       appointmentTime: new Date().toISOString(),
     },
-    patient: { id: "p001", fullName: "New Patient" },
-    doctor: { id: "emp001", fullName: "Dr. Current User" },
+    patient: patientInfo || { id: "p001", fullName: "New Patient" },
+    doctor: doctorInfo || { id: "emp001", fullName: "Dr. Current User" },
     status,
     diagnosis: data.diagnosis,
     symptoms: data.symptoms,
@@ -188,6 +193,60 @@ export const createPrescriptionMock = async (
     prescription: newPrescription,
     updatedAt: new Date().toISOString(),
   };
+
+  // AUTO-GENERATE INVOICE when prescription is created
+  const consultationFee = 200000; // Base consultation fee
+  const medicineItems = newPrescription.items.map((item) => ({
+    id: `item-${Date.now()}-${item.id}`,
+    invoiceId: `inv-${examId}`,
+    type: "MEDICINE" as const,
+    description: item.medicine.name,
+    referenceId: item.medicine.id,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+    amount: item.quantity * item.unitPrice,
+  }));
+
+  const consultationItem = {
+    id: `item-${Date.now()}-consult`,
+    invoiceId: `inv-${examId}`,
+    type: "CONSULTATION" as const,
+    description: "Phí khám bệnh",
+    referenceId: examId,
+    quantity: 1,
+    unitPrice: consultationFee,
+    amount: consultationFee,
+  };
+
+  const allItems = [consultationItem, ...medicineItems];
+  const subtotal = allItems.reduce((sum, item) => sum + item.amount, 0);
+  const tax = Math.round(subtotal * 0.1); // 10% tax
+  const totalAmount = subtotal + tax;
+
+  const newInvoice = {
+    id: `inv-${examId}`,
+    invoiceNumber: `INV-${new Date().toISOString().split("T")[0].replace(/-/g, "")}-${String(invoices.length + 1).padStart(4, "0")}`,
+    patientId: exam.patient.id,
+    patientName: exam.patient.fullName,
+    invoiceDate: new Date().toISOString(),
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+    appointmentId: exam.appointment.id,
+    medicalExamId: examId, // Store exam ID for linking
+    subtotal,
+    discount: 0,
+    tax,
+    totalAmount,
+    paidAmount: 0,
+    balance: totalAmount,
+    status: "UNPAID",
+    notes: `Invoice for prescription ${newPrescription.id}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    items: allItems,
+    payments: [],
+  };
+
+  invoices.push(newInvoice);
 
   return newPrescription;
 };

@@ -26,7 +26,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, User, Heart, Phone, Link2 } from "lucide-react";
 import { useState } from "react";
 import MyDatePicker from "@/app/admin/_components/MyDatePicker";
 import {
@@ -137,17 +137,18 @@ export function PatientForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <User className="h-5 w-5 text-sky-500" />
+            Personal Information
+          </div>
+          <div className="space-y-4">
             <FormField
               control={form.control}
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name *</FormLabel>
+                  <FormLabel className="form-label form-label-required">Full Name</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter full name" {...field} />
                   </FormControl>
@@ -156,13 +157,13 @@ export function PatientForm({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-grid">
               <FormField
                 control={form.control}
                 name="dateOfBirth"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Date of Birth *</FormLabel>
+                    <FormLabel className="form-label form-label-required">Date of Birth</FormLabel>
                     <FormControl>
                       <MyDatePicker
                         value={field.value ? new Date(field.value) : undefined}
@@ -182,7 +183,7 @@ export function PatientForm({
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Gender</FormLabel>
+                    <FormLabel className="form-label">Gender</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -203,13 +204,13 @@ export function PatientForm({
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-grid">
               <FormField
                 control={form.control}
                 name="phoneNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone Number *</FormLabel>
+                    <FormLabel className="form-label form-label-required">Phone Number</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter phone number" {...field} />
                     </FormControl>
@@ -223,7 +224,7 @@ export function PatientForm({
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="form-label">Email</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
@@ -241,8 +242,8 @@ export function PatientForm({
               control={form.control}
               name="address"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
+                <FormItem className="form-full-width">
+                  <FormLabel className="form-label">Address</FormLabel>
                   <FormControl>
                     <Textarea placeholder="Enter address" {...field} />
                   </FormControl>
@@ -251,13 +252,13 @@ export function PatientForm({
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="form-grid">
               <FormField
                 control={form.control}
                 name="identificationNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ID Number</FormLabel>
+                    <FormLabel className="form-label">ID Number</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter ID number" {...field} />
                     </FormControl>
@@ -271,7 +272,7 @@ export function PatientForm({
                 name="healthInsuranceNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Health Insurance Number</FormLabel>
+                    <FormLabel className="form-label">Health Insurance Number</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter insurance number" {...field} />
                     </FormControl>
@@ -280,106 +281,110 @@ export function PatientForm({
                 )}
               />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Health Information - Collapsible */}
         <Collapsible open={healthInfoOpen} onOpenChange={setHealthInfoOpen}>
-          <Card>
+          <div className="form-section-card">
             <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Health Information</CardTitle>
+              <div className="form-section-card-title cursor-pointer hover:text-sky-600 transition-colors">
+                <Heart className="h-5 w-5 text-rose-500" />
+                Health Information
+                <div className="ml-auto">
                   {healthInfoOpen ? (
-                    <ChevronUp className="h-5 w-5" />
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
                   ) : (
-                    <ChevronDown className="h-5 w-5" />
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
                   )}
                 </div>
-              </CardHeader>
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="bloodType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Blood Type</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full md:w-48">
-                            <SelectValue placeholder="Select blood type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {bloodTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-4 pt-4">
+                <div className="form-grid">
+                  <FormField
+                    control={form.control}
+                    name="bloodType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label">Blood Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select blood type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {bloodTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="allergies"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Allergies</FormLabel>
-                      <FormControl>
-                        <TagInput
-                          value={field.value || []}
-                          onChange={field.onChange}
-                          placeholder="Add allergy and press Enter"
-                          suggestions={[
-                            "Penicillin",
-                            "Peanut",
-                            "Seafood",
-                            "Dust",
-                            "NSAIDs",
-                          ]}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
+                  <FormField
+                    control={form.control}
+                    name="allergies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label">Allergies</FormLabel>
+                        <FormControl>
+                          <TagInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            placeholder="Add allergy and press Enter"
+                            suggestions={[
+                              "Penicillin",
+                              "Peanut",
+                              "Seafood",
+                              "Dust",
+                              "NSAIDs",
+                            ]}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </CollapsibleContent>
-          </Card>
+          </div>
         </Collapsible>
 
         {/* Emergency Contact - Collapsible */}
         <Collapsible open={emergencyOpen} onOpenChange={setEmergencyOpen}>
-          <Card>
+          <div className="form-section-card">
             <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">Emergency Contact</CardTitle>
+              <div className="form-section-card-title cursor-pointer hover:text-sky-600 transition-colors">
+                <Phone className="h-5 w-5 text-emerald-500" />
+                Emergency Contact
+                <div className="ml-auto">
                   {emergencyOpen ? (
-                    <ChevronUp className="h-5 w-5" />
+                    <ChevronUp className="h-5 w-5 text-slate-400" />
                   ) : (
-                    <ChevronDown className="h-5 w-5" />
+                    <ChevronDown className="h-5 w-5 text-slate-400" />
                   )}
                 </div>
-              </CardHeader>
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="relativeFullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Name</FormLabel>
+                      <FormLabel className="form-label">Contact Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter contact name" {...field} />
                       </FormControl>
@@ -388,13 +393,13 @@ export function PatientForm({
                   )}
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="form-grid">
                   <FormField
                     control={form.control}
                     name="relativeRelationship"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Relationship</FormLabel>
+                        <FormLabel className="form-label">Relationship</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
@@ -422,7 +427,7 @@ export function PatientForm({
                     name="relativePhoneNumber"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Contact Phone</FormLabel>
+                        <FormLabel className="form-label">Contact Phone</FormLabel>
                         <FormControl>
                           <Input placeholder="Enter contact phone" {...field} />
                         </FormControl>
@@ -431,32 +436,31 @@ export function PatientForm({
                     )}
                   />
                 </div>
-              </CardContent>
+              </div>
             </CollapsibleContent>
-          </Card>
+          </div>
         </Collapsible>
 
         {/* Account Linking (Optional) */}
         <Collapsible defaultOpen={false}>
-          <Card>
+          <div className="form-section-card">
             <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">
-                    Account Linking (Optional)
-                  </CardTitle>
-                  <ChevronDown className="h-5 w-5" />
+              <div className="form-section-card-title cursor-pointer hover:text-sky-600 transition-colors">
+                <Link2 className="h-5 w-5 text-violet-500" />
+                Account Linking (Optional)
+                <div className="ml-auto">
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 </div>
-              </CardHeader>
+              </div>
             </CollapsibleTrigger>
             <CollapsibleContent>
-              <CardContent className="space-y-4">
+              <div className="space-y-4 pt-4">
                 <FormField
                   control={form.control}
                   name="accountId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Account ID</FormLabel>
+                      <FormLabel className="form-label">Account ID</FormLabel>
                       <FormControl>
                         <AccountSearchSelect
                           value={field.value || null}
@@ -467,17 +471,21 @@ export function PatientForm({
                     </FormItem>
                   )}
                 />
-              </CardContent>
+              </div>
             </CollapsibleContent>
-          </Card>
+          </div>
         </Collapsible>
 
         {/* Action buttons */}
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={handleCancel}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={handleCancel} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             {initialData ? "Update Patient" : "Create Patient"}
           </Button>

@@ -47,6 +47,9 @@ type Props<T> = {
   // Loading từ React Query
   loading?: boolean;
   onRowClick?: (row: T) => void;
+  
+  // Hide pagination (render it separately)
+  hidePagination?: boolean;
 };
 
 // Skeleton row component
@@ -68,12 +71,13 @@ export function ReusableTable<T>({
   onRowsPerPageChange,
   loading = false,
   onRowClick,
+  hidePagination = false,
 }: Props<T>) {
   const { currentPage, totalPages, rowsPerPage, totalItems } = pagination;
 
   return (
-    <div className="flex flex-col justify-between min-h-[500px] gap-5">
-      <div className="border-app-azure-100 rounded-[10px] border">
+    <div className="flex flex-col gap-5">
+      <div className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -122,17 +126,19 @@ export function ReusableTable<T>({
       </div>
 
       {/* Pagination */}
-      <DataTablePagination
-        currentPage={currentPage - 1} // Convert from 1-indexed to 0-indexed
-        totalPages={totalPages}
-        totalElements={totalItems}
-        pageSize={rowsPerPage}
-        onPageChange={(page) => onPageChange(page + 1)} // Convert back to 1-indexed
-        showRowsPerPage={true}
-        rowsPerPageOptions={[10, 20, 50]}
-        rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={onRowsPerPageChange}
-      />
+      {!hidePagination && (
+        <DataTablePagination
+          currentPage={currentPage - 1} // Convert from 1-indexed to 0-indexed
+          totalPages={totalPages}
+          totalElements={totalItems}
+          pageSize={rowsPerPage}
+          onPageChange={(page) => onPageChange(page + 1)} // Convert back to 1-indexed
+          showRowsPerPage={true}
+          rowsPerPageOptions={[10, 20, 50]}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={onRowsPerPageChange}
+        />
+      )}
     </div>
   );
 }

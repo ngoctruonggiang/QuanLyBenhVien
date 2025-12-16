@@ -25,6 +25,7 @@ import { Department, DepartmentRequest } from "@/interfaces/hr";
 import { useRouter } from "next/navigation";
 import { DoctorSearchSelect } from "@/components/appointment/DoctorSearchSelect";
 import { Spinner } from "@/components/ui/spinner";
+import { Building2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z
@@ -93,114 +94,126 @@ export default function DepartmentForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Department Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Cardiology" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Building2 className="h-5 w-5 text-violet-500" />
+            Department Information
+          </div>
+          <div className="space-y-4">
+            <div className="form-grid">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Department Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Cardiology" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Status</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="INACTIVE">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="headDoctorId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Head Doctor</FormLabel>
+                    <DoctorSearchSelect
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                      placeholder="Search active doctor"
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Building A, Floor 2" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="phoneExtension"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Phone Extension</FormLabel>
+                    <FormControl>
+                      <Input placeholder="1234" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Description</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
+                    <Textarea
+                      placeholder="Department description..."
+                      className="resize-none"
+                      {...field}
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="headDoctorId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Head Doctor</FormLabel>
-                <DoctorSearchSelect
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                  placeholder="Search active doctor"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input placeholder="Building A, Floor 2" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="phoneExtension"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Phone Extension</FormLabel>
-                <FormControl>
-                  <Input placeholder="1234" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Department description..."
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+        <div className="flex justify-end gap-4 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={() => router.back()} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             {initialData ? "Update Department" : "Create Department"}
           </Button>

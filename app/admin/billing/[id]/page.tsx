@@ -6,6 +6,8 @@ import { useInvoice, useCancelInvoice } from "@/hooks/queries/useBilling";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
+import { InfoItem, InfoGrid } from "@/components/ui/info-item";
 import {
   ArrowLeft,
   CreditCard,
@@ -14,6 +16,11 @@ import {
   AlertTriangle,
   ExternalLink,
   FileSearch,
+  Receipt,
+  User,
+  Calendar,
+  DollarSign,
+  Clock,
 } from "lucide-react";
 import Link from "next/link";
 import { InvoiceStatusBadge } from "../_components/invoice-status-badge";
@@ -81,59 +88,119 @@ export default function InvoiceDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.back()}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Invoice Details
-            </h1>
-            <p className="text-muted-foreground">
-              Invoice #{invoice.invoiceNumber} •{" "}
-              {new Date(invoice.invoiceDate).toLocaleDateString()}
-            </p>
-          </div>
+      {/* Emerald Gradient Header */}
+      <div className="relative rounded-xl bg-gradient-to-r from-emerald-500 to-green-500 p-6 text-white overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white" />
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline">
-            <Printer className="mr-2 h-4 w-4" />
-            Print
-          </Button>
-          {invoice?.appointmentId && (
-            <Button variant="outline" asChild>
-              <Link
-                href={`/admin/exams/${invoice.appointmentId}`}
-                className="flex items-center gap-2"
-              >
-                <FileSearch className="h-4 w-4" />
-                View Medical Exam
-              </Link>
+        
+        <div className="relative flex items-start justify-between gap-6">
+          <div className="flex items-center gap-5">
+            {/* Back button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-          )}
-          {user?.role === "ADMIN" &&
-            invoice.status === "UNPAID" &&
-            (invoice.payments?.length ?? 0) === 0 && (
+            
+            {/* Icon */}
+            <div className="h-16 w-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Receipt className="h-8 w-8 text-white" />
+            </div>
+            
+            {/* Title & Meta */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">Invoice #{invoice.invoiceNumber}</h1>
+                <InvoiceStatusBadge status={invoice.status} />
+              </div>
+              <p className="text-white/80 text-sm font-medium">
+                {new Date(invoice.invoiceDate).toLocaleDateString()} • {invoice.patientName}
+              </p>
+            </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print
+            </Button>
+            {invoice?.medicalExamId && user?.role !== "RECEPTIONIST" && (
               <Button
                 variant="outline"
-                className="text-destructive hover:text-destructive"
-                onClick={() => setCancelDialogOpen(true)}
+                size="sm"
+                asChild
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
               >
-                <XCircle className="mr-2 h-4 w-4" />
-                Cancel Invoice
+                <Link href={`/admin/exams/${invoice.medicalExamId}`}>
+                  <FileSearch className="h-4 w-4 mr-2" />
+                  View Exam
+                </Link>
               </Button>
             )}
-          {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
-            <Button asChild>
-              <Link href={`/admin/billing/${invoice.id}/payment`}>
-                <CreditCard className="mr-2 h-4 w-4" />
-                Record Payment
-              </Link>
-            </Button>
-          )}
+            {user?.role === "ADMIN" &&
+              invoice.status === "UNPAID" &&
+              (invoice.payments?.length ?? 0) === 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Cancel
+                </Button>
+              )}
+            {invoice.status !== "PAID" && invoice.status !== "CANCELLED" && (
+              <Button size="sm" asChild className="bg-white text-emerald-600 hover:bg-white/90">
+                <Link href={`/admin/billing/${invoice.id}/payment`}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Record Payment
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Stats Summary */}
+      <StatsSummaryBar
+        stats={[
+          {
+            label: "Total Amount",
+            value: formatCurrency(invoice.totalAmount),
+            icon: <DollarSign className="h-5 w-5" />,
+            color: "slate",
+          },
+          {
+            label: "Amount Paid",
+            value: formatCurrency(invoice.paidAmount),
+            icon: <CreditCard className="h-5 w-5" />,
+            color: "emerald",
+          },
+          {
+            label: "Balance Due",
+            value: formatCurrency(invoice.balance),
+            icon: <Receipt className="h-5 w-5" />,
+            color: invoice.balance > 0 ? "rose" : "emerald",
+          },
+          {
+            label: "Due Date",
+            value: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A",
+            icon: <Calendar className="h-5 w-5" />,
+            color: invoice.status === "OVERDUE" ? "rose" : "sky",
+          },
+        ]}
+      />
 
       {/* Overdue Warning */}
       {invoice.status === "OVERDUE" && (
@@ -175,13 +242,13 @@ export default function InvoiceDetailPage() {
                   <div className="col-span-2 text-right">Unit Price</div>
                   <div className="col-span-2 text-right">Amount</div>
                 </div>
-                {invoice.items.map((item) => (
+                {invoice.items.map((item: { id: string; type: string; description: string; quantity: number; unitPrice: number; amount: number }) => (
                   <div
                     key={item.id}
                     className="grid grid-cols-12 gap-4 p-3 border-b last:border-0 items-center"
                   >
                     <div className="col-span-2">
-                      <ItemTypeBadge type={item.type} showIcon={false} />
+                      <ItemTypeBadge type={item.type as "CONSULTATION" | "MEDICINE" | "TEST" | "PROCEDURE" | "OTHER"} showIcon={false} />
                     </div>
                     <div className="col-span-5">
                       <p className="font-medium">{item.description}</p>
@@ -273,76 +340,78 @@ export default function InvoiceDetailPage() {
 
         <div className="space-y-6">
           {/* Patient Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Patient Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Name
-                </p>
-                <p className="font-semibold">{invoice.patientName}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Patient ID
-                </p>
-                <p>{invoice.patientId}</p>
-              </div>
-              {invoice.appointmentId && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Appointment
-                  </p>
-                  <Link
-                    href={`/admin/appointments/${invoice.appointmentId}`}
-                    className="text-primary hover:underline flex items-center gap-1"
-                  >
-                    {invoice.appointmentId}
-                    <ExternalLink className="h-3 w-3" />
-                  </Link>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <User className="h-4 w-4" />
+              <h3>Patient Information</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={1}>
+                <InfoItem
+                  icon={<User className="h-4 w-4" />}
+                  label="Patient Name"
+                  value={invoice.patientName}
+                  color="emerald"
+                />
+                <InfoItem
+                  icon={<Receipt className="h-4 w-4" />}
+                  label="Patient ID"
+                  value={invoice.patientId}
+                  color="slate"
+                />
+                {invoice.appointmentId && (
+                  <InfoItem
+                    icon={<Calendar className="h-4 w-4" />}
+                    label="Appointment"
+                    value={
+                      <Link
+                        href={`/admin/appointments/${invoice.appointmentId}`}
+                        className="text-primary hover:underline flex items-center gap-1"
+                      >
+                        {invoice.appointmentId}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    }
+                    color="sky"
+                  />
+                )}
+              </InfoGrid>
+            </div>
+          </div>
 
           {/* Invoice Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground mb-2">
-                  Current Status
-                </p>
-                <InvoiceStatusBadge status={invoice.status} size="lg" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Invoice Date
-                </p>
-                <p>{new Date(invoice.invoiceDate).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Due Date
-                </p>
-                <p
-                  className={
-                    invoice.status === "OVERDUE"
-                      ? "text-red-600 font-medium"
-                      : ""
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <Receipt className="h-4 w-4" />
+              <h3>Status</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={1}>
+                <div className="flex items-center gap-3">
+                  <div className="info-pair">
+                    <span className="info-pair-label">Current Status</span>
+                    <InvoiceStatusBadge status={invoice.status} />
+                  </div>
+                </div>
+                <InfoItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Invoice Date"
+                  value={new Date(invoice.invoiceDate).toLocaleDateString()}
+                  color="slate"
+                />
+                <InfoItem
+                  icon={<Clock className="h-4 w-4" />}
+                  label="Due Date"
+                  value={
+                    <span className={invoice.status === "OVERDUE" ? "text-red-600 font-medium" : ""}>
+                      {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A"}
+                    </span>
                   }
-                >
-                  {invoice.dueDate
-                    ? new Date(invoice.dueDate).toLocaleDateString()
-                    : "N/A"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                  color={invoice.status === "OVERDUE" ? "rose" : "sky"}
+                />
+              </InfoGrid>
+            </div>
+          </div>
 
           {/* Audit Info */}
           <Card>

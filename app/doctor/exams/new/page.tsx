@@ -48,8 +48,16 @@ function CreateMedicalExamPageClient() {
   ) => {
     try {
       const result = await createExamMutation.mutateAsync({
-        ...data,
-        status,
+        data: {
+          ...data,
+          status,
+        },
+        doctorInfo: user?.employeeId
+          ? { id: user.employeeId, fullName: user.fullName || "Doctor" }
+          : undefined,
+        patientInfo: appointment?.patient
+          ? { id: appointment.patient.id, fullName: appointment.patient.fullName }
+          : undefined,
       });
 
       const examId = result.id;

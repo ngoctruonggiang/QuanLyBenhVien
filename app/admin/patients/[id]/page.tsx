@@ -13,7 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { PatientAvatar } from "@/components/patients/PatientAvatar";
+import { DetailPageHeader } from "@/components/ui/detail-page-header";
+import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
+import { InfoItem, InfoGrid } from "@/components/ui/info-item";
+import { AlertBanner } from "@/components/ui/alert-banner";
 import { GenderBadge } from "@/components/patients/GenderBadge";
 import { BloodTypeBadge } from "@/components/patients/BloodTypeBadge";
 import { AllergyTags } from "@/components/patients/AllergyTags";
@@ -48,8 +51,9 @@ import {
   Clock,
   Stethoscope,
   FileText,
+  Users,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
@@ -219,108 +223,131 @@ export default function PatientDetailPage() {
       .map((s) => s.trim())
       .filter(Boolean) || [];
 
+  // Calculate balance from invoices
+  const totalBalance = invoices.reduce((sum: number, inv: any) => sum + (inv.balance || 0), 0);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin/patients">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-semibold">Chi tiết bệnh nhân</h1>
-            <p className="text-muted-foreground">Mã: {patient.id}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link href={`/admin/appointments/new?patientId=${patientId}`}>
-              <Calendar className="h-4 w-4 mr-2" />
-              Đặt lịch
-            </Link>
-          </Button>
-          {user?.role !== "RECEPTIONIST" && (
-            <Button variant="outline" asChild>
-              <Link href={`/admin/patients/${patientId}/history`}>
-                <FileText className="h-4 w-4 mr-2" />
-                Lịch sử
+      {/* Hero Header */}
+      <DetailPageHeader
+        title={patient.fullName}
+        subtitle={`ID: ${patient.id}`}
+        backHref="/admin/patients"
+        theme="sky"
+        avatar={{
+          initials: patient.fullName.charAt(0).toUpperCase(),
+        }}
+        metaItems={[
+          { icon: <Phone className="h-4 w-4" />, text: patient.phoneNumber || "No phone" },
+          { icon: <Mail className="h-4 w-4" />, text: patient.email || "No email" },
+        ]}
+        statusBadge={
+          patient.bloodType && <BloodTypeBadge bloodType={patient.bloodType as any} />
+        }
+        actions={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Link href={`/admin/appointments/new?patientId=${patientId}`}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Đặt lịch
               </Link>
             </Button>
-          )}
-          <Button variant="outline" asChild>
-            <Link href={`/admin/patients/${patientId}/edit`}>
-              <Edit className="h-4 w-4 mr-2" />
-              Chỉnh sửa
-            </Link>
-          </Button>
-          {canDelete && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Xóa
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Xóa bệnh nhân</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Bạn có chắc chắn muốn xóa{" "}
-                    <strong>{patient.fullName}</strong>? Hành động này không thể
-                    hoàn tác.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Hủy</AlertDialogCancel>
-                  <AlertDialogAction
-                    className="bg-destructive hover:bg-destructive/90"
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Spinner size="sm" className="mr-2" />
-                        Đang xóa...
-                      </>
-                    ) : (
-                      "Xóa"
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-      </div>
-
-      {/* Patient Info Card */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start gap-6">
-            <PatientAvatar name={patient.fullName} size="xl" />
-            <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Họ và tên</p>
-                <p className="font-semibold text-lg">{patient.fullName}</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">Giới tính</p>
-                <GenderBadge gender={patient.gender as any} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Tuổi</p>
-                <p className="font-medium">{age ? `${age} tuổi` : "N/A"}</p>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="text-sm text-muted-foreground">Nhóm máu</p>
-                <BloodTypeBadge bloodType={patient.bloodType as any} />
-              </div>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Link href={`/admin/patients/${patientId}/edit`}>
+                <Edit className="h-4 w-4 mr-2" />
+                Chỉnh sửa
+              </Link>
+            </Button>
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Xóa
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xóa bệnh nhân</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Bạn có chắc chắn muốn xóa{" "}
+                      <strong>{patient.fullName}</strong>? Hành động này không thể
+                      hoàn tác.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Spinner size="sm" className="mr-2" />
+                          Đang xóa...
+                        </>
+                      ) : (
+                        "Xóa"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        }
+      />
+
+      {/* Stats Summary */}
+      <StatsSummaryBar
+        stats={[
+          {
+            label: "Tuổi",
+            value: age ? `${age}` : "N/A",
+            icon: <User className="h-5 w-5" />,
+            color: "sky",
+          },
+          {
+            label: "Lịch hẹn",
+            value: appointments.length,
+            icon: <Calendar className="h-5 w-5" />,
+            color: "violet",
+          },
+          {
+            label: "Lần khám",
+            value: exams.length,
+            icon: <Stethoscope className="h-5 w-5" />,
+            color: "teal",
+          },
+          {
+            label: "Còn nợ",
+            value: totalBalance > 0 ? formatCurrency(totalBalance) : "0₫",
+            icon: <CreditCard className="h-5 w-5" />,
+            color: totalBalance > 0 ? "rose" : "emerald",
+          },
+        ]}
+      />
+
+      {/* Allergy Alert */}
+      {allergyList.length > 0 && (
+        <AlertBanner
+          type="warning"
+          title="Cảnh báo dị ứng"
+          description={allergyList.join(", ")}
+          icon={<AlertTriangle className="h-5 w-5" />}
+        />
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -384,108 +411,117 @@ export default function PatientDetailPage() {
         <TabsContent value="info" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Thông tin cá nhân */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Thông tin cá nhân
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <InfoRow
-                  icon={<User className="h-4 w-4" />}
-                  label="Họ và tên"
-                  value={patient.fullName}
-                />
-                <InfoRow
-                  icon={<Calendar className="h-4 w-4" />}
-                  label="Ngày sinh"
-                  value={formatDate(patient.dateOfBirth)}
-                />
-                <InfoRow
-                  icon={<Phone className="h-4 w-4" />}
-                  label="Số điện thoại"
-                  value={patient.phoneNumber}
-                />
-                <InfoRow
-                  icon={<Mail className="h-4 w-4" />}
-                  label="Email"
-                  value={patient.email}
-                />
-                <InfoRow
-                  icon={<MapPin className="h-4 w-4" />}
-                  label="Địa chỉ"
-                  value={patient.address}
-                />
-                <InfoRow
-                  icon={<CreditCard className="h-4 w-4" />}
-                  label="Số CMND/CCCD"
-                  value={patient.identificationNumber}
-                />
-                <InfoRow
-                  icon={<Shield className="h-4 w-4" />}
-                  label="Số BHYT"
-                  value={patient.healthInsuranceNumber}
-                />
-              </CardContent>
-            </Card>
+            <div className="detail-section-card">
+              <div className="detail-section-card-header">
+                <User className="h-4 w-4" />
+                <h3>Thông tin cá nhân</h3>
+              </div>
+              <div className="detail-section-card-content">
+                <InfoGrid columns={1}>
+                  <InfoItem
+                    icon={<User className="h-4 w-4" />}
+                    label="Họ và tên"
+                    value={patient.fullName}
+                    color="sky"
+                  />
+                  <InfoItem
+                    icon={<Calendar className="h-4 w-4" />}
+                    label="Ngày sinh"
+                    value={formatDate(patient.dateOfBirth)}
+                    color="violet"
+                  />
+                  <InfoItem
+                    icon={<Phone className="h-4 w-4" />}
+                    label="Số điện thoại"
+                    value={patient.phoneNumber}
+                    color="teal"
+                  />
+                  <InfoItem
+                    icon={<Mail className="h-4 w-4" />}
+                    label="Email"
+                    value={patient.email}
+                    color="amber"
+                  />
+                  <InfoItem
+                    icon={<MapPin className="h-4 w-4" />}
+                    label="Địa chỉ"
+                    value={patient.address}
+                    color="rose"
+                  />
+                  <InfoItem
+                    icon={<CreditCard className="h-4 w-4" />}
+                    label="Số CMND/CCCD"
+                    value={patient.identificationNumber}
+                    color="slate"
+                  />
+                  <InfoItem
+                    icon={<Shield className="h-4 w-4" />}
+                    label="Số BHYT"
+                    value={patient.healthInsuranceNumber}
+                    color="emerald"
+                  />
+                </InfoGrid>
+              </div>
+            </div>
 
             {/* Thông tin y tế */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="h-5 w-5" />
-                  Thông tin y tế
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Nhóm máu</p>
-                  <BloodTypeBadge bloodType={patient.bloodType as any} />
+            <div className="detail-section-card">
+              <div className="detail-section-card-header">
+                <Heart className="h-4 w-4" />
+                <h3>Thông tin y tế</h3>
+              </div>
+              <div className="detail-section-card-content space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="info-pair">
+                    <span className="info-pair-label">Giới tính</span>
+                    <GenderBadge gender={patient.gender as any} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="info-pair">
+                    <span className="info-pair-label">Nhóm máu</span>
+                    <BloodTypeBadge bloodType={patient.bloodType as any} />
+                  </div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <p className="info-pair-label flex items-center gap-1 mb-2">
                     <AlertTriangle className="h-3 w-3" />
                     Dị ứng
                   </p>
                   <AllergyTags allergies={allergyList} />
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
             {/* Thông tin người thân */}
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5" />
-                  Thông tin người thân / Liên hệ khẩn cấp
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Họ và tên</p>
-                    <p className="font-medium">
-                      {patient.relativeFullName || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Số điện thoại
-                    </p>
-                    <p className="font-medium">
-                      {patient.relativePhoneNumber || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Mối quan hệ</p>
-                    <p className="font-medium">
-                      {patient.relativeRelationship || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="detail-section-card md:col-span-2">
+              <div className="detail-section-card-header">
+                <Users className="h-4 w-4" />
+                <h3>Thông tin người thân / Liên hệ khẩn cấp</h3>
+              </div>
+              <div className="detail-section-card-content">
+                <InfoGrid columns={3}>
+                  <InfoItem
+                    icon={<User className="h-4 w-4" />}
+                    label="Họ và tên"
+                    value={patient.relativeFullName}
+                    color="violet"
+                  />
+                  <InfoItem
+                    icon={<Phone className="h-4 w-4" />}
+                    label="Số điện thoại"
+                    value={patient.relativePhoneNumber}
+                    color="teal"
+                  />
+                  <InfoItem
+                    icon={<Heart className="h-4 w-4" />}
+                    label="Mối quan hệ"
+                    value={patient.relativeRelationship}
+                    color="rose"
+                  />
+                </InfoGrid>
+              </div>
+            </div>
           </div>
         </TabsContent>
 

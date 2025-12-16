@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, Building2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useDepartments, useDeleteDepartment } from "@/hooks/queries/useHr";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -46,6 +46,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
 
 export default function DepartmentsPage() {
   const router = useRouter();
@@ -76,6 +78,10 @@ export default function DepartmentsPage() {
   const totalItems = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
+  // Calculate stats
+  const activeCount = useMemo(() => departments.filter(d => d.status === "ACTIVE").length, [departments]);
+  const inactiveCount = useMemo(() => departments.filter(d => d.status === "INACTIVE").length, [departments]);
+
   const handleDeleteClick = (dept: Department) => {
     setDepartmentToDelete(dept);
     setDeleteDialogOpen(true);
@@ -97,73 +103,74 @@ export default function DepartmentsPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Departments</h1>
-          <p className="text-muted-foreground">
-            Manage hospital departments and their heads.
-          </p>
+      {/* List Page Header */}
+      <ListPageHeader
+        title="Departments"
+        description="Manage hospital departments and their heads."
+        theme="violet"
+        icon={<Building2 className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Total", value: totalItems },
+          { label: "Active", value: activeCount },
+          { label: "Inactive", value: inactiveCount },
+        ]}
+        primaryAction={
+          isAdmin
+            ? {
+                label: "Add Department",
+                href: "/admin/hr/departments/new",
+              }
+            : undefined
+        }
+      />
+
+      {/* Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "ALL", label: "All" },
+          { id: "ACTIVE", label: "Active", count: activeCount },
+          { id: "INACTIVE", label: "Inactive", count: inactiveCount },
+        ]}
+        activeFilter={status}
+        onFilterChange={(v) => {
+          setStatus(v as DepartmentStatus | "ALL");
+          setPage(1);
+        }}
+      />
+
+      {/* Filters Row */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search by name..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="h-10 rounded-lg pl-9"
+          />
         </div>
-        {isAdmin && (
-          <Button
-            onClick={() => router.push("/admin/hr/departments/new")}
-            size="lg"
-            className="rounded-lg"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Department
-          </Button>
-        )}
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="h-10 w-44 rounded-lg">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="name,asc">Name (A-Z)</SelectItem>
+            <SelectItem value="name,desc">Name (Z-A)</SelectItem>
+            <SelectItem value="status,asc">Status (A-Z)</SelectItem>
+            <SelectItem value="status,desc">Status (Z-A)</SelectItem>
+            <SelectItem value="createdAt,desc">Created (newest)</SelectItem>
+            <SelectItem value="createdAt,asc">Created (oldest)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card className="w-full shadow-sm">
-        <CardHeader className="gap-3 sm:flex sm:items-end sm:justify-between">
-          <div className="relative w-full sm:max-w-xl">
-            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search by name..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-lg pl-9"
-            />
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <Select
-              value={status}
-              onValueChange={(v: DepartmentStatus | "ALL") => {
-                setStatus(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-40">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name,asc">Name (A-Z)</SelectItem>
-                <SelectItem value="name,desc">Name (Z-A)</SelectItem>
-                <SelectItem value="status,asc">Status (A-Z)</SelectItem>
-                <SelectItem value="status,desc">Status (Z-A)</SelectItem>
-                <SelectItem value="createdAt,desc">Created (newest)</SelectItem>
-                <SelectItem value="createdAt,asc">Created (oldest)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-
+      {/* Table Card */}
+      <Card className="w-full border-2 border-slate-200 shadow-md rounded-xl">
         <CardContent className="p-0">
-          <div className="overflow-hidden rounded-b-xl border-t">
+          <div className="overflow-hidden rounded-xl">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -185,7 +192,12 @@ export default function DepartmentsPage() {
                   </TableRow>
                 ) : departments.length ? (
                   departments.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      key={row.id}
+                      accent="violet"
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/hr/departments/${row.id}`)}
+                    >
                       <TableCell className="font-medium">{row.name}</TableCell>
                       <TableCell className="text-muted-foreground max-w-xs truncate">
                         {row.description || "N/A"}
@@ -245,7 +257,7 @@ export default function DepartmentsPage() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm w-full">
+      <Card className="border-2 border-slate-200 shadow-sm rounded-xl w-full">
         <CardContent className="py-4">
           <DataTablePagination
             currentPage={page - 1} // Convert from 1-indexed to 0-indexed

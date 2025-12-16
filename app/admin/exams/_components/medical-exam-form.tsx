@@ -23,7 +23,7 @@ import { ExamStatus } from "@/interfaces/medical-exam";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentSearchSelect } from "@/components/appointment/AppointmentSearchSelect";
-import { User, Briefcase, CalendarClock } from "lucide-react";
+import { User, Briefcase, CalendarClock, HeartPulse, Stethoscope, FileText } from "lucide-react";
 
 const InfoCard = ({
   title,
@@ -155,15 +155,18 @@ export function MedicalExamForm({
           />
         )}
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Vitals</h3>
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <HeartPulse className="h-5 w-5 text-rose-500" />
+            Vitals
+          </div>
           <div className="grid gap-4 sm:grid-cols-3 md:grid-cols-6">
             <FormField
               control={form.control}
               name="temperature"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Temp (°C)</FormLabel>
+                  <FormLabel className="form-label">Temp (°C)</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.1" {...field} />
                   </FormControl>
@@ -176,7 +179,7 @@ export function MedicalExamForm({
               name="bloodPressureSystolic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>BP Sys</FormLabel>
+                  <FormLabel className="form-label">BP Sys</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -189,7 +192,7 @@ export function MedicalExamForm({
               name="bloodPressureDiastolic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>BP Dia</FormLabel>
+                  <FormLabel className="form-label">BP Dia</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -202,7 +205,7 @@ export function MedicalExamForm({
               name="heartRate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>HR (bpm)</FormLabel>
+                  <FormLabel className="form-label">HR (bpm)</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -215,7 +218,7 @@ export function MedicalExamForm({
               name="weight"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Weight (kg)</FormLabel>
+                  <FormLabel className="form-label">Weight (kg)</FormLabel>
                   <FormControl>
                     <Input type="number" step="0.1" {...field} />
                   </FormControl>
@@ -228,7 +231,7 @@ export function MedicalExamForm({
               name="height"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Height (cm)</FormLabel>
+                  <FormLabel className="form-label">Height (cm)</FormLabel>
                   <FormControl>
                     <Input type="number" {...field} />
                   </FormControl>
@@ -239,69 +242,77 @@ export function MedicalExamForm({
           </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Clinical Findings</h3>
-          <FormField
-            control={form.control}
-            name="diagnosis"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Diagnosis</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Enter the diagnosis..."
-                    className="min-h-[100px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="symptoms"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Symptoms</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Describe the patient's symptoms..."
-                    className="min-h-[100px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="treatment"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Treatment Plan</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Outline the treatment plan..."
-                    className="min-h-[100px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Stethoscope className="h-5 w-5 text-violet-500" />
+            Clinical Findings
+          </div>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="diagnosis"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Diagnosis</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Enter the diagnosis..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="symptoms"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Symptoms</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe the patient's symptoms..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="treatment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Treatment Plan</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Outline the treatment plan..."
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Additional Notes</h3>
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <FileText className="h-5 w-5 text-amber-500" />
+            Additional Notes
+          </div>
           <FormField
             control={form.control}
             name="notes"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Notes (Optional)</FormLabel>
+                <FormLabel className="form-label">Notes (Optional)</FormLabel>
                 <FormControl>
                   <Textarea
                     placeholder="Any additional notes..."
@@ -316,7 +327,7 @@ export function MedicalExamForm({
         </div>
 
         {onSubmitWithStatus ? (
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">
             {(userRole === "ADMIN" ||
               userRole === "DOCTOR" ||
               userRole === "NURSE") && (
@@ -324,6 +335,7 @@ export function MedicalExamForm({
                 type="button"
                 variant="outline"
                 disabled={isSubmitting}
+                className="px-6"
                 onClick={() =>
                   form.handleSubmit((values) =>
                     onSubmitWithStatus(values, "PENDING")
@@ -337,6 +349,7 @@ export function MedicalExamForm({
               <Button
                 type="button"
                 disabled={isSubmitting || !canFinalize}
+                className="px-6 bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white border-0"
                 onClick={() =>
                   form.handleSubmit((values) =>
                     onSubmitWithStatus(values, "FINALIZED")
@@ -348,7 +361,11 @@ export function MedicalExamForm({
             )}
           </div>
         ) : (
-          <Button type="submit" disabled={isSubmitting}>
+          <Button 
+            type="submit" 
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white border-0"
+          >
             {isSubmitting ? "Saving..." : "Save Medical Exam"}
           </Button>
         )}

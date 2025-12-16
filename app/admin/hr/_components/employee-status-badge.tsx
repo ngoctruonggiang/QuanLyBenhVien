@@ -1,7 +1,6 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { CheckCircle, Clock, UserX } from "lucide-react";
 
 type EmployeeStatus = "ACTIVE" | "ON_LEAVE" | "RESIGNED";
@@ -15,23 +14,23 @@ const statusConfig: Record<
   EmployeeStatus,
   {
     label: string;
-    className: string;
+    variant: "success" | "warning" | "secondary";
     icon: React.ElementType;
   }
 > = {
   ACTIVE: {
     label: "Active",
-    className: "bg-green-100 text-green-800 hover:bg-green-100",
+    variant: "success",
     icon: CheckCircle,
   },
   ON_LEAVE: {
     label: "On Leave",
-    className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+    variant: "warning",
     icon: Clock,
   },
   RESIGNED: {
     label: "Resigned",
-    className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+    variant: "secondary",
     icon: UserX,
   },
 };
@@ -44,12 +43,10 @@ export function EmployeeStatusBadge({
   const Icon = config.icon;
 
   return (
-    <Badge
-      variant="outline"
-      className={cn("border-0 font-medium text-xs", config.className)}
-    >
+    <Badge variant={config.variant}>
       {showIcon && <Icon className="mr-1 h-3 w-3" />}
       {config.label}
     </Badge>
   );
 }
+

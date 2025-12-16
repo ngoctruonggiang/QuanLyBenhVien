@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -43,6 +43,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
+import { ListEmptyState } from "@/components/ui/list-empty-state";
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -79,6 +82,12 @@ export default function EmployeesPage() {
 
   const employees = data?.content ?? [];
   const departments = departmentsData?.content ?? [];
+  const totalElements = data?.totalElements ?? 0;
+
+  // Calculate stats
+  const doctorCount = useMemo(() => employees.filter(e => e.role === "DOCTOR").length, [employees]);
+  const nurseCount = useMemo(() => employees.filter(e => e.role === "NURSE").length, [employees]);
+  const activeCount = useMemo(() => employees.filter(e => e.status === "ACTIVE").length, [employees]);
 
   const handleDelete = (id: string, fullName: string) => {
     deleteEmployee.mutate(id, {
@@ -109,123 +118,144 @@ export default function EmployeesPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
-          <p className="text-muted-foreground">
-            Manage staff profiles, roles, and status.
-          </p>
+      {/* Enhanced Header */}
+      <ListPageHeader
+        title="Employees"
+        description="Manage staff profiles, roles, and status"
+        theme="violet"
+        icon={<Users className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Total", value: totalElements },
+          { label: "Doctors", value: doctorCount },
+          { label: "Nurses", value: nurseCount },
+          { label: "Active", value: activeCount },
+        ]}
+        primaryAction={
+          isAdmin
+            ? {
+                label: "Add Employee",
+                href: "/admin/hr/employees/new",
+                icon: <UserPlus className="h-4 w-4 mr-2" />,
+              }
+            : undefined
+        }
+      />
+
+      {/* Quick Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "ALL", label: "All", count: totalElements },
+          { id: "DOCTOR", label: "Doctors", count: doctorCount },
+          { id: "NURSE", label: "Nurses", count: nurseCount },
+          { id: "RECEPTIONIST", label: "Receptionists" },
+          { id: "ADMIN", label: "Admins" },
+        ]}
+        activeFilter={role}
+        onFilterChange={(id) => {
+          setRole(id);
+          setPage(1);
+        }}
+      />
+
+      {/* Filters Row - not inside Card */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          <Input
+            placeholder="Search by name, email, or license..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            className="h-10 rounded-lg pl-9"
+          />
         </div>
-        {isAdmin && (
-          <Button
-            onClick={() => router.push("/admin/hr/employees/new")}
-            size="lg"
-            className="rounded-lg"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Employee
-          </Button>
-        )}
+        <Select
+          value={departmentId}
+          onValueChange={(v) => {
+            setDepartmentId(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-10 w-44">
+            <SelectValue placeholder="Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Departments</SelectItem>
+            {departments.map((dept) => (
+              <SelectItem key={dept.id} value={dept.id}>
+                {dept.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={role}
+          onValueChange={(v) => {
+            setRole(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-10 w-36">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All Roles</SelectItem>
+            <SelectItem value="DOCTOR">Doctor</SelectItem>
+            <SelectItem value="NURSE">Nurse</SelectItem>
+            <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-10 w-32">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">All</SelectItem>
+            <SelectItem value="ACTIVE">Active</SelectItem>
+            <SelectItem value="ON_LEAVE">On Leave</SelectItem>
+            <SelectItem value="RESIGNED">Resigned</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={sort}
+          onValueChange={(v) => {
+            setSort(v);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="h-10 w-36">
+            <SelectValue placeholder="Sort" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="fullName,asc">Name (A-Z)</SelectItem>
+            <SelectItem value="fullName,desc">Name (Z-A)</SelectItem>
+            <SelectItem value="role,asc">Role (A-Z)</SelectItem>
+            <SelectItem value="role,desc">Role (Z-A)</SelectItem>
+            <SelectItem value="departmentName,asc">
+              Department (A-Z)
+            </SelectItem>
+            <SelectItem value="departmentName,desc">
+              Department (Z-A)
+            </SelectItem>
+            <SelectItem value="hiredAt,desc">Hire Date (newest)</SelectItem>
+            <SelectItem value="hiredAt,asc">Hire Date (oldest)</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <Card className="w-full shadow-sm">
-        <CardHeader className="gap-3 sm:flex sm:items-end sm:justify-between">
-          <div className="relative w-full sm:max-w-xl">
-            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search by name, email, or license..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(1);
-              }}
-              className="h-10 rounded-lg pl-9"
-            />
-          </div>
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <Select
-              value={departmentId}
-              onValueChange={(v) => {
-                setDepartmentId(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-44">
-                <SelectValue placeholder="Department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Departments</SelectItem>
-                {departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={role}
-              onValueChange={(v) => {
-                setRole(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-36">
-                <SelectValue placeholder="Role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Roles</SelectItem>
-                <SelectItem value="DOCTOR">Doctor</SelectItem>
-                <SelectItem value="NURSE">Nurse</SelectItem>
-                <SelectItem value="RECEPTIONIST">Receptionist</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={status}
-              onValueChange={(v) => {
-                setStatus(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-32">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="ON_LEAVE">On Leave</SelectItem>
-                <SelectItem value="RESIGNED">Resigned</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select
-              value={sort}
-              onValueChange={(v) => {
-                setSort(v);
-                setPage(1);
-              }}
-            >
-              <SelectTrigger className="h-10 w-full rounded-lg sm:w-36">
-                <SelectValue placeholder="Sort" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="fullName,asc">Name (A-Z)</SelectItem>
-                <SelectItem value="fullName,desc">Name (Z-A)</SelectItem>
-                <SelectItem value="role,asc">Role (A-Z)</SelectItem>
-                <SelectItem value="role,desc">Role (Z-A)</SelectItem>
-                <SelectItem value="departmentName,asc">
-                  Department (A-Z)
-                </SelectItem>
-                <SelectItem value="departmentName,desc">
-                  Department (Z-A)
-                </SelectItem>
-                <SelectItem value="hiredAt,desc">Hire Date (newest)</SelectItem>
-                <SelectItem value="hiredAt,asc">Hire Date (oldest)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
-
+      {/* Table Card */}
+      <Card className="w-full border-2 border-slate-200 shadow-md rounded-xl">
         <CardContent className="p-0">
-          <div className="overflow-hidden rounded-b-xl border-t">
+          <div className="overflow-hidden rounded-xl">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -248,7 +278,12 @@ export default function EmployeesPage() {
                   </TableRow>
                 ) : employees.length ? (
                   employees.map((row) => (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      key={row.id}
+                      accent="violet"
+                      className="cursor-pointer"
+                      onClick={() => router.push(`/admin/hr/employees/${row.id}`)}
+                    >
                       <TableCell className="font-medium">
                         {row.fullName}
                       </TableCell>

@@ -11,17 +11,33 @@ import {
 import { VitalsPanel } from "@/components/medical-exam/VitalsPanel";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Printer, Edit, PlusCircle, ArrowLeft, Clock } from "lucide-react";
+import {
+  Printer,
+  Edit,
+  PlusCircle,
+  ArrowLeft,
+  Clock,
+  Stethoscope,
+  User,
+  Calendar,
+  FileText,
+  Heart,
+  Pill,
+  Receipt,
+  ExternalLink,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { usePatient } from "@/hooks/queries/usePatient";
 import { useAppointment } from "@/hooks/queries/useAppointment";
 import { Badge } from "@/components/ui/badge";
+import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
+import { InfoItem, InfoGrid } from "@/components/ui/info-item";
 
 interface MedicalExamDetailViewProps {
   medicalExam: MedicalExam;
   userRole?: UserRole;
-  patientProfileBaseHref?: string; // Base path for patient profile link (default: /admin/patients)
+  patientProfileBaseHref?: string;
 }
 
 export function MedicalExamDetailView({
@@ -73,206 +89,395 @@ export function MedicalExamDetailView({
     !medicalExam.hasPrescription;
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back
-        </Button>
-        <div className="flex items-center gap-2">
-          {canEdit && (
-            <Button asChild>
-              <Link href={`/doctor/exams/${medicalExam.id}/edit`}>
-                <Edit className="h-4 w-4 mr-2" /> Edit
-              </Link>
+    <div className="space-y-6">
+      {/* Sky Blue Gradient Header */}
+      <div className="relative rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 p-6 text-white overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white" />
+        </div>
+
+        <div className="relative flex items-start justify-between gap-6">
+          <div className="flex items-center gap-5">
+            {/* Back button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.back()}
+              className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-          )}
-          {canAddPrescription && (
-            <Button asChild>
-              <Link href={`/doctor/exams/${medicalExam.id}/prescription`}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Add Prescription
-              </Link>
+
+            {/* Icon */}
+            <div className="h-16 w-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Stethoscope className="h-8 w-8 text-white" />
+            </div>
+
+            {/* Title & Meta */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">
+                  Medical Exam
+                </h1>
+                <Badge
+                  variant={isEditable ? "default" : "secondary"}
+                  className={
+                    isEditable
+                      ? "bg-white/20 text-white border-white/30"
+                      : "bg-white/10 text-white/80 border-white/20"
+                  }
+                >
+                  <Clock className="h-3 w-3 mr-1" />
+                  {isEditable ? `${timeLeft} left` : "Read-only"}
+                </Badge>
+              </div>
+              <p className="text-white/80 text-sm font-medium">
+                {format(new Date(medicalExam.examDate), "PPP")} •{" "}
+                {medicalExam.patient.fullName}
+              </p>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print
             </Button>
-          )}
-          <Button variant="outline">
-            <Printer className="h-4 w-4 mr-2" /> Print
-          </Button>
+            {canEdit && (
+              <Button
+                size="sm"
+                asChild
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                variant="outline"
+              >
+                <Link href={`/doctor/exams/${medicalExam.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Link>
+              </Button>
+            )}
+            {canAddPrescription && (
+              <Button
+                size="sm"
+                asChild
+                className="bg-white text-sky-600 hover:bg-white/90"
+              >
+                <Link href={`/doctor/exams/${medicalExam.id}/prescription`}>
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add Prescription
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle>Medical Exam #{medicalExam.id}</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                {format(new Date(medicalExam.examDate), "PPP")}
-              </p>
-            </div>
-            <Badge
-              variant={isEditable ? "default" : "secondary"}
-              className="flex items-center gap-2"
-            >
-              <Clock className="h-4 w-4" />
-              {isEditable ? `Editable: ${timeLeft} left` : "Read-only"}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Patient Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p>
-                <strong>Name:</strong> {medicalExam.patient.fullName}
-              </p>
-              <p>
-                <strong>DOB:</strong>{" "}
-                {patientData?.dateOfBirth
-                  ? format(new Date(patientData.dateOfBirth), "PPP")
-                  : patientData
-                    ? "N/A"
-                    : "Loading..."}
-              </p>
-              <p>
-                <strong>Gender:</strong> {patientData?.gender || "Loading..."}
-              </p>
-              <Button variant="link" className="p-0 h-auto">
-                <Link
-                  href={`${patientProfileBaseHref}/${medicalExam.patient.id}`}
-                >
-                  View Patient Profile →
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
+      {/* Stats Summary Bar */}
+      <StatsSummaryBar
+        stats={[
+          {
+            label: "Patient",
+            value: medicalExam.patient.fullName,
+            icon: <User className="h-5 w-5" />,
+            color: "sky",
+          },
+          {
+            label: "Doctor",
+            value: medicalExam.doctor.fullName,
+            icon: <Stethoscope className="h-5 w-5" />,
+            color: "violet",
+          },
+          {
+            label: "Prescription",
+            value: medicalExam.hasPrescription ? "Yes" : "No",
+            icon: <Pill className="h-5 w-5" />,
+            color: medicalExam.hasPrescription ? "emerald" : "slate",
+          },
+          {
+            label: "Status",
+            value: isEditable ? "Active" : "Archived",
+            icon: <FileText className="h-5 w-5" />,
+            color: isEditable ? "emerald" : "slate",
+          },
+        ]}
+      />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Appointment Information</CardTitle>
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Main Content - 2 columns */}
+        <div className="md:col-span-2 space-y-6">
+          {/* Clinical Findings */}
+          <Card className="border-2 border-slate-200 shadow-md rounded-xl">
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-sky-600" />
+                Clinical Findings
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <p>
-                <strong>Date & Time:</strong>{" "}
-                {format(
-                  new Date(medicalExam.appointment.appointmentTime),
-                  "PPPp"
-                )}
-              </p>
-              <p>
-                <strong>Type:</strong> {appointmentData?.type || "Loading..."}
-              </p>
-              <p>
-                <strong>Reason:</strong>{" "}
-                {appointmentData?.reason || "Loading..."}
-              </p>
-              <Button variant="link" className="p-0 h-auto">
-                <Link
-                  href={`/admin/appointments/${medicalExam.appointment.id}`}
-                >
-                  View Appointment →
-                </Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Clinical Findings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="p-6 space-y-6">
               <div>
-                <h3 className="text-lg font-semibold">Diagnosis</h3>
-                <p className="text-muted-foreground">
-                  {medicalExam.diagnosis || "N/A"}
+                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                  Diagnosis
+                </h4>
+                <p className="text-slate-800 text-lg">
+                  {medicalExam.diagnosis || (
+                    <span className="text-slate-400 italic">
+                      No diagnosis recorded
+                    </span>
+                  )}
                 </p>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold">Symptoms</h3>
-                <p className="text-muted-foreground">
-                  {medicalExam.symptoms || "N/A"}
-                </p>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    Symptoms
+                  </h4>
+                  <p className="text-slate-700">
+                    {medicalExam.symptoms || (
+                      <span className="text-slate-400 italic">
+                        No symptoms recorded
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    Treatment Plan
+                  </h4>
+                  <p className="text-slate-700">
+                    {medicalExam.treatment || (
+                      <span className="text-slate-400 italic">
+                        No treatment recorded
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
+
               <div>
-                <h3 className="text-lg font-semibold">Treatment Plan</h3>
-                <p className="text-muted-foreground">
-                  {medicalExam.treatment || "N/A"}
+                <h4 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                  Doctor's Notes
+                </h4>
+                <p className="text-slate-700 bg-slate-50 p-4 rounded-lg border">
+                  {medicalExam.notes || (
+                    <span className="text-slate-400 italic">
+                      No additional notes
+                    </span>
+                  )}
                 </p>
               </div>
             </CardContent>
           </Card>
 
+          {/* Vital Signs */}
           {medicalExam.vitals && (
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Vital Signs</CardTitle>
+            <Card className="border-2 border-slate-200 shadow-md rounded-xl">
+              <CardHeader className="bg-slate-50 border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="h-5 w-5 text-rose-500" />
+                  Vital Signs
+                </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <VitalsPanel vitals={medicalExam.vitals} showStatus />
               </CardContent>
             </Card>
           )}
 
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Doctor's Notes</CardTitle>
+          {/* Prescription */}
+          <Card className="border-2 border-slate-200 shadow-md rounded-xl">
+            <CardHeader className="bg-slate-50 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <Pill className="h-5 w-5 text-emerald-600" />
+                Prescription
+              </CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                {medicalExam.notes || "N/A"}
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Prescription</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="p-6">
               {medicalExam.hasPrescription ? (
-                <div className="flex items-center justify-between">
-                  <p className="text-muted-foreground">
-                    💊 Prescription created on{" "}
-                    {format(new Date(medicalExam.createdAt), "PPP")}
-                  </p>
-                  <Button variant="link" className="p-0 h-auto">
+                <div className="flex items-center justify-between bg-emerald-50 p-4 rounded-lg border border-emerald-200">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <Pill className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-emerald-800">
+                        Prescription Available
+                      </p>
+                      <p className="text-sm text-emerald-600">
+                        Created on{" "}
+                        {format(new Date(medicalExam.createdAt), "PPP")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button asChild variant="outline" className="border-emerald-300 text-emerald-700 hover:bg-emerald-100">
                     <Link
                       href={`/admin/exams/${medicalExam.id}/prescription/view`}
                     >
-                      View Prescription →
+                      View Prescription
+                      <ExternalLink className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </div>
               ) : (
-                <p className="text-muted-foreground">
-                  No prescription created yet.
-                </p>
+                <div className="flex items-center justify-between bg-slate-50 p-4 rounded-lg border border-slate-200">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
+                      <Pill className="h-5 w-5 text-slate-400" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-600">
+                        No Prescription
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        No prescription has been created for this exam
+                      </p>
+                    </div>
+                  </div>
+                  {canAddPrescription && (
+                    <Button asChild>
+                      <Link
+                        href={`/doctor/exams/${medicalExam.id}/prescription`}
+                      >
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Prescription
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Audit Information</CardTitle>
+        {/* Sidebar - 1 column */}
+        <div className="space-y-6">
+          {/* Patient Information */}
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <User className="h-4 w-4" />
+              <h3>Patient Information</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={1}>
+                <InfoItem
+                  icon={<User className="h-4 w-4" />}
+                  label="Name"
+                  value={medicalExam.patient.fullName}
+                  color="sky"
+                />
+                <InfoItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Date of Birth"
+                  value={
+                    patientData?.dateOfBirth
+                      ? format(new Date(patientData.dateOfBirth), "PPP")
+                      : "N/A"
+                  }
+                  color="slate"
+                />
+                <InfoItem
+                  icon={<User className="h-4 w-4" />}
+                  label="Gender"
+                  value={patientData?.gender || "N/A"}
+                  color="slate"
+                />
+              </InfoGrid>
+              <Button
+                variant="link"
+                className="p-0 h-auto mt-3 text-sky-600"
+                asChild
+              >
+                <Link
+                  href={`${patientProfileBaseHref}/${medicalExam.patient.id}`}
+                >
+                  View Patient Profile
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Appointment Information */}
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <Calendar className="h-4 w-4" />
+              <h3>Appointment</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={1}>
+                <InfoItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Date & Time"
+                  value={format(
+                    new Date(medicalExam.appointment.appointmentTime),
+                    "PPPp"
+                  )}
+                  color="violet"
+                />
+                <InfoItem
+                  icon={<FileText className="h-4 w-4" />}
+                  label="Type"
+                  value={appointmentData?.type || "N/A"}
+                  color="slate"
+                />
+                <InfoItem
+                  icon={<FileText className="h-4 w-4" />}
+                  label="Reason"
+                  value={appointmentData?.reason || "N/A"}
+                  color="slate"
+                />
+              </InfoGrid>
+              <Button
+                variant="link"
+                className="p-0 h-auto mt-3 text-violet-600"
+                asChild
+              >
+                <Link
+                  href={`/admin/appointments/${medicalExam.appointment.id}`}
+                >
+                  View Appointment
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Audit Information */}
+          <Card className="border-2 border-slate-200 shadow-md rounded-xl">
+            <CardHeader className="py-3 px-4 bg-slate-50 border-b">
+              <CardTitle className="text-sm font-medium">
+                Audit Information
+              </CardTitle>
             </CardHeader>
-            <CardContent className="text-muted-foreground text-sm space-y-1">
-              <p>
-                <strong>Created:</strong>{" "}
-                {format(new Date(medicalExam.createdAt), "PPPp")} by{" "}
-                {medicalExam.doctor.fullName}
-              </p>
-              <p>
-                <strong>Last Updated:</strong>{" "}
-                {format(new Date(medicalExam.updatedAt), "PPPp")}
-              </p>
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <p className="text-xs font-medium text-slate-500">Created</p>
+                <p className="text-sm text-slate-700">
+                  {format(new Date(medicalExam.createdAt), "PPPp")}
+                </p>
+                <p className="text-xs text-slate-500">
+                  by {medicalExam.doctor.fullName}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500">
+                  Last Updated
+                </p>
+                <p className="text-sm text-slate-700">
+                  {format(new Date(medicalExam.updatedAt), "PPPp")}
+                </p>
+              </div>
             </CardContent>
           </Card>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

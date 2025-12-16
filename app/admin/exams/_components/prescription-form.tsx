@@ -36,6 +36,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMedicines } from "@/services/medicine.service";
 import { Medicine } from "@/interfaces/medicine";
 import { useState } from "react";
+import { Pill, FileText } from "lucide-react";
 
 interface PrescriptionFormProps {
   onSubmit: (data: PrescriptionFormValues) => void;
@@ -79,40 +80,45 @@ export function PrescriptionForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-        <div className="space-y-4">
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="flex flex-col gap-4 rounded-lg border p-4"
-            >
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Medicine {index + 1}</h4>
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => remove(index)}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
-              </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Pill className="h-5 w-5 text-emerald-500" />
+            Prescription Items
+          </div>
+          <div className="space-y-4">
+            {fields.map((field, index) => (
+              <div
+                key={field.id}
+                className="flex flex-col gap-4 rounded-lg border border-slate-200 p-4 bg-slate-50/50"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium text-slate-700">Medicine {index + 1}</h4>
+                  {fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => remove(index)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
+                </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.medicineId`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Medicine</FormLabel>
-                      <Popover
-                        open={openMedicine === index}
-                        onOpenChange={(open) =>
-                          setOpenMedicine(open ? index : null)
-                        }
-                      >
+                <div className="form-grid">
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.medicineId`}
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel className="form-label form-label-required">Medicine</FormLabel>
+                        <Popover
+                          open={openMedicine === index}
+                          onOpenChange={(open) =>
+                            setOpenMedicine(open ? index : null)
+                          }
+                        >
                         <PopoverTrigger asChild>
                           <FormControl>
                             <Button
@@ -165,111 +171,122 @@ export function PrescriptionForm({
                             </CommandList>
                           </Command>
                         </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.quantity`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label form-label-required">Quantity</FormLabel>
+                        <FormControl>
+                          <Input type="number" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.dosage`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label form-label-required">Dosage</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="e.g., 1 tablet 3x daily"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name={`items.${index}.duration`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label form-label-required">Duration</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., 5 days" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 <FormField
                   control={form.control}
-                  name={`items.${index}.quantity`}
+                  name={`items.${index}.notes`}
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Quantity</FormLabel>
+                      <FormLabel className="form-label">Notes</FormLabel>
                       <FormControl>
-                        <Input type="number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.dosage`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dosage</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="e.g., 1 tablet 3x daily"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name={`items.${index}.duration`}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Duration</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., 5 days" {...field} />
+                        <Input placeholder="Special instructions..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name={`items.${index}.notes`}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notes</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Special instructions..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          ))}
+            ))}
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() =>
-              append({
-                medicineId: "",
-                quantity: 1,
-                dosage: "",
-                duration: "",
-                notes: "",
-              })
-            }
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Medicine
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() =>
+                append({
+                  medicineId: "",
+                  quantity: 1,
+                  dosage: "",
+                  duration: "",
+                  notes: "",
+                })
+              }
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Medicine
+            </Button>
+          </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prescription Notes</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Additional notes for the prescription..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <FileText className="h-5 w-5 text-amber-500" />
+            Prescription Notes
+          </div>
+          <FormField
+            control={form.control}
+            name="notes"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="form-label">Additional Notes</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Additional notes for the prescription..."
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
-        <Button type="submit" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="bg-gradient-to-r from-violet-500 to-purple-500 hover:from-violet-600 hover:to-purple-600 text-white border-0"
+        >
           {isSubmitting ? "Saving..." : "Save Prescription"}
         </Button>
       </form>

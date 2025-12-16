@@ -12,19 +12,19 @@ export default function MedicinesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <Pill className="h-6 w-6" />
+        <div className="page-header">
+          <h1>
+            <Pill className="h-6 w-6 text-teal-500" />
             Medicines Management
           </h1>
-          <p className="text-muted-foreground">
+          <p>
             Manage medicine inventory, pricing, and categories.
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="medicines" className="w-full">
-        <TabsList>
+        <TabsList className="bg-slate-100 p-1 rounded-lg">
           <TabsTrigger value="medicines">Medicines</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
         </TabsList>

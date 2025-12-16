@@ -25,6 +25,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   sorting?: SortingState;
   onSortingChange?: OnChangeFn<SortingState>;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -32,6 +33,7 @@ export function DataTable<TData, TValue>({
   data,
   sorting: controlledSorting,
   onSortingChange: setControlledSorting,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [internalSorting, setInternalSorting] = useState<SortingState>([]);
 
@@ -80,6 +82,9 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                data-clickable={onRowClick ? "true" : undefined}
+                onClick={() => onRowClick?.(row.original)}
+                className={onRowClick ? "cursor-pointer" : ""}
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>

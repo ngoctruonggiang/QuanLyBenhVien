@@ -174,7 +174,12 @@ export default function DoctorExamsPage() {
                   filtered.map((exam) => (
                     <TableRow key={exam.id}>
                       <TableCell className="font-medium">
-                        {exam.patient.fullName}
+                        <Link
+                          href={`/doctor/patients/${exam.patient.id}`}
+                          className="text-primary hover:underline"
+                        >
+                          {exam.patient.fullName}
+                        </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground truncate max-w-[220px]">
                         {exam.diagnosis || "-"}

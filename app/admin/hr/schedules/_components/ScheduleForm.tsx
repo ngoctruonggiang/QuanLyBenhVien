@@ -35,7 +35,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ScheduleRequest } from "@/interfaces/hr";
 import { useEmployees } from "@/hooks/queries/useHr";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Calendar } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 const formSchema = z
@@ -127,149 +127,163 @@ export default function ScheduleForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="employeeId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Employee</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      className="w-full justify-between"
-                    >
-                      {field.value
-                        ? employees.find((emp) => emp.id === field.value)
-                            ?.fullName
-                        : "Select employee"}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Search employee" />
-                    <CommandEmpty>No employee found.</CommandEmpty>
-                    <CommandGroup>
-                      {employees.map((emp) => (
-                        <CommandItem
-                          key={emp.id}
-                          value={emp.fullName}
-                          onSelect={() => field.onChange(emp.id)}
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Calendar className="h-5 w-5 text-sky-500" />
+            Schedule Information
+          </div>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="employeeId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Employee</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
                         >
-                          <Check
-                            className={`mr-2 h-4 w-4 ${
-                              field.value === emp.id
-                                ? "opacity-100"
-                                : "opacity-0"
-                            }`}
-                          />
-                          {emp.fullName} ({emp.role})
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                          {field.value
+                            ? employees.find((emp) => emp.id === field.value)
+                                ?.fullName
+                            : "Select employee"}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search employee" />
+                        <CommandEmpty>No employee found.</CommandEmpty>
+                        <CommandGroup>
+                          {employees.map((emp) => (
+                            <CommandItem
+                              key={emp.id}
+                              value={emp.fullName}
+                              onSelect={() => field.onChange(emp.id)}
+                            >
+                              <Check
+                                className={`mr-2 h-4 w-4 ${
+                                  field.value === emp.id
+                                    ? "opacity-100"
+                                    : "opacity-0"
+                                }`}
+                              />
+                              {emp.fullName} ({emp.role})
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="workDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date</FormLabel>
-              <FormControl>
-                <Input
-                  type="date"
-                  min={new Date().toISOString().split("T")[0]}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="form-grid">
+              <FormField
+                control={form.control}
+                name="workDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        min={new Date().toISOString().split("T")[0]}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="startTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Start Time</FormLabel>
-                <FormControl>
-                  <Input type="time" step={1800} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label">Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="AVAILABLE">Available</SelectItem>
+                        <SelectItem value="BOOKED">Booked</SelectItem>
+                        <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-          <FormField
-            control={form.control}
-            name="endTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Time</FormLabel>
-                <FormControl>
-                  <Input type="time" step={1800} {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+            <div className="form-grid">
+              <FormField
+                control={form.control}
+                name="startTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">Start Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" step={1800} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="endTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="form-label form-label-required">End Time</FormLabel>
+                    <FormControl>
+                      <Input type="time" step={1800} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Notes</FormLabel>
+                  <FormControl>
+                    <Textarea placeholder="Optional notes" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="AVAILABLE">Available</SelectItem>
-                  <SelectItem value="BOOKED">Booked</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Optional notes" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={onCancel} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             Save
           </Button>

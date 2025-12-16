@@ -29,7 +29,7 @@ import { usePathname } from "next/navigation";
 import React from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell, Search } from "lucide-react";
 import { RoleGuard } from "@/components/auth/RoleGuard";
 import { cn } from "@/lib/utils";
 
@@ -118,29 +118,35 @@ export default function AdminLayout({
   return (
     <RoleGuard allowedRoles={["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"]}>
       <SidebarProvider>
-        <div className="bg-muted/40 text-foreground flex min-h-screen w-screen">
+        <div className="bg-slate-50 text-foreground flex min-h-screen w-screen">
           <Sidebar
-            className="border-r border-slate-200 bg-white"
+            className="border-r-0"
             collapsible="icon"
           >
-            <SidebarHeader className="gap-2 px-4 py-4 border-b border-slate-200">
-              <div className="bg-blue-600 text-white grid h-10 w-10 place-items-center rounded-lg text-sm font-semibold">
-                HMS
-              </div>
-              <div className="leading-tight">
-                <p className="text-sm font-semibold text-slate-900">
-                  Health Management
-                </p>
-                <p className="text-xs text-slate-600">Hospital System</p>
+            {/* Sidebar with gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900" />
+            
+            <SidebarHeader className="relative z-10 gap-3 px-4 py-5 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-br from-sky-400 to-teal-500 text-white grid h-10 w-10 place-items-center rounded-xl text-sm font-bold shadow-lg shadow-sky-500/20">
+                  HMS
+                </div>
+                <div className="leading-tight group-data-[collapsible=icon]:hidden">
+                  <p className="text-sm font-semibold text-white">
+                    Health Management
+                  </p>
+                  <p className="text-xs text-slate-400">Hospital System</p>
+                </div>
               </div>
             </SidebarHeader>
-            <SidebarContent>
+            
+            <SidebarContent className="relative z-10">
               <SidebarGroup>
-                <SidebarGroupLabel className="text-slate-600">
+                <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider px-4 mb-2">
                   Navigation
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <SidebarMenu>
+                  <SidebarMenu className="px-2 space-y-1">
                     {navItems.map((item) => {
                       const Icon = item.icon;
                       // Fix active logic: exact match for Dashboard, startsWith for others
@@ -154,14 +160,17 @@ export default function AdminLayout({
                             asChild
                             isActive={isActive}
                             className={cn(
-                              "h-10 rounded-lg px-4 py-3 font-medium transition-colors",
+                              "h-10 rounded-lg px-3 py-2.5 font-medium transition-all duration-200",
                               isActive
-                                ? "bg-blue-50 text-blue-700 border-l-4 border-blue-600"
-                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                                ? "bg-gradient-to-r from-sky-500/20 to-teal-500/10 text-white border-l-2 border-sky-400 shadow-sm"
+                                : "text-slate-300 hover:bg-white/5 hover:text-white"
                             )}
                           >
                             <Link href={item.href}>
-                              <Icon className="size-4" />
+                              <Icon className={cn(
+                                "size-4 transition-colors",
+                                isActive ? "text-sky-400" : "text-slate-400"
+                              )} />
                               <span>{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -172,53 +181,76 @@ export default function AdminLayout({
                 </SidebarGroupContent>
               </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter className="px-4 pb-4 border-t border-slate-200">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between rounded-lg bg-slate-50 border border-slate-200 px-3 py-2">
-                  <div>
-                    <p className="text-sm font-medium text-slate-900">
+            
+            <SidebarFooter className="relative z-10 px-3 pb-4 border-t border-white/10 pt-4">
+              <div className="space-y-3">
+                {/* User profile card */}
+                <div className="flex items-center gap-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2.5 group-data-[collapsible=icon]:justify-center">
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-400 to-teal-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+                    {(user?.fullName || user?.email || "U").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="group-data-[collapsible=icon]:hidden">
+                    <p className="text-sm font-medium text-white truncate max-w-[120px]">
                       {user?.fullName || user?.email}
                     </p>
-                    <p className="text-xs text-slate-600">{user?.role}</p>
+                    <p className="text-xs text-slate-400">{user?.role}</p>
                   </div>
                 </div>
+                
+                {/* Logout button */}
                 <Button
                   onClick={logout}
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="w-full border-slate-200 text-slate-700 hover:bg-slate-100"
+                  className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center"
                 >
-                  <LogOut className="size-4 mr-2" />
-                  Logout
+                  <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
+                  <span className="group-data-[collapsible=icon]:hidden">Logout</span>
                 </Button>
               </div>
             </SidebarFooter>
-            <SidebarRail />
+            <SidebarRail className="bg-white/5 hover:bg-white/10" />
           </Sidebar>
 
           <div className="flex-1 min-w-0 w-full">
-            <header className="sticky top-0 z-20 w-full border-b bg-background/80 backdrop-blur">
-              <div className="flex h-14 w-full items-center gap-3 px-3 sm:px-5">
-                <SidebarTrigger className="md:hidden" />
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Breadcrumb>
-                    <BreadcrumbList>
-                      {breadcrumbs.map((item) => (
-                        <React.Fragment key={item.href}>
-                          <BreadcrumbItem>
-                            {item.isLast ? (
-                              <span className="text-foreground font-medium">
-                                {item.name}
-                              </span>
-                            ) : (
-                              <span>{item.name}</span>
-                            )}
-                          </BreadcrumbItem>
-                          {!item.isLast && <BreadcrumbSeparator />}
-                        </React.Fragment>
-                      ))}
-                    </BreadcrumbList>
-                  </Breadcrumb>
+            {/* Enhanced header */}
+            <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+              <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger className="md:hidden text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg p-2" />
+                  <div className="hidden sm:flex items-center gap-2 text-sm">
+                    <Breadcrumb>
+                      <BreadcrumbList>
+                        {breadcrumbs.map((item) => (
+                          <React.Fragment key={item.href}>
+                            <BreadcrumbItem>
+                              {item.isLast ? (
+                                <span className="text-slate-900 font-medium">
+                                  {item.name}
+                                </span>
+                              ) : (
+                                <span className="text-slate-500 hover:text-slate-700 transition-colors">
+                                  {item.name}
+                                </span>
+                              )}
+                            </BreadcrumbItem>
+                            {!item.isLast && <BreadcrumbSeparator className="text-slate-300" />}
+                          </React.Fragment>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+                  </div>
+                </div>
+                
+                {/* Header actions */}
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                    <Search className="size-5" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative">
+                    <Bell className="size-5" />
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full" />
+                  </Button>
                 </div>
               </div>
             </header>
@@ -235,3 +267,4 @@ export default function AdminLayout({
     </RoleGuard>
   );
 }
+

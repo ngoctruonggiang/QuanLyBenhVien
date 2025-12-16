@@ -24,9 +24,17 @@ export const generateInvoice = async (data: GenerateInvoiceRequest) =>
     data,
   );
 
-// Get invoice by ID
-export const getInvoiceById = async (id: string) =>
-  api.get<{ status: string; data: Invoice }>(`/api/billing/invoices/${id}`);
+// Get invoice by ID - direct mock implementation
+export const getInvoiceById = async (id: string) => {
+  const { invoices } = await import("@/mocks/handlers/billing");
+  await new Promise(resolve => setTimeout(resolve, 200));
+  
+  const invoice = invoices.find((inv: any) => inv.id === id);
+  if (!invoice) {
+    throw new Error("Invoice not found");
+  }
+  return { data: { status: "success", data: invoice } };
+};
 
 // Get invoice by appointment
 export const getInvoiceByAppointment = async (appointmentId: string) =>
@@ -45,9 +53,74 @@ export type InvoiceListParams = {
   search?: string;
 };
 
-// List invoices (admin)
+// List invoices (admin) - direct mock implementation
 export const getInvoiceList = async (params?: InvoiceListParams) => {
-  return api.get("/api/billing/invoices", { params });
+  // Import invoices directly for mock mode to ensure data sync
+  const { invoices } = await import("@/mocks/handlers/billing");
+  
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 300));
+
+  let filtered = [...invoices];
+
+  if (params?.status && params.status !== "ALL") {
+    filtered = filtered.filter((inv) => inv.status === params.status);
+  }
+
+  if (params?.search) {
+    const search = params.search.toLowerCase();
+    filtered = filtered.filter(
+      (inv: any) =>
+        inv.patientName?.toLowerCase().includes(search) ||
+        inv.invoiceNumber?.toLowerCase().includes(search)
+    );
+  }
+
+  if (params?.startDate) {
+    const start = new Date(params.startDate);
+    filtered = filtered.filter((inv: any) => new Date(inv.invoiceDate) >= start);
+  }
+
+  if (params?.endDate) {
+    const end = new Date(params.endDate);
+    filtered = filtered.filter((inv: any) => new Date(inv.invoiceDate) <= end);
+  }
+
+  const sortParam = params?.sort || "invoiceDate,desc";
+  const [sortKey, sortDir] = sortParam.split(",");
+  filtered = filtered.sort((a: any, b: any) => {
+    const direction = sortDir === "asc" ? 1 : -1;
+    switch (sortKey) {
+      case "totalAmount":
+        return (a.totalAmount - b.totalAmount) * direction;
+      case "status":
+        return a.status.localeCompare(b.status) * direction;
+      case "invoiceDate":
+      default:
+        return (
+          (new Date(a.invoiceDate).getTime() - new Date(b.invoiceDate).getTime()) *
+          direction
+        );
+    }
+  });
+
+  const totalElements = filtered.length;
+  const page = params?.page || 0;
+  const size = params?.size || 10;
+  const startIndex = page * size;
+  const content = filtered.slice(startIndex, startIndex + size);
+  const totalPages = size > 0 ? Math.ceil(totalElements / size) : 1;
+
+  return {
+    data: {
+      content,
+      page,
+      size,
+      totalElements,
+      totalPages,
+      last: page >= totalPages - 1,
+    },
+  };
 };
 
 export type PatientInvoiceParams = {

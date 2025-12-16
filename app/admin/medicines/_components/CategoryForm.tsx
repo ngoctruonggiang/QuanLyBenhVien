@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Category, CategoryRequest } from "@/interfaces/category";
 import { Spinner } from "@/components/ui/spinner";
+import { Tags } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().trim().min(1, "Category name is required"),
@@ -52,41 +53,54 @@ export function CategoryForm({
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., Antibiotics" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="A brief description of the category..."
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end gap-4 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <Tags className="h-5 w-5 text-teal-500" />
+            Category Information
+          </div>
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label form-label-required">Category Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., Antibiotics" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="form-label">Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="A brief description of the category..."
+                      className="resize-none"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-4 pt-4 border-t border-slate-200">
+          <Button type="button" variant="outline" onClick={onCancel} className="px-6">
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="px-6 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white border-0"
+          >
             {isLoading && <Spinner size="sm" className="mr-2" />}
             {initialData ? "Save Changes" : "Create Category"}
           </Button>

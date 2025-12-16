@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ReusableTable } from "@/app/admin/_components/MyTable";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +33,7 @@ import {
   Wallet,
   X,
   CreditCard,
+  Receipt,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CancelInvoiceDialog } from "@/app/admin/billing/_components/cancel-invoice-dialog";
 import { Invoice } from "@/interfaces/billing";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -116,87 +120,124 @@ export default function InvoiceListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">
-          Billing & Invoices
-        </h1>
-        <Button asChild variant="outline">
-          <Link href="/admin/billing/payments">
-            <CreditCard className="mr-2 h-4 w-4" />
-            Payment History
-          </Link>
-        </Button>
-      </div>
+      {/* Enhanced Header */}
+      <ListPageHeader
+        title="Billing & Invoices"
+        description="Manage patient invoices and payment records"
+        theme="emerald"
+        icon={<Receipt className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Today", value: formatCurrency(summary?.todayAmount || 0) },
+          { label: "This Week", value: formatCurrency(summary?.thisWeekAmount || 0) },
+          { label: "Total Invoices", value: data?.totalElements || 0 },
+        ]}
+        secondaryActions={
+          <Button asChild variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+            <Link href="/admin/billing/payments">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Payment History
+            </Link>
+          </Button>
+        }
+      />
+
+      {/* Quick Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "ALL", label: "All Invoices", count: data?.totalElements || 0 },
+          { id: "UNPAID", label: "Unpaid", countColor: "warning" },
+          { id: "PAID", label: "Paid", countColor: "success" },
+          { id: "OVERDUE", label: "Overdue", countColor: "danger" },
+          { id: "CANCELLED", label: "Cancelled" },
+        ]}
+        activeFilter={status}
+        onFilterChange={(id) => {
+          setStatus(id);
+          setPage(0);
+        }}
+      />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="border-0 shadow-md overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-sky-400/10 to-transparent rounded-bl-full" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-slate-600">
               Today&apos;s Collections
             </CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <div className="p-2 bg-sky-50 rounded-lg">
+              <FileText className="h-4 w-4 text-sky-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-slate-900">
               {summaryLoading
                 ? "..."
                 : formatCurrency(summary?.todayAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500 mt-1">
               {summary?.todayCount || 0} payments
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-md overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-400/10 to-transparent rounded-bl-full" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-slate-600">
               This Week&apos;s Collections
             </CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
+            <div className="p-2 bg-amber-50 rounded-lg">
+              <Clock className="h-4 w-4 text-amber-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
+            <div className="text-2xl font-bold text-amber-600">
               {summaryLoading
                 ? "..."
                 : formatCurrency(summary?.thisWeekAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500 mt-1">
               {summary?.thisWeekCount || 0} payments
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-md overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-rose-400/10 to-transparent rounded-bl-full" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Cash Payments</CardTitle>
-            <AlertCircle className="h-4 w-4 text-destructive" />
+            <CardTitle className="text-sm font-medium text-slate-600">Cash Payments</CardTitle>
+            <div className="p-2 bg-rose-50 rounded-lg">
+              <Wallet className="h-4 w-4 text-rose-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">
+            <div className="text-2xl font-bold text-rose-600">
               {summaryLoading
                 ? "..."
                 : formatCurrency(summary?.cashAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500 mt-1">
               {summary?.cashPercentage?.toFixed(1) || 0}% of total
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 shadow-md overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-400/10 to-transparent rounded-bl-full" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Card Payments</CardTitle>
-            <Wallet className="h-4 w-4 text-green-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">Card Payments</CardTitle>
+            <div className="p-2 bg-emerald-50 rounded-lg">
+              <CreditCard className="h-4 w-4 text-emerald-500" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-emerald-600">
               {summaryLoading
                 ? "..."
                 : formatCurrency(summary?.cardAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-500 mt-1">
               {summary?.cardPercentage?.toFixed(1) || 0}% of total
             </p>
           </CardContent>
@@ -295,22 +336,56 @@ export default function InvoiceListPage() {
         )}
       </div>
 
-      <ReusableTable
-        data={data?.content ?? []}
-        columns={columns}
-        loading={isLoading}
-        pagination={{
-          currentPage: (data?.page ?? 0) + 1,
-          totalPages: data?.totalPages ?? 1,
-          rowsPerPage: limit,
-          totalItems: data?.totalElements ?? 0,
-        }}
-        onPageChange={setPage}
-        onRowsPerPageChange={(size) => {
-          setLimit(size);
-          setPage(0);
-        }}
-      />
+      <Card className="border-2 border-slate-200 shadow-md rounded-xl overflow-hidden">
+        <ReusableTable
+          data={data?.content ?? []}
+          columns={columns}
+          loading={isLoading}
+          pagination={{
+            currentPage: (data?.page ?? 0) + 1,
+            totalPages: data?.totalPages ?? 1,
+            rowsPerPage: limit,
+            totalItems: data?.totalElements ?? 0,
+          }}
+          onPageChange={setPage}
+          onRowsPerPageChange={(size) => {
+            setLimit(size);
+            setPage(0);
+          }}
+          onRowClick={(invoice) => router.push(`/admin/billing/${invoice.id}`)}
+          hidePagination
+        />
+      </Card>
+
+      {/* Pagination - in separate Card like patient page */}
+      {(data?.content?.length ?? 0) > 0 && (
+        <Card className="border-2 border-slate-200 shadow-sm rounded-xl">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Showing <span className="font-medium">{(data?.page ?? 0) * limit + 1}</span>{" "}
+              to{" "}
+              <span className="font-medium">
+                {Math.min(((data?.page ?? 0) + 1) * limit, data?.totalElements ?? 0)}
+              </span>{" "}
+              of <span className="font-medium">{data?.totalElements ?? 0}</span> invoices
+            </p>
+            <DataTablePagination
+              currentPage={data?.page ?? 0}
+              totalPages={data?.totalPages ?? 1}
+              totalElements={data?.totalElements ?? 0}
+              pageSize={limit}
+              onPageChange={setPage}
+              showRowsPerPage={true}
+              rowsPerPageOptions={[10, 20, 50]}
+              rowsPerPage={limit}
+              onRowsPerPageChange={(size) => {
+                setLimit(size);
+                setPage(0);
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       <CancelInvoiceDialog
         open={cancelDialogOpen}

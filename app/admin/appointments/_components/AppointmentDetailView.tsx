@@ -14,11 +14,15 @@ import {
   Calendar,
   FileText,
   Clock,
+  Phone,
+  Building2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
+import { InfoItem, InfoGrid } from "@/components/ui/info-item";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -123,116 +127,188 @@ export function AppointmentDetailView({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={backHref}>
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold tracking-tight">
-                Appointment Details
-              </h1>
-              <AppointmentStatusBadge status={appointment.status} />
-            </div>
-            <p className="text-muted-foreground">
-              Booked on {format(new Date(appointment.createdAt), "MMM d, yyyy")}
-            </p>
-          </div>
+      {/* Violet Gradient Header */}
+      <div className="relative rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 p-6 text-white overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white" />
         </div>
-        <div className="flex gap-2">
-          {canEdit && editHref && (
-            <Button variant="outline" asChild>
-              <Link href={editHref}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Reschedule
+        
+        <div className="relative flex items-start justify-between gap-6">
+          <div className="flex items-center gap-5">
+            {/* Back button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
+            >
+              <Link href={backHref}>
+                <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
-          )}
-          {canComplete && (
-            <Button
-              variant="default"
-              onClick={() => setCompleteDialogOpen(true)}
-            >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              Mark as Completed
-            </Button>
-          )}
-          {canCancel && (
-            <Button
-              variant="destructive"
-              onClick={() => setCancelDialogOpen(true)}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Cancel
-            </Button>
-          )}
+            
+            {/* Icon */}
+            <div className="h-16 w-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <Calendar className="h-8 w-8 text-white" />
+            </div>
+            
+            {/* Title & Meta */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold tracking-tight">Appointment Details</h1>
+                <AppointmentStatusBadge status={appointment.status} />
+              </div>
+              <p className="text-white/80 text-sm font-medium">
+                {date} at {time}
+              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <AppointmentTypeBadge type={appointment.type} />
+              </div>
+            </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {canEdit && editHref && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              >
+                <Link href={editHref}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Reschedule
+                </Link>
+              </Button>
+            )}
+            {canComplete && (
+              <Button
+                size="sm"
+                onClick={() => setCompleteDialogOpen(true)}
+                className="bg-white text-violet-600 hover:bg-white/90"
+              >
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                Complete
+              </Button>
+            )}
+            {canCancel && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setCancelDialogOpen(true)}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancel
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Stats Summary */}
+      <StatsSummaryBar
+        stats={[
+          {
+            label: "Patient",
+            value: appointment.patient.fullName,
+            icon: <User className="h-5 w-5" />,
+            color: "violet",
+          },
+          {
+            label: "Doctor",
+            value: appointment.doctor.fullName,
+            icon: <Stethoscope className="h-5 w-5" />,
+            color: "sky",
+          },
+          {
+            label: "Date",
+            value: date.split(",")[1]?.trim() || date,
+            icon: <Calendar className="h-5 w-5" />,
+            color: "teal",
+          },
+          {
+            label: "Time",
+            value: time,
+            icon: <Clock className="h-5 w-5" />,
+            color: "amber",
+          },
+        ]}
+      />
+
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <User className="h-5 w-5 text-muted-foreground" />
-              Patient Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{appointment.patient.fullName}</p>
-            </div>
-            {appointment.patient.phoneNumber && (
-              <div>
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{appointment.patient.phoneNumber}</p>
-              </div>
-            )}
-            <div className="pt-2">
+        {/* Patient Information */}
+        <div className="detail-section-card">
+          <div className="detail-section-card-header">
+            <User className="h-4 w-4" />
+            <h3>Patient Information</h3>
+          </div>
+          <div className="detail-section-card-content">
+            <InfoGrid columns={1}>
+              <InfoItem
+                icon={<User className="h-4 w-4" />}
+                label="Name"
+                value={appointment.patient.fullName}
+                color="violet"
+              />
+              {appointment.patient.phoneNumber && (
+                <InfoItem
+                  icon={<Phone className="h-4 w-4" />}
+                  label="Phone"
+                  value={appointment.patient.phoneNumber}
+                  color="teal"
+                />
+              )}
+            </InfoGrid>
+            <div className="pt-3 mt-3 border-t">
               <Button
                 variant="link"
                 className="h-auto p-0 text-primary"
                 asChild
               >
-                <Link
-                  href={`${patientProfileBaseHref}/${appointment.patient.id}`}
-                >
+                <Link href={`${patientProfileBaseHref}/${appointment.patient.id}`}>
                   View Patient Profile →
                 </Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Stethoscope className="h-5 w-5 text-muted-foreground" />
-              Doctor Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{appointment.doctor.fullName}</p>
-            </div>
-            {appointment.doctor.department && (
-              <div>
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="font-medium">{appointment.doctor.department}</p>
-              </div>
-            )}
-            {appointment.doctor.specialization && (
-              <div>
-                <p className="text-sm text-muted-foreground">Specialization</p>
-                <p className="font-medium">
-                  {appointment.doctor.specialization}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        {/* Doctor Information */}
+        <div className="detail-section-card">
+          <div className="detail-section-card-header">
+            <Stethoscope className="h-4 w-4" />
+            <h3>Doctor Information</h3>
+          </div>
+          <div className="detail-section-card-content">
+            <InfoGrid columns={1}>
+              <InfoItem
+                icon={<Stethoscope className="h-4 w-4" />}
+                label="Name"
+                value={appointment.doctor.fullName}
+                color="sky"
+              />
+              {appointment.doctor.department && (
+                <InfoItem
+                  icon={<Building2 className="h-4 w-4" />}
+                  label="Department"
+                  value={appointment.doctor.department}
+                  color="violet"
+                />
+              )}
+              {appointment.doctor.specialization && (
+                <InfoItem
+                  icon={<FileText className="h-4 w-4" />}
+                  label="Specialization"
+                  value={appointment.doctor.specialization}
+                  color="teal"
+                />
+              )}
+            </InfoGrid>
+          </div>
+        </div>
       </div>
       <Card>
         <CardHeader className="pb-3">

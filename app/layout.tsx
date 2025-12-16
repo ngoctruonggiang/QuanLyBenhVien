@@ -21,7 +21,7 @@ export default function RootLayout({
   const queryClient = useMemo(() => new QueryClient(), []);
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.variable} font-sans text-[16px] antialiased`}>
+      <body className={`${poppins.variable} font-sans text-[16px] antialiased`} suppressHydrationWarning>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
             <MockServiceProvider />

@@ -103,7 +103,11 @@ export function useMedicalExamByAppointment(appointmentId: string) {
 export function useCreateMedicalExam() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: MedicalExamCreateRequest) => createMedicalExam(data),
+    mutationFn: (params: {
+      data: MedicalExamCreateRequest;
+      doctorInfo?: { id: string; fullName: string };
+      patientInfo?: { id: string; fullName: string };
+    }) => createMedicalExam(params.data, params.doctorInfo, params.patientInfo),
     onSuccess: (createdExam) => {
       toast.success("Medical exam created successfully");
       queryClient.invalidateQueries({ queryKey: ["medical-exams"] });
@@ -174,6 +178,9 @@ export function useCreatePrescription(examId?: string) {
         });
       }
       queryClient.invalidateQueries({ queryKey: ["medical-exams"] });
+      // Invalidate billing queries since invoice is auto-generated
+      queryClient.invalidateQueries({ queryKey: ["billing"] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
     },
     onError: (error: any) => {
       toast.error(

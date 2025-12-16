@@ -21,6 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
+import { InfoItem, InfoGrid } from "@/components/ui/info-item";
+import { AlertBanner } from "@/components/ui/alert-banner";
 import {
   Pill,
   Package,
@@ -32,6 +35,9 @@ import {
   Trash2,
   Eye,
   AlertTriangle,
+  ArrowLeft,
+  Beaker,
+  Box,
 } from "lucide-react";
 import { format, isBefore } from "date-fns";
 import { useState } from "react";
@@ -74,136 +80,210 @@ export function MedicineCard({
   if (variant === "detail") {
     return (
       <div className="space-y-6">
-        {/* Header Card */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Pill className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold">{medicine.name}</h1>
-                  <p className="text-muted-foreground">
-                    ID: {medicine.id.slice(0, 8)}
-                  </p>
-                  <div className="flex items-center gap-2 mt-2">
-                    {medicine.categoryName && (
-                      <Badge variant="secondary">{medicine.categoryName}</Badge>
-                    )}
-                    <Badge variant="outline">{medicine.unit}</Badge>
-                    {isExpired && (
-                      <Badge variant="destructive">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Expired
-                      </Badge>
-                    )}
-                    {isLowStock && !isExpired && (
-                      <Badge
-                        variant="outline"
-                        className="border-amber-500 text-amber-600"
-                      >
-                        Low Stock
-                      </Badge>
-                    )}
-                  </div>
-                </div>
+        {/* Teal Gradient Header */}
+        <div className="relative rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 p-6 text-white overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-white" />
+            <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-white" />
+          </div>
+          
+          <div className="relative flex items-start justify-between gap-6">
+            <div className="flex items-center gap-5">
+              {/* Back button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild
+                className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
+              >
+                <Link href="/admin/medicines">
+                  <ArrowLeft className="h-5 w-5" />
+                </Link>
+              </Button>
+              
+              {/* Icon */}
+              <div className="h-16 w-16 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <Pill className="h-8 w-8 text-white" />
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" asChild>
-                  <Link href={`/admin/medicines/${medicine.id}/edit`}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </Link>
-                </Button>
-                {onDelete && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </Button>
-                )}
+              
+              {/* Title & Meta */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tight">{medicine.name}</h1>
+                </div>
+                <p className="text-white/80 text-sm font-medium">ID: {medicine.id.slice(0, 8)}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {medicine.categoryName && (
+                    <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
+                      {medicine.categoryName}
+                    </Badge>
+                  )}
+                  <Badge className="bg-white/20 text-white border-0">
+                    {medicine.unit}
+                  </Badge>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            
+            {/* Actions */}
+            <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+              >
+                <Link href={`/admin/medicines/${medicine.id}/edit`}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Link>
+              </Button>
+              {onDelete && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Summary */}
+        <StatsSummaryBar
+          stats={[
+            {
+              label: "In Stock",
+              value: medicine.quantity,
+              icon: <Package className="h-5 w-5" />,
+              color: isLowStock ? "amber" : "emerald",
+            },
+            {
+              label: "Selling Price",
+              value: formatPrice(medicine.sellingPrice),
+              icon: <DollarSign className="h-5 w-5" />,
+              color: "teal",
+            },
+            {
+              label: "Purchase Price",
+              value: formatPrice(medicine.purchasePrice),
+              icon: <Tag className="h-5 w-5" />,
+              color: "slate",
+            },
+            {
+              label: "Expires",
+              value: formatDate(medicine.expiresAt),
+              icon: <Calendar className="h-5 w-5" />,
+              color: isExpired ? "rose" : "sky",
+            },
+          ]}
+        />
+
+        {/* Alerts */}
+        {isExpired && (
+          <AlertBanner
+            type="error"
+            title="Expired Medicine"
+            description="This medicine has expired and should not be dispensed to patients."
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+        )}
+        {isLowStock && !isExpired && (
+          <AlertBanner
+            type="warning"
+            title="Low Stock Alert"
+            description={`Only ${medicine.quantity} ${medicine.unit} remaining. Consider restocking soon.`}
+            icon={<AlertTriangle className="h-5 w-5" />}
+          />
+        )}
 
         {/* Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Product Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Active Ingredient
-                </p>
-                <p className="font-medium">
-                  {medicine.activeIngredient || "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Description</p>
-                <p>{medicine.description || "No description"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Packaging</p>
-                <p>{medicine.packaging || "N/A"}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <Package className="h-4 w-4" />
+              <h3>Product Details</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={1}>
+                <InfoItem
+                  icon={<Beaker className="h-4 w-4" />}
+                  label="Active Ingredient"
+                  value={medicine.activeIngredient}
+                  color="teal"
+                />
+                <InfoItem
+                  icon={<Tag className="h-4 w-4" />}
+                  label="Category"
+                  value={medicine.categoryName}
+                  color="violet"
+                />
+                <InfoItem
+                  icon={<Box className="h-4 w-4" />}
+                  label="Packaging"
+                  value={medicine.packaging}
+                  color="amber"
+                />
+              </InfoGrid>
+              {medicine.description && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">Description</p>
+                  <p className="text-sm text-slate-600">{medicine.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Tag className="h-5 w-5" />
-                Stock & Pricing
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Quantity</p>
-                  <p className="font-medium text-lg">{medicine.quantity}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Unit</p>
-                  <p className="font-medium">{medicine.unit}</p>
-                </div>
+          <div className="detail-section-card">
+            <div className="detail-section-card-header">
+              <DollarSign className="h-4 w-4" />
+              <h3>Stock & Pricing</h3>
+            </div>
+            <div className="detail-section-card-content">
+              <InfoGrid columns={2}>
+                <InfoItem
+                  icon={<Package className="h-4 w-4" />}
+                  label="Quantity"
+                  value={<span className={isLowStock ? "text-amber-600" : ""}>{medicine.quantity}</span>}
+                  color={isLowStock ? "amber" : "emerald"}
+                />
+                <InfoItem
+                  icon={<Tag className="h-4 w-4" />}
+                  label="Unit"
+                  value={medicine.unit}
+                  color="slate"
+                />
+                <InfoItem
+                  icon={<DollarSign className="h-4 w-4" />}
+                  label="Purchase Price"
+                  value={formatPrice(medicine.purchasePrice)}
+                  color="slate"
+                />
+                <InfoItem
+                  icon={<DollarSign className="h-4 w-4" />}
+                  label="Selling Price"
+                  value={<span className="text-teal-600 font-semibold">{formatPrice(medicine.sellingPrice)}</span>}
+                  color="teal"
+                />
+              </InfoGrid>
+              <div className="mt-4 pt-4 border-t">
+                <InfoItem
+                  icon={<Calendar className="h-4 w-4" />}
+                  label="Expiry Date"
+                  value={
+                    <span className={isExpired ? "text-red-600 font-semibold" : ""}>
+                      {formatDate(medicine.expiresAt)}
+                    </span>
+                  }
+                  color={isExpired ? "rose" : "sky"}
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Purchase Price
-                  </p>
-                  <p className="font-medium">
-                    {formatPrice(medicine.purchasePrice)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Selling Price</p>
-                  <p className="font-medium text-primary">
-                    {formatPrice(medicine.sellingPrice)}
-                  </p>
-                </div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  Expiry Date
-                </p>
-                <p className={isExpired ? "text-destructive font-medium" : ""}>
-                  {formatDate(medicine.expiresAt)}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Delete Dialog */}

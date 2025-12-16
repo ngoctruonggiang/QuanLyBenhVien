@@ -41,6 +41,7 @@ export interface Invoice {
   patientId: string;
   patientName?: string; // Helper
   appointmentId?: string;
+  medicalExamId?: string; // Link to medical exam
   invoiceNumber: string;
   invoiceDate: string;
   dueDate?: string;

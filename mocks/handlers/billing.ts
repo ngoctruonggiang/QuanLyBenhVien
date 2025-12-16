@@ -1,6 +1,6 @@
 import { http, HttpResponse } from "msw";
 
-const invoices = [
+export const invoices: any[] = [
   {
     id: "inv-1",
     invoiceNumber: "INV-001",
@@ -328,7 +328,7 @@ const invoices = [
 // Flatten payments with invoice context for list endpoints
 const allPayments = () =>
   invoices.flatMap((inv) =>
-    (inv.payments ?? []).map((p) => ({
+    (inv.payments ?? []).map((p: any) => ({
       ...p,
       invoiceId: inv.id,
       invoiceNumber: inv.invoiceNumber,
