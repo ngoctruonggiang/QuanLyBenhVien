@@ -32,6 +32,7 @@ import { useDepartments } from "@/hooks/queries/useHr";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { User, Briefcase, Link2 } from "lucide-react";
+import { AccountSearchSelect } from "@/components/ui/account-search-select";
 
 const formSchema = z
   .object({
@@ -111,10 +112,6 @@ export default function EmployeeForm({
   });
 
   const { data: departmentsData } = useDepartments({ size: 100 });
-  const availableAccounts = [
-    { id: "acct-2001", email: "unlinked1@hms.com" },
-    { id: "acct-2002", email: "unlinked2@hms.com" },
-  ];
 
   const handleSubmit = (values: EmployeeFormValues) => {
     const submitData: EmployeeRequest = {
@@ -339,30 +336,23 @@ export default function EmployeeForm({
             <Link2 className="h-5 w-5 text-emerald-500" />
             Account Linking (Optional)
           </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Link this employee to a staff account (excludes Patient and Admin accounts)
+          </p>
           <FormField
             control={form.control}
             name="accountId"
             render={({ field }) => (
               <FormItem className="max-w-md">
-                <FormLabel className="form-label">Account ID</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value || "none"}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select account" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">Unlinked</SelectItem>
-                    {availableAccounts.map((acct) => (
-                      <SelectItem key={acct.id} value={acct.id}>
-                        {acct.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormLabel className="form-label">Link to Account</FormLabel>
+                <FormControl>
+                  <AccountSearchSelect
+                    value={field.value || null}
+                    onChange={field.onChange}
+                    // Exclude PATIENT and ADMIN accounts for employee linking
+                    excludeRoles={["PATIENT", "ADMIN"]}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -392,3 +382,4 @@ export default function EmployeeForm({
     </Form>
   );
 }
+

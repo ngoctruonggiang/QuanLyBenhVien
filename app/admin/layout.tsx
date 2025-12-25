@@ -71,6 +71,12 @@ const allNavItems = [
     roles: ["ADMIN"],
   },
   {
+    title: "Accounts",
+    href: "/admin/accounts",
+    icon: NAV_ICONS.accounts,
+    roles: ["ADMIN"],
+  },
+  {
     title: "Billing",
     href: "/admin/billing",
     icon: NAV_ICONS.billing,

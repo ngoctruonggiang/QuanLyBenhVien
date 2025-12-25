@@ -14,6 +14,7 @@ import { CalendarDays, FileText, Pill } from "lucide-react";
 import { format } from "date-fns";
 import { useMedicalExamList } from "@/hooks/queries/useMedicalExam";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyProfile } from "@/hooks/queries/usePatient";
 import { Spinner } from "@/components/ui/spinner";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 
@@ -25,19 +26,20 @@ export default function PatientMedicalRecordsPage() {
   const [page, setPage] = useState(0);
   const pageSize = 10;
 
-  // Get patientId from authenticated user
-  const patientId = user?.patientId || "";
+  // Fetch patient profile to get patientId
+  const { data: profile, isLoading: isLoadingProfile } = useMyProfile();
+  const patientId = profile?.id || "";
 
   const queryParams = useMemo(
     () => ({
-      patientId,
+      patientId: patientId || undefined, // Only pass if we have a valid patientId
       startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
       endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
       page,
       size: pageSize,
       sort: "examDate,desc",
     }),
-    [user, startDate, endDate, page]
+    [patientId, startDate, endDate, page]
   );
 
   const { data, isLoading } = useMedicalExamList(queryParams);
@@ -45,6 +47,15 @@ export default function PatientMedicalRecordsPage() {
   const exams = data?.content || [];
   const totalPages = data?.totalPages || 0;
   const totalElements = data?.totalElements || 0;
+
+  // Show loading while fetching profile
+  if (isLoadingProfile) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Spinner size="lg" variant="muted" />
+      </div>
+    );
+  }
 
   if (!user || user.role !== "PATIENT") {
     return (

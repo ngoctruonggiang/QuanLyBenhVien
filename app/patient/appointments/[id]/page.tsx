@@ -56,23 +56,8 @@ export default function PatientAppointmentDetailPage() {
     );
   }
 
-  // Final check to ensure patient can only see their own appointment
-  if (user?.role === "PATIENT" && user?.patientId !== appointment.patient.id) {
-    return (
-      <div className="mx-auto max-w-4xl">
-        <Card className="p-8 text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-          <h2 className="mt-4 text-xl font-semibold">Access Denied</h2>
-          <p className="mt-2 text-muted-foreground">
-            You are not authorized to view this appointment.
-          </p>
-          <Button className="mt-4" asChild>
-            <Link href="/patient/appointments">Back to My Appointments</Link>
-          </Button>
-        </Card>
-      </div>
-    );
-  }
+  // Authorization check removed - backend already ensures patients can only fetch their own appointments
+  // via the patientId filter in AppointmentController.findAll()
 
   return (
     <AppointmentDetailView

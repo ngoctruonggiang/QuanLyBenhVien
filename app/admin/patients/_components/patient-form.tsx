@@ -40,6 +40,7 @@ import { TagInput } from "@/components/ui/tag-input";
 import { useEffect } from "react";
 import { AccountSearchSelect } from "@/components/ui/account-search-select";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Re-export for convenience
 export { patientFormSchema, type PatientFormValues };
@@ -83,6 +84,7 @@ export function PatientForm({
   isLoading = false,
   confirmOnCancel = true,
 }: PatientFormProps) {
+  const { user } = useAuth();
   const [healthInfoOpen, setHealthInfoOpen] = useState(true);
   const [emergencyOpen, setEmergencyOpen] = useState(true);
 
@@ -213,24 +215,6 @@ export function PatientForm({
                     <FormLabel className="form-label form-label-required">Phone Number</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter phone number" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="form-label">Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="Enter email"
-                        {...field}
-                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -460,11 +444,19 @@ export function PatientForm({
                   name="accountId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="form-label">Account ID</FormLabel>
+                      <FormLabel className="form-label">Link to Account</FormLabel>
                       <FormControl>
                         <AccountSearchSelect
                           value={field.value || null}
                           onChange={field.onChange}
+                          onAccountSelect={(account) => {
+                            // Auto-fill email from account
+                            if (account) {
+                              form.setValue("email", account.email);
+                            }
+                          }}
+                          // Receptionists can only link PATIENT accounts
+                          roleFilter={user?.role !== "ADMIN" ? "PATIENT" : undefined}
                         />
                       </FormControl>
                       <FormMessage />

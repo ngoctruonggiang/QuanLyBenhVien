@@ -13,6 +13,7 @@ export type UserRole =
   | "UNKNOWN";
 
 type User = {
+  accountId?: string;
   email: string;
   role: string;
   fullName?: string;
@@ -45,12 +46,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const employeeId = Cookies.get("userEmployeeId");
     const patientId = Cookies.get("userPatientId");
     const department = Cookies.get("userDepartment");
+    const accountId = Cookies.get("userAccountId");
 
     console.log("[AuthContext] Cookies found:", { email, role, fullName });
 
     if (email && role) {
       console.log("[AuthContext] Setting user from cookies");
       setUser({
+        accountId,
         email,
         role,
         fullName,
@@ -129,10 +132,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       Cookies.set("refreshToken", response.refreshToken, { expires: 30 });
       Cookies.set("userEmail", response.email, { expires: 7 });
       Cookies.set("userRole", response.role, { expires: 7 });
+      Cookies.set("userAccountId", response.accountId, { expires: 7 });
 
       localStorage.setItem("accessToken", response.accessToken);
       localStorage.setItem("userEmail", response.email);
       localStorage.setItem("userRole", response.role);
+      localStorage.setItem("userAccountId", response.accountId);
 
       // Store IDs if present in response
       if (response.employeeId) {
@@ -150,6 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       Cookies.set("userFullName", fullName, { expires: 7 });
 
       setUser({
+        accountId: response.accountId,
         email: response.email,
         role: response.role,
         fullName: fullName, 

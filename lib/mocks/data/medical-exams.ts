@@ -30,6 +30,7 @@ export const mockMedicalExams: MedicalExam[] = [
       items: [
         { id: "rxi-001", medicine: { id: "med-001", name: "Lisinopril 10mg" }, quantity: 30, unitPrice: 1500, dosage: "1 tablet daily", durationDays: 30, instructions: "Take in the morning." },
       ],
+      status: "ACTIVE",
       createdAt: formatISO(subDays(baseDate, 5)),
       updatedAt: formatISO(subDays(baseDate, 5)),
     },
@@ -72,6 +73,7 @@ export const mockMedicalExams: MedicalExam[] = [
       items: [
         { id: "rxi-002", medicine: { id: "med-002", name: "Nitroglycerin 0.4mg" }, quantity: 25, unitPrice: 2000, dosage: "1 tablet as needed", instructions: "For emergency use." },
       ],
+      status: "ACTIVE",
       createdAt: formatISO(subDays(baseDate, 6)),
       updatedAt: formatISO(subDays(baseDate, 6)),
     },

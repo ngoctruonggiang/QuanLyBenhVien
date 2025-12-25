@@ -255,7 +255,44 @@ export const appointmentService = {
     params: AppointmentListParams,
   ): Promise<PaginatedResponse<Appointment>> => {
     if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/all`, { params });
+      // Build RSQL filter for backend
+      const filters: string[] = [];
+      
+      if (params.doctorId) {
+        filters.push(`doctorId==${params.doctorId}`);
+      }
+      if (params.patientId) {
+        filters.push(`patientId==${params.patientId}`);
+      }
+      if (params.status) {
+        filters.push(`status==${params.status}`);
+      }
+      // Date range filter - use ISO 8601 format with Z suffix for Instant fields
+      if (params.startDate) {
+        filters.push(`appointmentTime=ge=${params.startDate}T00:00:00Z`);
+      }
+      if (params.endDate) {
+        filters.push(`appointmentTime=le=${params.endDate}T23:59:59Z`);
+      }
+
+      // Add search filter for patientName
+      if (params.search) {
+        // RSQL uses ==*value* for LIKE queries (not =like=)
+        filters.push(`patientName==*${params.search}*`);
+      }
+
+      const apiParams: Record<string, any> = {
+        page: params.page,
+        size: params.size,
+        sort: params.sort,
+      };
+
+      if (filters.length > 0) {
+        apiParams.filter = filters.join(";");
+      }
+
+      console.log("[AppointmentService] API params:", apiParams);
+      const response = await axiosInstance.get(`${BASE_URL}/all`, { params: apiParams });
       return response.data.data; // Extract from ApiResponse wrapper
     }
 

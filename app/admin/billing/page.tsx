@@ -40,10 +40,12 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CancelInvoiceDialog } from "@/app/admin/billing/_components/cancel-invoice-dialog";
+import { CreateInvoiceDialog } from "@/app/admin/billing/_components/create-invoice-dialog";
 import { Invoice } from "@/interfaces/billing";
 import { ListPageHeader } from "@/components/ui/list-page-header";
 import { FilterPills } from "@/components/ui/filter-pills";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useQueryClient } from "@tanstack/react-query";
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -61,6 +63,7 @@ export default function InvoiceListPage() {
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [sort, setSort] = useState("invoiceDate,desc");
   const debouncedSearch = useDebounce(search, 300);
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useInvoiceList({
     page,
@@ -132,12 +135,17 @@ export default function InvoiceListPage() {
           { label: "Total Invoices", value: data?.totalElements || 0 },
         ]}
         secondaryActions={
-          <Button asChild variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-            <Link href="/admin/billing/payments">
-              <CreditCard className="mr-2 h-4 w-4" />
-              Payment History
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <CreateInvoiceDialog 
+              onSuccess={() => queryClient.invalidateQueries({ queryKey: ['invoices'] })}
+            />
+            <Button asChild variant="outline" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+              <Link href="/admin/billing/payments">
+                <CreditCard className="mr-2 h-4 w-4" />
+                Payment History
+              </Link>
+            </Button>
+          </div>
         }
       />
 

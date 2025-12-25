@@ -16,6 +16,7 @@ import {
   Users,
   UserPlus,
   User,
+  UserCog,
   XCircle,
 } from "lucide-react";
 
@@ -30,6 +31,7 @@ export const NAV_ICONS = {
   billing: CreditCard,
   reports: BarChart3,
   profile: User,
+  accounts: UserCog,
 };
 
 export const ACTION_ICONS = {

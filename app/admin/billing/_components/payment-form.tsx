@@ -130,13 +130,16 @@ export function PaymentForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="CASH">Cash</SelectItem>
-                        <SelectItem value="CREDIT_CARD">Credit Card</SelectItem>
-                        <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                        <SelectItem value="INSURANCE">Insurance</SelectItem>
+                        <SelectItem value="CASH">💵 Cash</SelectItem>
+                        <SelectItem value="VNPAY">💳 Card / Online (VNPay)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
+                    {field.value === "VNPAY" && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You will be redirected to VNPay to complete payment
+                      </p>
+                    )}
                   </FormItem>
                 )}
               />

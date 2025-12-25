@@ -20,6 +20,9 @@ export const medicalExamSchema = z.object({
   height: z.coerce.number().min(1).max(300).optional(),
 
   notes: z.string().max(2000, "Notes exceed maximum length").optional(),
+  
+  // Follow-up date for scheduling reminder notification
+  followUpDate: z.string().optional(),
 });
 
 export const prescriptionSchema = z.object({
@@ -49,6 +52,7 @@ export type MedicalExamFormValues = {
   weight?: number;
   height?: number;
   notes?: string;
+  followUpDate?: string;
 };
 
 export type PrescriptionFormValues = {

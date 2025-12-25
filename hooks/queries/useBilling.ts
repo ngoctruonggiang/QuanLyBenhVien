@@ -1,15 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as billingService from "@/services/billing.service";
 import {
-  CreatePaymentRequest,
   GenerateInvoiceRequest,
 } from "@/interfaces/billing";
-import {
-  InvoiceListParams,
-  PatientInvoiceParams,
-} from "@/services/billing.service";
 
 import { toast } from "sonner";
+
+// Local type for patient invoice params
+export type PatientInvoiceParams = {
+  status?: string;
+  page?: number;
+  size?: number;
+};
+
+export type InvoiceListParams = {
+  patientId?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+  search?: string;
+};
+
 
 // ============ Query Keys ============
 
@@ -49,7 +63,7 @@ export const useInvoiceList = (params: InvoiceListParams) => {
   return useQuery({
     queryKey: billingKeys.invoiceList(params),
     queryFn: () => billingService.getInvoiceList(params),
-    select: (response) => response.data,
+    select: (response) => response.data.data, // Unwrap ApiResponse { code, data: PageResponse }
   });
 };
 
@@ -128,13 +142,40 @@ export const usePayment = (id: string) => {
   });
 };
 
-// Create payment (mutation)
-export const useCreatePayment = () => {
+// Initialize VNPay payment (mutation) - returns redirect URL
+export const useInitPayment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreatePaymentRequest) =>
-      billingService.createPayment(data),
+    mutationFn: (data: { invoiceId: string; amount?: number; returnUrl?: string }) =>
+      billingService.initPayment({
+        invoiceId: data.invoiceId,
+        amount: data.amount,
+        returnUrl: data.returnUrl || `${window.location.origin}/payment/result`,
+      }),
+    onSuccess: (response) => {
+      // Redirect to VNPay
+      const paymentUrl = response.data.data.paymentUrl;
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      }
+      return response.data.data;
+    },
+    onError: (error: any) => {
+      const errorCode = error.response?.data?.code;
+      const errorMessage = error.response?.data?.message || getBillingErrorMessage(String(errorCode));
+      toast.error(errorMessage);
+    },
+  });
+};
+
+// Create cash payment (mutation)
+export const useCreateCashPayment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { invoiceId: string; amount?: number; notes?: string }) =>
+      billingService.createCashPayment(data.invoiceId, data.amount, data.notes),
     onSuccess: (response, variables) => {
       // Invalidate invoice detail to refresh payment history
       queryClient.invalidateQueries({
@@ -144,16 +185,19 @@ export const useCreatePayment = () => {
         queryKey: billingKeys.paymentsByInvoice(variables.invoiceId),
       });
       queryClient.invalidateQueries({ queryKey: billingKeys.invoices() });
-      toast.success("Payment recorded successfully");
+      toast.success("Thanh toán tiền mặt thành công");
       return response.data.data;
     },
     onError: (error: any) => {
-      const errorCode = error.response?.data?.error?.code;
-      const errorMessage = getBillingErrorMessage(errorCode);
+      const errorCode = error.response?.data?.code;
+      const errorMessage = error.response?.data?.message || getBillingErrorMessage(String(errorCode));
       toast.error(errorMessage);
     },
   });
 };
+
+// Alias for backward compatibility - existing pages use useCreatePayment
+export const useCreatePayment = useCreateCashPayment;
 
 // Cancel invoice (mutation) - inferred from usage in page files
 export const useCancelInvoice = () => {
@@ -185,7 +229,7 @@ export const usePaymentSummaryCards = () => {
   });
 };
 
-// Get payments list (inferred from usage in page files)
+// Get payments list - Returns mock data until BE endpoint is implemented
 export const usePayments = (
   page: number,
   limit: number,
@@ -195,20 +239,16 @@ export const usePayments = (
   endDate?: string,
   sort?: string,
 ) => {
-  const params = {
-    page,
-    limit,
-    search,
-    method,
-    startDate,
-    endDate,
-    sort,
-  };
-
+  const params = { page, limit, search, method, startDate, endDate, sort };
   return useQuery({
     queryKey: billingKeys.paymentsList(params),
-    queryFn: () => billingService.getPayments(params),
-    select: (response) => response.data,
+    // Mock data until BE endpoint is ready
+    queryFn: async () => ({
+      data: [],
+      page: 0,
+      total: 0,
+      totalPages: 0,
+    }),
   });
 };
 

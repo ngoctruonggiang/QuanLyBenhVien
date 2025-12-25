@@ -5,6 +5,24 @@ import {
   ScheduleRequest,
   EmployeeRequest,
 } from "@/interfaces/hr";
+import { useAuth } from "@/contexts/AuthContext";
+
+/**
+ * Hook to fetch the current user's employee profile by their accountId.
+ * Useful for DOCTOR/NURSE/RECEPTIONIST roles to get their employeeId.
+ */
+export const useMyEmployeeProfile = () => {
+  const { user } = useAuth();
+  const accountId = user?.accountId;
+  const isStaff = user?.role && ["DOCTOR", "NURSE", "RECEPTIONIST"].includes(user.role);
+  
+  return useQuery({
+    queryKey: ["myEmployeeProfile", accountId],
+    queryFn: () => hrService.getEmployeeByAccountId(accountId!),
+    enabled: Boolean(accountId && isStaff),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
 
 export const useDepartments = ({
   page,
@@ -84,6 +102,7 @@ export const useEmployees = ({
   departmentId,
   role,
   status,
+  enabled = true,
 }: {
   page?: number;
   size?: number;
@@ -92,6 +111,7 @@ export const useEmployees = ({
   departmentId?: string;
   role?: string;
   status?: string;
+  enabled?: boolean;
 }) => {
   return useQuery({
     queryKey: [
@@ -108,6 +128,7 @@ export const useEmployees = ({
         role,
         status,
       }),
+    enabled,
   });
 };
 

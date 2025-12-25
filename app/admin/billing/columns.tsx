@@ -64,16 +64,17 @@ export const getInvoiceColumns = ({
     key: "balance",
     label: "Balance",
     render: (row) => {
+      const balance = row.balance ?? row.balanceDue ?? 0;
       return (
         <span
           className={
-            row.balance > 0 ? "text-red-500 font-medium" : "text-green-500"
+            balance > 0 ? "text-red-500 font-medium" : "text-green-500"
           }
         >
           {new Intl.NumberFormat("vi-VN", {
             style: "currency",
             currency: "VND",
-          }).format(row.balance)}
+          }).format(balance)}
         </span>
       );
     },

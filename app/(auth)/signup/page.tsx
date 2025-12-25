@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { mockAuthService } from "@/services/auth.mock.service";
+import { authService } from "@/services/auth.service";
 import {
   Card,
   CardContent,
@@ -21,12 +21,11 @@ import z from "zod";
 
 export const signupSchema = z
   .object({
-    username: z.string().min(1, "Username is required"),
-    email: z.email({ message: "Invalid email address" }),
-    password: z.string().min(6, "Password must be at least 6 characters"),
+    email: z.string().email({ message: "Invalid email address" }),
+    password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z
       .string()
-      .min(6, "Confirm Password must be at least 6 characters"),
+      .min(8, "Confirm Password must be at least 8 characters"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -38,7 +37,6 @@ export type SignUpCredentials = z.infer<typeof signupSchema>;
 const SignUpPage = () => {
   const router = useRouter();
   const [credentials, setCredentials] = useState<SignUpCredentials>({
-    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -47,10 +45,12 @@ const SignUpPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
+    setSuccessMessage("");
 
     // Validation
     if (credentials.password !== credentials.confirmPassword) {
@@ -58,27 +58,23 @@ const SignUpPage = () => {
       return;
     }
 
-    if (credentials.password.length < 6) {
-      setErrorMessage("Password must be at least 6 characters");
+    if (credentials.password.length < 8) {
+      setErrorMessage("Password must be at least 8 characters");
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await mockAuthService.signup({
-        username: credentials.username,
+      await authService.register({
         email: credentials.email,
         password: credentials.password,
       });
 
-      // Store tokens in localStorage
-      localStorage.setItem("accessToken", response.accessToken);
-      localStorage.setItem("refreshToken", response.refreshToken);
-      localStorage.setItem("userEmail", response.email);
-      localStorage.setItem("userRole", response.role);
-
-      // Redirect to admin dashboard after successful signup
-      router.push("/admin");
+      // Show success and redirect to login
+      setSuccessMessage("Account created successfully! Redirecting to login...");
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     } catch (error) {
       if (error instanceof Error) {
         setErrorMessage(error.message);
@@ -124,10 +120,10 @@ const SignUpPage = () => {
           {/* Card Header */}
           <CardHeader className="px-6 pt-6 pb-0">
             <CardTitle className="text-base font-medium text-neutral-950 tracking-[-0.3125px] text-center">
-              Welcome
+              Create Account
             </CardTitle>
             <CardDescription className="text-base font-normal text-[#717182] tracking-[-0.3125px] text-center">
-              Enter your credentials to register
+              Enter your email and password to register
             </CardDescription>
           </CardHeader>
 
@@ -142,32 +138,13 @@ const SignUpPage = () => {
                 </div>
               )}
 
-              {/* Username Field */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="username"
-                  className="text-sm font-medium text-neutral-950 tracking-[-0.1504px]"
-                >
-                  Username
-                </Label>
-                <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  autoComplete="username"
-                  required
-                  value={credentials.username}
-                  onChange={(e) =>
-                    setCredentials({
-                      ...credentials,
-                      username: e.target.value,
-                    })
-                  }
-                  className="h-9 bg-[#f3f3f5] border-transparent rounded-lg px-3 py-1 text-sm tracking-[-0.1504px] placeholder:text-[#717182]"
-                  placeholder="Enter your username"
-                  disabled={isLoading}
-                />
-              </div>
+              {/* Success Message */}
+              {successMessage && (
+                <div className="bg-green-50 border border-green-600 text-green-600 px-4 py-3 rounded-lg text-sm flex items-start gap-2">
+                  <span className="shrink-0 mt-0.5">✓</span>
+                  <span>{successMessage}</span>
+                </div>
+              )}
 
               {/* Email Field */}
               <div className="space-y-2">
@@ -219,7 +196,7 @@ const SignUpPage = () => {
                       })
                     }
                     className="h-9 bg-[#f3f3f5] border-transparent rounded-lg px-3 py-1 pr-10 text-sm tracking-[-0.1504px] placeholder:text-[#717182]"
-                    placeholder="Enter your password"
+                    placeholder="Enter your password (min 8 characters)"
                     disabled={isLoading}
                   />
                   <button
@@ -282,7 +259,7 @@ const SignUpPage = () => {
               <Button
                 type="submit"
                 className="w-full h-9 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium tracking-[-0.1504px] rounded-lg transition-colors duration-200"
-                disabled={isLoading}
+                disabled={isLoading || !!successMessage}
               >
                 {isLoading ? "Creating account..." : "Sign up"}
               </Button>
@@ -350,3 +327,4 @@ const SignUpPage = () => {
 };
 
 export default SignUpPage;
+

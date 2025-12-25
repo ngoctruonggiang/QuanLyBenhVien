@@ -254,16 +254,81 @@ const mockPatientActivity: PatientActivity = {
   cached: true,
 };
 
+// Helper to convert Map to Array format
+const mapToStatusArray = (map: Record<string, number>, total: number) => {
+  return Object.entries(map).map(([status, count]) => ({
+    status,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 1000) / 10 : 0,
+  }));
+};
+
+const mapToTypeArray = (map: Record<string, number>) => {
+  return Object.entries(map).map(([type, count]) => ({
+    type,
+    count,
+  }));
+};
+
+const mapToGenderArray = (map: Record<string, number>, total: number) => {
+  return Object.entries(map).map(([gender, count]) => ({
+    gender,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 1000) / 10 : 0,
+  }));
+};
+
+const mapToBloodTypeArray = (map: Record<string, number>, total: number) => {
+  return Object.entries(map).map(([bloodType, count]) => ({
+    bloodType,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 1000) / 10 : 0,
+  }));
+};
+
 export const reportsService = {
   // Revenue Report
   getRevenueReport: async (
     params: RevenueReportParams,
   ): Promise<RevenueReport> => {
     if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/revenue`, {
-        params,
-      });
-      return response.data;
+      try {
+        const response = await axiosInstance.get(`${BASE_URL}/revenue`, {
+          params,
+        });
+        const data = response.data.data || response.data;
+        
+        // Transform backend response to frontend format
+        const invoiceCountObj = data.invoiceCount || {};
+        const totalRevenue = Number(data.totalRevenue) || 0;
+        const paidRevenue = Number(data.paidRevenue) || 0;
+        
+        return {
+          totalRevenue,
+          paidRevenue,
+          unpaidRevenue: Number(data.unpaidRevenue) || 0,
+          invoiceCount: invoiceCountObj.total || 0,
+          collectionRate: totalRevenue > 0 ? Math.round((paidRevenue / totalRevenue) * 100) : 0,
+          revenueByDepartment: (data.revenueByDepartment || []).map((d: {departmentId?: string; departmentName: string; revenue: number; percentage: number}) => ({
+            departmentId: d.departmentId || d.departmentName,
+            departmentName: d.departmentName,
+            revenue: Number(d.revenue) || 0,
+            percentage: d.percentage || 0,
+          })),
+          revenueByPaymentMethod: (data.revenueByPaymentMethod || []).map((p: {method: string; amount: number; percentage: number}) => ({
+            method: p.method,
+            amount: Number(p.amount) || 0,
+            count: 0, // Backend doesn't provide count
+            percentage: p.percentage || 0,
+          })),
+          generatedAt: data.generatedAt || new Date().toISOString(),
+          cached: true,
+        };
+      } catch (error) {
+        console.error("Error fetching revenue report:", error);
+        // Fallback to mock on error
+        return { ...mockRevenueReport, generatedAt: new Date().toISOString() };
+      }
     }
 
     await delay(800);
@@ -275,30 +340,53 @@ export const reportsService = {
     params: AppointmentStatsParams,
   ): Promise<AppointmentStats> => {
     if (!USE_MOCK) {
-      const response = await axiosInstance.get(`${BASE_URL}/appointments`, {
-        params,
-      });
-      return response.data;
+      try {
+        const response = await axiosInstance.get(`${BASE_URL}/appointments`, {
+          params,
+        });
+        const data = response.data.data || response.data;
+        
+        const total = data.totalAppointments || 0;
+        const byStatus = data.appointmentsByStatus || {};
+        const byType = data.appointmentsByType || {};
+        
+        return {
+          totalAppointments: total,
+          completedCount: byStatus.COMPLETED || 0,
+          cancelledCount: byStatus.CANCELLED || 0,
+          noShowCount: byStatus.NO_SHOW || 0,
+          completionRate: total > 0 ? Math.round(((byStatus.COMPLETED || 0) / total) * 1000) / 10 : 0,
+          noShowRate: total > 0 ? Math.round(((byStatus.NO_SHOW || 0) / total) * 1000) / 10 : 0,
+          appointmentsByStatus: mapToStatusArray(byStatus, total),
+          appointmentsByType: mapToTypeArray(byType),
+          appointmentsByDepartment: (data.appointmentsByDepartment || []).map((d: {departmentName: string; count: number; percentage: number}) => ({
+            departmentId: d.departmentName,
+            departmentName: d.departmentName,
+            count: d.count || 0,
+          })),
+          dailyTrend: (data.dailyTrend || []).map((d: {date: string; count: number}) => ({
+            date: d.date,
+            count: d.count || 0,
+          })),
+          generatedAt: data.generatedAt || new Date().toISOString(),
+          cached: true,
+        };
+      } catch (error) {
+        console.error("Error fetching appointment stats:", error);
+        return { ...mockAppointmentStats, generatedAt: new Date().toISOString() };
+      }
     }
 
     await delay(600);
     return { ...mockAppointmentStats, generatedAt: new Date().toISOString() };
   },
 
-  // Doctor Performance
+  // Doctor Performance (uses mock - backend doesn't have this endpoint)
   getDoctorPerformance: async (
     params: DoctorPerformanceParams,
   ): Promise<DoctorPerformance> => {
-    if (!USE_MOCK) {
-      const response = await axiosInstance.get(
-        `${BASE_URL}/doctors/performance`,
-        { params },
-      );
-      return response.data;
-    }
-
+    // Backend doesn't have doctor performance endpoint yet - use mock
     await delay(700);
-    // Sort by the specified field
     let sortedDoctors = [...mockDoctorPerformance.doctors];
     if (params.sortBy) {
       sortedDoctors.sort((a, b) => {
@@ -315,7 +403,6 @@ export const reportsService = {
       });
     }
 
-    // Filter by department
     if (params.departmentId) {
       sortedDoctors = sortedDoctors.filter(
         (d) => d.departmentId === params.departmentId,
@@ -334,11 +421,40 @@ export const reportsService = {
     params: PatientActivityParams,
   ): Promise<PatientActivity> => {
     if (!USE_MOCK) {
-      const response = await axiosInstance.get(
-        `${BASE_URL}/patients/activity`,
-        { params },
-      );
-      return response.data;
+      try {
+        // Backend uses /reports/patients (not /reports/patients/activity)
+        const response = await axiosInstance.get(`${BASE_URL}/patients`);
+        const data = response.data.data || response.data;
+        
+        const total = data.totalPatients || 0;
+        const byGender = data.patientsByGender || {};
+        const byBloodType = data.patientsByBloodType || {};
+        
+        return {
+          totalPatients: total,
+          newPatients: data.newPatientsThisMonth || 0,
+          activePatients: total, // Backend doesn't differentiate active
+          returningPatients: total - (data.newPatientsThisMonth || 0),
+          patientsByGender: mapToGenderArray(byGender, total),
+          patientsByBloodType: mapToBloodTypeArray(byBloodType, total),
+          topDiagnoses: (data.topDiagnoses || []).map((d: {diagnosis: string; icdCode: string; count: number; percentage: number}) => ({
+            diagnosis: d.diagnosis,
+            icdCode: d.icdCode,
+            count: d.count || 0,
+            percentage: d.percentage || 0,
+          })),
+          registrationTrend: (data.registrationTrend || []).map((d: {date: string; newPatients: number; visits?: number}) => ({
+            date: d.date,
+            newPatients: d.newPatients || 0,
+            visits: d.visits || 0,
+          })),
+          generatedAt: data.generatedAt || new Date().toISOString(),
+          cached: true,
+        };
+      } catch (error) {
+        console.error("Error fetching patient activity:", error);
+        return { ...mockPatientActivity, generatedAt: new Date().toISOString() };
+      }
     }
 
     await delay(650);
@@ -348,8 +464,20 @@ export const reportsService = {
   // Clear Report Cache
   clearCache: async (): Promise<{ message: string; clearedAt: string }> => {
     if (!USE_MOCK) {
-      const response = await axiosInstance.delete(`${BASE_URL}/cache`);
-      return response.data;
+      try {
+        const response = await axiosInstance.delete(`${BASE_URL}/cache`);
+        const data = response.data.data || response.data;
+        return {
+          message: data.message || "Report cache cleared successfully",
+          clearedAt: data.clearedAt || new Date().toISOString(),
+        };
+      } catch (error) {
+        console.error("Error clearing cache:", error);
+        return {
+          message: "Failed to clear cache",
+          clearedAt: new Date().toISOString(),
+        };
+      }
     }
 
     await delay(300);

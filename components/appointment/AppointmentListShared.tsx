@@ -36,7 +36,8 @@ import {
   useCompleteAppointment,
 } from "@/hooks/queries/useAppointment";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useEmployees } from "@/hooks/queries/useHr";
+import { useEmployees, useMyEmployeeProfile } from "@/hooks/queries/useHr";
+import { useMyProfile } from "@/hooks/queries/usePatient";
 import { Employee } from "@/interfaces/hr";
 import { useAuth } from "@/contexts/AuthContext";
 import { CancelAppointmentDialog } from "@/app/admin/appointments/_components/cancel-appointment-dialog";
@@ -87,19 +88,29 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
     return `${id},${desc ? "desc" : "asc"}`;
   }, [sorting]);
 
+  // Fetch current user's employee profile for doctor filtering
+  const { data: myEmployeeProfile } = useMyEmployeeProfile();
+
+  // Fetch current user's patient profile for patient filtering
+  const { data: myPatientProfile } = useMyProfile();
+
   // Auto-filter for DOCTOR and PATIENT roles
   const effectiveDoctorId = useMemo(() => {
-    if (role === "DOCTOR") return user?.employeeId || "";
+    if (role === "DOCTOR") {
+      // Use fetched employeeId from profile if available
+      return myEmployeeProfile?.id || user?.employeeId || "";
+    }
     if (doctorId === "ALL") return undefined;
     return doctorId;
-  }, [role, doctorId, user?.employeeId]);
+  }, [role, doctorId, user?.employeeId, myEmployeeProfile?.id]);
 
   const effectivePatientId = useMemo(() => {
+    // For PATIENT role: use patientId from patient profile to filter appointments
     if (role === "PATIENT") {
-      return user?.patientId || "";
+      return myPatientProfile?.id || undefined;
     }
     return undefined;
-  }, [role, user?.patientId]);
+  }, [role, myPatientProfile?.id]);
 
   // Build query params
   const queryParams = useMemo(
@@ -128,7 +139,9 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
   );
 
   const { data, isLoading, isFetching } = useAppointmentList(queryParams);
-  const { data: doctorsData } = useEmployees({ role: "DOCTOR", size: 999 });
+  // Only fetch doctors for admin/nurse - patients don't have access to HR API
+  const canFilterByDoctor = role === "ADMIN" || role === "NURSE";
+  const { data: doctorsData } = useEmployees({ role: "DOCTOR", size: 999, enabled: canFilterByDoctor });
   const cancelMutation = useCancelAppointment();
   const completeMutation = useCompleteAppointment();
 
@@ -161,9 +174,8 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
     [role]
   );
 
-  // Permission checks
-  const canCreate = role === "ADMIN" || role === "NURSE" || role === "DOCTOR";
-  const canFilterByDoctor = role === "ADMIN" || role === "NURSE";
+  // Permission checks - PATIENT can create appointments after verification
+  const canCreate = role === "ADMIN" || role === "NURSE" || role === "DOCTOR" || role === "PATIENT";
   const canFilterByStatus = true; // All roles can filter by status
 
   const appointments = data?.content || [];
@@ -198,10 +210,7 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
           canCreate
             ? {
                 label: "Book Appointment",
-                href:
-                  role === "DOCTOR"
-                    ? "/admin/appointments/new"
-                    : `/${role.toLowerCase()}/appointments/new`,
+                href: `/${role.toLowerCase()}/appointments/new`,
               }
             : undefined
         }

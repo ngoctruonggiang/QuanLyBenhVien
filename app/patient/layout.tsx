@@ -41,7 +41,7 @@ const navItems = [
     icon: FileText,
   },
   { title: "Billing", href: "/patient/billing", icon: CreditCard },
-  { title: "Profile", href: "/profile", icon: User },
+  { title: "Profile", href: "/patient/profile", icon: User },
 ];
 
 function buildBreadcrumbs(pathname: string) {

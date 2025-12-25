@@ -10,6 +10,7 @@ import { MedicalExamDetailView } from "@/app/admin/exams/_components/MedicalExam
 import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
+import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
 
 export default function DoctorMedicalExamDetailPage({
   params,
@@ -20,6 +21,10 @@ export default function DoctorMedicalExamDetailPage({
   const router = useRouter();
   const { user } = useAuth();
   const { data: medicalExam, isLoading, error } = useMedicalExam(id);
+  
+  // Get current doctor's employee profile for proper isCreator check
+  const { data: myProfile } = useMyEmployeeProfile();
+  const myEmployeeId = myProfile?.id || user?.employeeId;
 
   if (isLoading) {
     return (
@@ -49,8 +54,8 @@ export default function DoctorMedicalExamDetailPage({
     );
   }
 
-  // Check if doctor is the creator
-  const isCreator = medicalExam.doctor?.id === user?.employeeId;
+  // Check if doctor is the creator using fetched employeeId
+  const isCreator = medicalExam.doctor?.id === myEmployeeId;
 
   // Check if exam is editable (within 24 hours)
   const examDate = new Date(medicalExam.examDate);
@@ -103,6 +108,7 @@ export default function DoctorMedicalExamDetailPage({
         medicalExam={medicalExam}
         userRole="DOCTOR"
         patientProfileBaseHref="/doctor/patients"
+        examBaseHref="/doctor/exams"
       />
     </div>
   );

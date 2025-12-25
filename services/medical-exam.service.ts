@@ -6,6 +6,7 @@ import {
   PrescriptionCreateRequest,
   Prescription,
   ExamStatus,
+  PrescriptionStatus,
 } from "@/interfaces/medical-exam";
 import { mockMedicalExams } from "@/lib/mocks/data/medical-exams"; // IMPORT THE CENTRAL MOCK DATA
 import { invoices } from "@/mocks/handlers/billing"; // Import invoices for auto-generation
@@ -22,7 +23,44 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const getMedicalExams = async (params?: MedicalExamListParams) => {
   if (!USE_MOCK) {
-    const response = await axiosInstance.get(`${BASE_URL_EXAMS}/all`, { params });
+    // Build RSQL filter for backend
+    const filters: string[] = [];
+    
+    if (params?.doctorId) {
+      filters.push(`doctorId==${params.doctorId}`);
+    }
+    if (params?.patientId) {
+      filters.push(`patientId==${params.patientId}`);
+    }
+    if (params?.status) {
+      filters.push(`status==${params.status}`);
+    }
+    // Date range filter - use ISO 8601 format with Z suffix for Instant fields
+    if (params?.startDate) {
+      filters.push(`examDate=ge=${params.startDate}T00:00:00Z`);
+    }
+    if (params?.endDate) {
+      filters.push(`examDate=le=${params.endDate}T23:59:59Z`);
+    }
+
+    // Add search filter for patientName
+    if (params?.search) {
+      // RSQL uses ==*value* for LIKE queries (not =like=)
+      filters.push(`patientName==*${params.search}*`);
+    }
+
+    const apiParams: Record<string, any> = {
+      page: params?.page,
+      size: params?.size,
+      sort: params?.sort,
+    };
+
+    if (filters.length > 0) {
+      apiParams.filter = filters.join(";");
+    }
+
+    console.log("[MedicalExamService] API params:", apiParams);
+    const response = await axiosInstance.get(`${BASE_URL_EXAMS}/all`, { params: apiParams });
     // Backend returns ApiResponse<PageResponse<T>> - extract data.data
     return response.data.data;
   }
@@ -236,6 +274,7 @@ export const createPrescriptionMock = async (
       durationDays: item.durationDays,
       instructions: item.instructions,
     })),
+    status: "ACTIVE",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -368,6 +407,55 @@ export const getPrescriptionByExam = async (examId: string) => {
   return { data: exam.prescription };
 };
 
+/**
+ * Dispense a prescription.
+ * This marks the prescription as DISPENSED and triggers invoice generation.
+ * @param prescriptionId - The prescription ID to dispense
+ * @returns The updated prescription
+ */
+export const dispensePrescription = async (prescriptionId: string): Promise<Prescription> => {
+  if (!USE_MOCK) {
+    // Backend endpoint: POST /exams/prescriptions/{id}/dispense
+    const response = await axiosInstance.post(`${BASE_URL_EXAMS}/prescriptions/${prescriptionId}/dispense`);
+    return response.data.data;
+  }
+
+  // Mock implementation
+  await delay(500);
+  
+  // Find the exam with this prescription
+  const examIndex = mockMedicalExams.findIndex((e) => e.prescription?.id === prescriptionId);
+  if (examIndex === -1) throw new Error("Prescription not found");
+  
+  const exam = mockMedicalExams[examIndex];
+  if (!exam.prescription) throw new Error("Prescription not found");
+  
+  if (exam.prescription.status === "DISPENSED") {
+    throw new Error("Prescription already dispensed");
+  }
+  
+  if (exam.prescription.status === "CANCELLED") {
+    throw new Error("Cannot dispense cancelled prescription");
+  }
+  
+  // Update prescription status
+  const updatedPrescription: Prescription = {
+    ...exam.prescription,
+    status: "DISPENSED" as PrescriptionStatus,
+    dispensedAt: new Date().toISOString(),
+    dispensedBy: "current-user-id", // In real app, get from auth context
+    updatedAt: new Date().toISOString(),
+  };
+  
+  mockMedicalExams[examIndex] = {
+    ...exam,
+    prescription: updatedPrescription,
+    updatedAt: new Date().toISOString(),
+  };
+  
+  return updatedPrescription;
+};
+
 // ============ Medical Exam Service ============
 
 const medicalExamService = {
@@ -379,7 +467,7 @@ const medicalExamService = {
   createPrescription: createPrescriptionMock,
   updatePrescription: updatePrescriptionMock,
   getPrescriptionByExam: getPrescriptionByExam,
-  // Add other mock implementations as needed
+  dispensePrescription: dispensePrescription,
 };
 
 export default medicalExamService;

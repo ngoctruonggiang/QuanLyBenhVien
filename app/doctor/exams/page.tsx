@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarClock, Loader2, Search } from "lucide-react";
+import { AlertCircle, CalendarClock, Search } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { useMedicalExamList } from "@/hooks/queries/useMedicalExam";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -29,6 +29,8 @@ import { MedicalExamListItem } from "@/interfaces/medical-exam";
 import { ExamStatusBadge } from "@/app/admin/exams/_components/exam-status-badge";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { DataTableRowActions } from "@/components/ui/data-table-row-actions";
+import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleString("vi-VN", {
@@ -38,11 +40,9 @@ const formatDate = (value: string) =>
   });
 
 export default function DoctorExamsPage() {
-  const [doctorId, setDoctorId] = useState<string | null>(() => {
-    const stored =
-      typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    return stored || "emp-101";
-  });
+  // Get current doctor's employee profile
+  const { data: myProfile, isLoading: isLoadingProfile } = useMyEmployeeProfile();
+  const doctorId = myProfile?.id;
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
@@ -60,21 +60,52 @@ export default function DoctorExamsPage() {
     startDate: startDate || undefined,
     endDate: endDate || undefined,
     status: status !== "ALL" ? (status as any) : undefined,
+    search: debouncedSearch || undefined, // Server-side search
   });
 
   const exams = data?.content || [];
   const totalPages = data?.totalPages || 1;
   const totalElements = data?.totalElements || 0;
 
-  const filtered = useMemo(() => {
-    if (!debouncedSearch) return exams;
-    const term = debouncedSearch.toLowerCase();
-    return exams.filter(
-      (exam: MedicalExamListItem) =>
-        exam.patient.fullName.toLowerCase().includes(term) ||
-        exam.diagnosis?.toLowerCase().includes(term)
+  // Loading state while fetching employee profile
+  if (isLoadingProfile) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div>
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-5 w-80 mt-2" />
+        </div>
+        <Card className="shadow-sm">
+          <CardHeader>
+            <Skeleton className="h-6 w-24" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-48 w-full" />
+          </CardContent>
+        </Card>
+      </div>
     );
-  }, [exams, debouncedSearch]);
+  }
+
+  // Show message if employee profile not found
+  if (!doctorId && !isLoadingProfile) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex items-center gap-3 pt-6">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-800">Employee Profile Not Found</p>
+              <p className="text-sm text-amber-700">
+                Your account is not linked to an employee record. Please contact an administrator.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -99,7 +130,7 @@ export default function DoctorExamsPage() {
           <div className="relative w-full sm:max-w-xl">
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
-              placeholder="Tìm theo bệnh nhân, chẩn đoán..."
+              placeholder="Tìm theo tên bệnh nhân..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -108,24 +139,6 @@ export default function DoctorExamsPage() {
               className="h-10 rounded-lg pl-9"
             />
           </div>
-          <Select
-            value={status}
-            onValueChange={(v) => {
-              setStatus(v);
-              setPage(0);
-            }}
-          >
-            <SelectTrigger className="h-10 w-full sm:w-44">
-              <SelectValue placeholder="Trạng thái" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Tất cả</SelectItem>
-              <SelectItem value="PENDING">PENDING</SelectItem>
-              <SelectItem value="IN_PROGRESS">IN_PROGRESS</SelectItem>
-              <SelectItem value="FINALIZED">FINALIZED</SelectItem>
-              <SelectItem value="CANCELLED">CANCELLED</SelectItem>
-            </SelectContent>
-          </Select>
           <Input
             type="date"
             value={startDate}
@@ -170,8 +183,8 @@ export default function DoctorExamsPage() {
                       </span>
                     </TableCell>
                   </TableRow>
-                ) : filtered.length ? (
-                  filtered.map((exam: MedicalExamListItem) => (
+                ) : exams.length ? (
+                  exams.map((exam: MedicalExamListItem) => (
                     <TableRow key={exam.id}>
                       <TableCell className="font-medium">
                         <Link

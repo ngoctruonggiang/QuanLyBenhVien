@@ -1,46 +1,32 @@
 import {
   Invoice,
-  CreatePaymentRequest,
   Payment,
   GenerateInvoiceRequest,
+  PaymentInitRequest,
+  PaymentInitResponse,
+  PaymentsByInvoiceResponse,
 } from "@/interfaces/billing";
 import api from "@/config/axios";
 
-export interface InvoiceSummary {
-  totalInvoices: number;
-  totalAmount: number;
-  unpaidCount: number;
-  unpaidAmount: number;
-  overdueCount: number;
-  overdueAmount: number;
-  collectedThisMonth: number;
-}
+// ==================== Invoice APIs ====================
 
-// ---- Invoice APIs ----
 // Generate invoice (internal - triggered by prescription creation)
 export const generateInvoice = async (data: GenerateInvoiceRequest) =>
-  api.post<{ status: string; data: Invoice }>(
-    `/billing/invoices/generate`,
-    data,
-  );
+  api.post<{ code: number; data: Invoice }>(`/invoices/generate`, data);
 
-// Get invoice by ID - direct mock implementation
-export const getInvoiceById = async (id: string) => {
-  const { invoices } = await import("@/mocks/handlers/billing");
-  await new Promise(resolve => setTimeout(resolve, 200));
-  
-  const invoice = invoices.find((inv: any) => inv.id === id);
-  if (!invoice) {
-    throw new Error("Invoice not found");
-  }
-  return { data: { status: "success", data: invoice } };
-};
+// Get invoice by ID
+export const getInvoiceById = async (id: string) =>
+  api.get<{ code: number; data: Invoice }>(`/invoices/${id}`);
 
 // Get invoice by appointment
 export const getInvoiceByAppointment = async (appointmentId: string) =>
-  api.get<{ status: string; data: Invoice }>(
-    `/billing/invoices/by-appointment/${appointmentId}`,
+  api.get<{ code: number; data: Invoice }>(
+    `/invoices/by-appointment/${appointmentId}`
   );
+
+// Get invoice by medical exam
+export const getInvoiceByExam = async (examId: string) =>
+  api.get<{ code: number; data: Invoice }>(`/invoices/by-exam/${examId}`);
 
 export type InvoiceListParams = {
   patientId?: string;
@@ -53,115 +39,80 @@ export type InvoiceListParams = {
   search?: string;
 };
 
-// List invoices (admin) - direct mock implementation
-export const getInvoiceList = async (params?: InvoiceListParams) => {
-  // Import invoices directly for mock mode to ensure data sync
-  const { invoices } = await import("@/mocks/handlers/billing");
-  
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 300));
+// Page response type from BE
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
 
-  let filtered = [...invoices];
-
-  if (params?.status && params.status !== "ALL") {
-    filtered = filtered.filter((inv) => inv.status === params.status);
-  }
-
-  if (params?.search) {
-    const search = params.search.toLowerCase();
-    filtered = filtered.filter(
-      (inv: any) =>
-        inv.patientName?.toLowerCase().includes(search) ||
-        inv.invoiceNumber?.toLowerCase().includes(search)
-    );
-  }
-
-  if (params?.startDate) {
-    const start = new Date(params.startDate);
-    filtered = filtered.filter((inv: any) => new Date(inv.invoiceDate) >= start);
-  }
-
-  if (params?.endDate) {
-    const end = new Date(params.endDate);
-    filtered = filtered.filter((inv: any) => new Date(inv.invoiceDate) <= end);
-  }
-
-  const sortParam = params?.sort || "invoiceDate,desc";
-  const [sortKey, sortDir] = sortParam.split(",");
-  filtered = filtered.sort((a: any, b: any) => {
-    const direction = sortDir === "asc" ? 1 : -1;
-    switch (sortKey) {
-      case "totalAmount":
-        return (a.totalAmount - b.totalAmount) * direction;
-      case "status":
-        return a.status.localeCompare(b.status) * direction;
-      case "invoiceDate":
-      default:
-        return (
-          (new Date(a.invoiceDate).getTime() - new Date(b.invoiceDate).getTime()) *
-          direction
-        );
-    }
-  });
-
-  const totalElements = filtered.length;
-  const page = params?.page || 0;
-  const size = params?.size || 10;
-  const startIndex = page * size;
-  const content = filtered.slice(startIndex, startIndex + size);
-  const totalPages = size > 0 ? Math.ceil(totalElements / size) : 1;
-
-  return {
-    data: {
-      content,
-      page,
-      size,
-      totalElements,
-      totalPages,
-      last: page >= totalPages - 1,
-    },
-  };
-};
-
-export type PatientInvoiceParams = {
-  status?: string;
-  page?: number;
-  size?: number;
-};
+// List invoices (admin)
+export const getInvoiceList = async (params?: InvoiceListParams) =>
+  api.get<{ code: number; data: PageResponse<Invoice> }>(`/invoices/all`, { params });
 
 // Get patient invoices
 export const getPatientInvoices = async (
   patientId: string,
-  params?: PatientInvoiceParams,
+  params?: { status?: string; page?: number; size?: number }
+) => api.get(`/invoices/by-patient/${patientId}`, { params });
+
+// Cancel invoice
+export const cancelInvoice = async (
+  id: string,
+  data: { cancelReason: string }
+) => api.post<{ code: number; data: Invoice }>(`/invoices/${id}/cancel`, data);
+
+// ==================== Payment APIs ====================
+
+// Initialize VNPay payment - returns redirect URL
+export const initPayment = async (data: PaymentInitRequest) =>
+  api.post<{ code: number; data: PaymentInitResponse }>(`/payments/init`, data);
+
+// Record cash payment
+export const createCashPayment = async (
+  invoiceId: string,
+  amount?: number,
+  notes?: string
 ) => {
-  return api.get(`/billing/invoices/by-patient/${patientId}`, { params });
+  const params = new URLSearchParams();
+  if (amount) params.append("amount", amount.toString());
+  if (notes) params.append("notes", notes);
+  return api.post<{ code: number; data: Payment }>(
+    `/payments/${invoiceId}/cash?${params.toString()}`
+  );
 };
-
-// ---- Payment APIs ----
-
-// Create payment
-export const createPayment = async (data: CreatePaymentRequest) =>
-  api.post<{ status: string; data: Payment }>(`/billing/payments`, data);
 
 // Get payment by ID
 export const getPaymentById = async (id: string) =>
-  api.get<{ status: string; data: Payment }>(`/billing/payments/${id}`);
+  api.get<{ code: number; data: Payment }>(`/payments/${id}`);
 
-// Get payments by invoice
+// Get payments by invoice (with summary)
 export const getPaymentsByInvoice = async (invoiceId: string) =>
-  api.get<{ status: string; data: Payment[] }>(
-    `/billing/payments/by-invoice/${invoiceId}`,
+  api.get<{ code: number; data: PaymentsByInvoiceResponse }>(
+    `/payments/by-invoice/${invoiceId}`
   );
 
-// Cancel invoice (PATCH method is more appropriate for partial updates)
-export const cancelInvoice = async (
-  id: string,
-  data: { cancelReason: string },
-) =>
-  api.post<{ status: string; data: Invoice }>(
-    `/billing/invoices/${id}/cancel`,
-    data,
+// Verify VNPay return (call from FE to verify payment after redirect)
+export const verifyVNPayReturn = async (params: Record<string, string>) => {
+  const searchParams = new URLSearchParams(params);
+  return api.get<{ code: number; data: Payment }>(
+    `/payments/vnpay-return?${searchParams.toString()}`
   );
+};
+
+// ==================== Summary APIs (for dashboard) ====================
+
+export interface InvoiceSummary {
+  totalInvoices: number;
+  totalAmount: number;
+  unpaidCount: number;
+  unpaidAmount: number;
+  overdueCount: number;
+  overdueAmount: number;
+  collectedThisMonth: number;
+}
 
 export interface PaymentSummaryCards {
   todayAmount: number;
@@ -174,23 +125,18 @@ export interface PaymentSummaryCards {
   cardPercentage: number;
 }
 
-export const getPayments = async (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  method?: string;
-  startDate?: string;
-  endDate?: string;
-  sort?: string;
-}) => {
-  return api.get("/billing/payments", { params });
+// Note: These endpoints may not be implemented in BE yet
+export const getInvoiceSummary = async (): Promise<InvoiceSummary> => {
+  const response = await api.get<{ data: InvoiceSummary }>(
+    "/invoices/summary"
+  );
+  return response.data.data;
 };
 
 export const getPaymentSummaryCards =
   async (): Promise<PaymentSummaryCards> => {
     const response = await api.get<{ data: PaymentSummaryCards }>(
-      "/billing/payments/summary-cards",
+      "/payments/summary-cards"
     );
     return response.data.data;
   };
-

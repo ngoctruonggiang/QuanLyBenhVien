@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -46,6 +47,7 @@ const editSchema = z.object({
 type EditFormValues = z.infer<typeof editSchema>;
 
 export default function EditProfilePage() {
+  const router = useRouter();
   const { data: profile, isLoading, error } = useMyProfile();
   const updateProfile = useUpdateMyProfile();
 
@@ -92,6 +94,8 @@ export default function EditProfilePage() {
       relativePhoneNumber: values.relativePhoneNumber || undefined,
       relativeRelationship: values.relativeRelationship || undefined,
     });
+    // Redirect to profile page after successful save
+    router.push("/profile");
   };
 
   const readonlyBlock = useMemo(
@@ -232,16 +236,16 @@ export default function EditProfilePage() {
           <div className="space-y-2">
             <label className="text-sm font-medium">Quan hệ</label>
             <Select
-              value={form.watch("relativeRelationship") || ""}
+              value={form.watch("relativeRelationship") || "NONE"}
               onValueChange={(v) =>
-                form.setValue("relativeRelationship", v as RelationshipType)
+                form.setValue("relativeRelationship", v === "NONE" ? "" : v as RelationshipType)
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Chọn quan hệ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Chưa chọn</SelectItem>
+                <SelectItem value="NONE">Chưa chọn</SelectItem>
                 <SelectItem value="SPOUSE">Vợ/Chồng</SelectItem>
                 <SelectItem value="PARENT">Cha/Mẹ</SelectItem>
                 <SelectItem value="CHILD">Con</SelectItem>
@@ -254,18 +258,6 @@ export default function EditProfilePage() {
         </CardContent>
       </Card>
 
-      <Separator />
-      <div className="flex gap-2 justify-end">
-        <Button variant="outline" asChild>
-          <Link href="/profile">Hủy</Link>
-        </Button>
-        <Button
-          onClick={form.handleSubmit(onSubmit)}
-          disabled={updateProfile.isPending}
-        >
-          {updateProfile.isPending ? "Đang lưu..." : "Lưu thay đổi"}
-        </Button>
-      </div>
     </div>
   );
 }

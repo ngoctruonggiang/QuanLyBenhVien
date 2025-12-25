@@ -33,9 +33,7 @@ export default function PatientPaymentPage() {
       await createPayment({
         invoiceId: id,
         amount: data.amount,
-        method: data.method,
         notes: data.notes,
-        idempotencyKey: data.idempotencyKey,
       });
       toast.success("Thanh toán thành công");
       router.push(`/patient/billing/${id}`);
@@ -75,7 +73,7 @@ export default function PatientPaymentPage() {
             {new Intl.NumberFormat("vi-VN", {
               style: "currency",
               currency: "VND",
-            }).format(invoice.balance)}
+            }).format(invoice.balance ?? invoice.balanceDue ?? 0)}
           </p>
         </div>
       </div>
@@ -93,8 +91,8 @@ export default function PatientPaymentPage() {
             invoice={invoice}
             onSubmit={onSubmit}
             isSubmitting={isPending}
-            defaultAmount={invoice.balance}
-            maxAmount={invoice.balance}
+            defaultAmount={invoice.balance ?? invoice.balanceDue ?? 0}
+            maxAmount={invoice.balance ?? invoice.balanceDue ?? 0}
           />
         </CardContent>
       </Card>

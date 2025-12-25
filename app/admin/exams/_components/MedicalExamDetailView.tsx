@@ -38,12 +38,14 @@ interface MedicalExamDetailViewProps {
   medicalExam: MedicalExam;
   userRole?: UserRole;
   patientProfileBaseHref?: string;
+  examBaseHref?: string; // Base path for exam-related links
 }
 
 export function MedicalExamDetailView({
   medicalExam,
   userRole,
   patientProfileBaseHref = "/admin/patients",
+  examBaseHref = "/admin/exams", // Default to admin path
 }: MedicalExamDetailViewProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -171,7 +173,7 @@ export function MedicalExamDetailView({
                 asChild
                 className="bg-white text-sky-600 hover:bg-white/90"
               >
-                <Link href={`/admin/exams/${medicalExam.id}/prescription`}>
+                <Link href={`${examBaseHref}/${medicalExam.id}/prescription`}>
                   <PlusCircle className="h-4 w-4 mr-2" />
                   Add Prescription
                 </Link>
@@ -320,7 +322,7 @@ export function MedicalExamDetailView({
                   </div>
                   <Button asChild variant="outline" className="border-emerald-300 text-emerald-700 hover:bg-emerald-100">
                     <Link
-                      href={`/admin/exams/${medicalExam.id}/prescription/view`}
+                      href={`${examBaseHref}/${medicalExam.id}/prescription/view`}
                     >
                       View Prescription
                       <ExternalLink className="ml-2 h-4 w-4" />
@@ -345,7 +347,7 @@ export function MedicalExamDetailView({
                   {canAddPrescription && (
                     <Button asChild>
                       <Link
-                        href={`/admin/exams/${medicalExam.id}/prescription`}
+                        href={`${examBaseHref}/${medicalExam.id}/prescription`}
                       >
                         <PlusCircle className="mr-2 h-4 w-4" />
                         Add Prescription

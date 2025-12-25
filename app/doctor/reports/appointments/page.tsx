@@ -9,6 +9,7 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +25,8 @@ import { EmptyReportState } from "@/components/reports/EmptyReportState";
 import { CacheInfoBanner } from "@/components/reports/CacheInfoBanner";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const statusColors: Record<string, string> = {
   COMPLETED: "#22c55e",
@@ -121,17 +124,45 @@ export default function DoctorAppointmentReportsPage() {
   const [endDate, setEndDate] = useState<Date | undefined>(
     presets.last30Days.endDate
   );
-  const [doctorId, setDoctorId] = useState<string | undefined>(() => {
-    const stored =
-      typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    return stored || "emp-101";
-  });
+  
+  // Get current doctor's employee profile
+  const { data: myProfile, isLoading: isLoadingProfile } = useMyEmployeeProfile();
+  const doctorId = myProfile?.id;
 
   const { data, isLoading, refetch } = useAppointmentStats({
     startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",
     endDate: endDate ? format(endDate, "yyyy-MM-dd") : "",
     doctorId,
   });
+
+  // Show loading while fetching profile
+  if (isLoadingProfile) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-[200px] w-full" />
+      </div>
+    );
+  }
+
+  // Show message if employee profile not found
+  if (!doctorId && !isLoadingProfile) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex items-center gap-3 pt-6">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-800">Employee Profile Not Found</p>
+              <p className="text-sm text-amber-700">
+                Your account is not linked to an employee record. Please contact an administrator.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const validateRange = () => {
     if (!startDate || !endDate) return true;

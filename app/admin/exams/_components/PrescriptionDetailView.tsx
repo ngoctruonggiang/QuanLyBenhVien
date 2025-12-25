@@ -1,6 +1,6 @@
 "use client";
 
-import { Prescription } from "@/interfaces/medical-exam";
+import { Prescription, PrescriptionStatus } from "@/interfaces/medical-exam";
 import { UserRole } from "@/contexts/AuthContext";
 import {
   Card,
@@ -20,13 +20,17 @@ import {
 } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer, Pill } from "lucide-react";
+import { ArrowLeft, Printer, Pill, PackageCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { toast } from "sonner";
+import medicalExamService from "@/services/medical-exam.service";
 
 interface PrescriptionDetailViewProps {
   prescription: Prescription;
   userRole?: UserRole;
+  onDispensed?: (prescription: Prescription) => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -36,18 +40,51 @@ const formatCurrency = (value: number) => {
   }).format(value);
 };
 
+const getStatusBadge = (status?: PrescriptionStatus) => {
+  switch (status) {
+    case "DISPENSED":
+      return <Badge className="bg-green-500">Dispensed</Badge>;
+    case "CANCELLED":
+      return <Badge variant="destructive">Cancelled</Badge>;
+    case "ACTIVE":
+    default:
+      return <Badge variant="outline">Active</Badge>;
+  }
+};
+
 export function PrescriptionDetailView({
-  prescription,
+  prescription: initialPrescription,
   userRole,
+  onDispensed,
 }: PrescriptionDetailViewProps) {
   const router = useRouter();
+  const [prescription, setPrescription] = useState(initialPrescription);
+  const [isDispensing, setIsDispensing] = useState(false);
+  
   const isStaff =
     userRole === "ADMIN" || userRole === "DOCTOR" || userRole === "NURSE";
+  const canDispense = isStaff && (!prescription.status || prescription.status === "ACTIVE");
 
   const totalCost = prescription.items.reduce(
     (acc, item) => acc + item.quantity * item.unitPrice,
     0
   );
+
+  const handleDispense = async () => {
+    if (!canDispense) return;
+    
+    setIsDispensing(true);
+    try {
+      const updated = await medicalExamService.dispensePrescription(prescription.id);
+      setPrescription(updated);
+      toast.success("Prescription dispensed successfully! Invoice has been generated.");
+      onDispensed?.(updated);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to dispense prescription");
+    } finally {
+      setIsDispensing(false);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-4xl py-8 space-y-6">
@@ -60,9 +97,29 @@ export function PrescriptionDetailView({
         >
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
-        <Button variant="outline">
-          <Printer className="h-4 w-4 mr-2" /> Print
-        </Button>
+        <div className="flex items-center gap-2">
+          {getStatusBadge(prescription.status)}
+          {canDispense && (
+            <Button 
+              onClick={handleDispense} 
+              disabled={isDispensing}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isDispensing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Dispensing...
+                </>
+              ) : (
+                <>
+                  <PackageCheck className="h-4 w-4 mr-2" /> Dispense
+                </>
+              )}
+            </Button>
+          )}
+          <Button variant="outline">
+            <Printer className="h-4 w-4 mr-2" /> Print
+          </Button>
+        </div>
       </div>
 
       {/* Main Prescription Card */}

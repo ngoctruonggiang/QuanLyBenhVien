@@ -1,36 +1,36 @@
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function ProfileLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const queryClient = useMemo(() => new QueryClient(), []);
   const { user } = useAuth();
+  const router = useRouter();
   const role = user?.role;
 
-  // Redirect to appropriate role-based layout
-  if (!role) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    // Redirect based on role - each portal has its own profile page with sidebar
+    if (!role) {
+      router.replace("/login");
+    } else if (role === "PATIENT") {
+      router.replace("/patient/profile");
+    } else if (role === "DOCTOR") {
+      router.replace("/doctor/profile");
+    } else if (role === "ADMIN") {
+      router.replace("/admin/profile");
+    }
+  }, [role, router]);
 
-  if (role === "DOCTOR") {
-    redirect("/doctor/appointments");
-  } else if (role === "ADMIN") {
-    redirect("/admin/profile");
-  }
-
-  // Only PATIENT role uses this layout
+  // While redirecting, show loading
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto py-8">{children}</div>
-      </div>
-    </QueryClientProvider>
+    <div className="flex items-center justify-center min-h-screen">
+      <Spinner size="lg" variant="muted" />
+    </div>
   );
 }

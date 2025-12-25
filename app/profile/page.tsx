@@ -133,12 +133,6 @@ export default function MyProfilePage() {
         </CardContent>
       </Card>
 
-      <Separator />
-      <div className="flex justify-end">
-        <Button asChild variant="outline">
-          <Link href="/profile/edit">Chỉnh sửa hồ sơ</Link>
-        </Button>
-      </div>
     </div>
   );
 }

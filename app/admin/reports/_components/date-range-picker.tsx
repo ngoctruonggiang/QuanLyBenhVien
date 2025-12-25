@@ -70,9 +70,7 @@ export function DateRangePicker({
             mode="single"
             selected={endDate}
             onSelect={onEndDateChange}
-            disabled={(date) =>
-              (startDate ? date < startDate : false) || date > new Date()
-            }
+            disabled={(date) => (startDate ? date < startDate : false)}
             initialFocus
           />
         </PopoverContent>

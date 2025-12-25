@@ -90,8 +90,8 @@ export function AppointmentDetailView({
     );
   const canComplete =
     isScheduled &&
-    user?.role === "DOCTOR" &&
-    user?.employeeId === appointment.doctor.id;
+    (user?.role === "ADMIN" ||
+      (user?.role === "DOCTOR" && user?.employeeId === appointment.doctor.id));
 
   const formatDateTime = (dateTime: string) => {
     const date = new Date(dateTime);

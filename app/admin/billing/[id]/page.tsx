@@ -189,9 +189,9 @@ export default function InvoiceDetailPage() {
           },
           {
             label: "Balance Due",
-            value: formatCurrency(invoice.balance),
+            value: formatCurrency(invoice.balance ?? invoice.balanceDue ?? 0),
             icon: <Receipt className="h-5 w-5" />,
-            color: invoice.balance > 0 ? "rose" : "emerald",
+            color: (invoice.balance ?? invoice.balanceDue ?? 0) > 0 ? "rose" : "emerald",
           },
           {
             label: "Due Date",
@@ -313,10 +313,10 @@ export default function InvoiceDetailPage() {
                   <span className="font-bold text-lg">Balance Due</span>
                   <span
                     className={`font-bold text-lg ${
-                      invoice.balance > 0 ? "text-red-600" : "text-green-600"
+                      (invoice.balance ?? invoice.balanceDue ?? 0) > 0 ? "text-red-600" : "text-green-600"
                     }`}
                   >
-                    {formatCurrency(invoice.balance)}
+                    {formatCurrency(invoice.balance ?? invoice.balanceDue ?? 0)}
                   </span>
                 </div>
               </div>
@@ -326,13 +326,13 @@ export default function InvoiceDetailPage() {
           {/* Payment History */}
           <Card>
             <CardHeader>
-              <CardTitle>Payment History ({invoice.payments.length})</CardTitle>
+              <CardTitle>Payment History ({invoice.payments?.length ?? 0})</CardTitle>
             </CardHeader>
             <CardContent>
               <PaymentHistoryTable
-                payments={invoice.payments}
+                payments={invoice.payments ?? []}
                 totalPaid={invoice.paidAmount}
-                remainingBalance={invoice.balance}
+                remainingBalance={invoice.balance ?? invoice.balanceDue ?? 0}
               />
             </CardContent>
           </Card>

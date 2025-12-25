@@ -8,6 +8,7 @@ import {
 } from "@/hooks/queries/useMedicalExam";
 import { PrescriptionForm } from "@/app/admin/exams/_components/prescription-form";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -25,6 +26,10 @@ export default function CreateDoctorPrescriptionPage({
   const { data: medicalExam, isLoading } = useMedicalExam(id);
   const { mutateAsync: createPrescription, isPending } =
     useCreatePrescription(id);
+  
+  // Get current doctor's employee profile for proper isCreator check
+  const { data: myProfile, isLoading: isLoadingProfile } = useMyEmployeeProfile();
+  const myEmployeeId = myProfile?.id || user?.employeeId;
 
   const onSubmit = async (data: PrescriptionFormValues) => {
     try {
@@ -36,7 +41,7 @@ export default function CreateDoctorPrescriptionPage({
     }
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingProfile) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Spinner size="lg" variant="muted" />
@@ -60,8 +65,8 @@ export default function CreateDoctorPrescriptionPage({
     );
   }
 
-  // Check if doctor is the creator
-  if (medicalExam.doctor?.id !== user?.employeeId) {
+  // Check if doctor is the creator using fetched employeeId
+  if (medicalExam.doctor?.id !== myEmployeeId) {
     return (
       <div className="container mx-auto py-6">
         <div className="text-center">

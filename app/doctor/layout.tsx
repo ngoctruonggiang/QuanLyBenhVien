@@ -51,6 +51,7 @@ const navItems = [
   { title: "My Exams", href: "/doctor/exams", icon: FileText },
   { title: "My Schedule", href: "/doctor/schedules", icon: CalendarClock },
   { title: "Patients", href: "/doctor/patients", icon: Users },
+  { title: "My Profile", href: "/doctor/profile", icon: User },
 ];
 
 function buildBreadcrumbs(pathname: string) {

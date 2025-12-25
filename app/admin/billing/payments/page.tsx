@@ -99,7 +99,8 @@ const paymentColumns: Column<PaymentWithInvoice>[] = [
     key: "method",
     label: "Method",
     render: (row) => {
-      const config = methodConfig[row.method];
+      const method = row.method ?? "CASH";
+      const config = methodConfig[method];
       return (
         <Badge variant="outline" className={cn("border-0", config.className)}>
           {config.label}
@@ -110,7 +111,7 @@ const paymentColumns: Column<PaymentWithInvoice>[] = [
   {
     key: "paymentDate",
     label: "Date",
-    render: (row) => new Date(row.paymentDate).toLocaleString(),
+    render: (row) => row.paymentDate ? new Date(row.paymentDate).toLocaleString() : "-",
   },
   {
     key: "status",

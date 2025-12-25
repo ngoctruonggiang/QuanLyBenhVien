@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const basePaymentSchema = z.object({
   amount: z.number().positive("Amount must be greater than 0"),
-  method: z.enum(["CASH", "CREDIT_CARD", "BANK_TRANSFER", "INSURANCE"], {
+  method: z.enum(["CASH", "VNPAY"], {
     message: "Please select a payment method",
   }),
   notes: z.string().max(1000, "Notes cannot exceed 1000 characters").optional(),

@@ -23,7 +23,7 @@ import { ExamStatus } from "@/interfaces/medical-exam";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppointmentSearchSelect } from "@/components/appointment/AppointmentSearchSelect";
-import { User, Briefcase, CalendarClock, HeartPulse, Stethoscope, FileText } from "lucide-react";
+import { User, Briefcase, CalendarClock, HeartPulse, Stethoscope, FileText, CalendarPlus } from "lucide-react";
 
 const InfoCard = ({
   title,
@@ -325,6 +325,36 @@ export function MedicalExamForm({
             )}
           />
         </div>
+
+        <div className="form-section-card">
+          <div className="form-section-card-title">
+            <CalendarPlus className="h-5 w-5 text-emerald-500" />
+            Follow-up Reminder
+          </div>
+          <FormField
+            control={form.control}
+            name="followUpDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="form-label">Follow-up Date (Optional)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="date"
+                    placeholder="Select a follow-up date..."
+                    className="max-w-xs"
+                    min={new Date().toISOString().split('T')[0]}
+                    {...field}
+                  />
+                </FormControl>
+                <p className="text-sm text-muted-foreground mt-1">
+                  If set, patient will receive an email reminder on this date.
+                </p>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
 
         {onSubmitWithStatus ? (
           <div className="flex flex-wrap gap-3 pt-4 border-t border-slate-200">

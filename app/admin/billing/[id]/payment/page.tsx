@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
-import { useCreatePayment, useInvoice } from "@/hooks/queries/useBilling";
+import { useCreateCashPayment, useInitPayment, useInvoice } from "@/hooks/queries/useBilling";
 import { PaymentForm } from "../../_components/payment-form";
 import { PaymentFormValues } from "@/lib/schemas/billing";
 import { toast } from "sonner";
@@ -20,27 +20,39 @@ export default function RecordPaymentPage() {
   const router = useRouter();
   const id = params.id as string;
   const { data: invoice, isLoading } = useInvoice(id);
-  const { mutateAsync: createPayment, isPending } = useCreatePayment();
+  const { mutateAsync: createCashPayment, isPending: isCashPending } = useCreateCashPayment();
+  const { mutateAsync: initVNPayPayment, isPending: isVNPayPending } = useInitPayment();
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      await createPayment({
-        invoiceId: id,
-        amount: data.amount,
-        method: data.method,
-        notes: data.notes,
-        idempotencyKey: data.idempotencyKey,
-      });
-      toast.success("Payment recorded successfully");
-      router.push(`/admin/billing/${id}`);
+      if (data.method === "VNPAY") {
+        // VNPay payment - redirect to payment gateway
+        await initVNPayPayment({
+          invoiceId: id,
+          amount: data.amount,
+          returnUrl: `${window.location.origin}/payment/result`,
+        });
+        // User will be redirected to VNPay
+      } else {
+        // Cash payment - record immediately
+        await createCashPayment({
+          invoiceId: id,
+          amount: data.amount,
+          notes: data.notes,
+        });
+        toast.success("Cash payment recorded successfully");
+        router.push(`/admin/billing/${id}`);
+      }
     } catch (error) {
-      toast.error("Failed to record payment");
+      toast.error("Failed to process payment");
       console.error(error);
     }
   };
 
   if (isLoading) return <div>Loading...</div>;
   if (!invoice) return <div>Invoice not found</div>;
+
+  const isPending = isCashPending || isVNPayPending;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -51,11 +63,11 @@ export default function RecordPaymentPage() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Record Payment</h1>
           <p className="text-muted-foreground">
-            Invoice #{invoice.id} • Balance Due:{" "}
+            Invoice #{invoice.invoiceNumber} • Balance Due:{" "}
             {new Intl.NumberFormat("vi-VN", {
               style: "currency",
               currency: "VND",
-            }).format(invoice.balance)}
+            }).format(invoice.balance ?? invoice.balanceDue ?? 0)}
           </p>
         </div>
       </div>
@@ -64,24 +76,21 @@ export default function RecordPaymentPage() {
         <CardHeader>
           <CardTitle>Payment Details</CardTitle>
           <CardDescription>
-            Enter the payment amount and method. The remaining balance is{" "}
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            }).format(invoice.balance)}
-            .
+            Choose a payment method. Cash payments are recorded immediately.
+            VNPay payments will redirect you to complete the transaction.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <PaymentForm
             onSubmit={onSubmit}
             isSubmitting={isPending}
-            invoice={invoice} // Pass the invoice object
-            defaultAmount={invoice.balance}
-            maxAmount={invoice.balance}
+            invoice={invoice}
+            defaultAmount={invoice.balance ?? invoice.balanceDue ?? 0}
+            maxAmount={invoice.balance ?? invoice.balanceDue ?? 0}
           />
         </CardContent>
       </Card>
     </div>
   );
 }
+

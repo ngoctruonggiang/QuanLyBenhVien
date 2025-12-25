@@ -25,6 +25,7 @@ import {
   useEmployees,
   useDoctorSchedules,
 } from "@/hooks/queries/useHr";
+import { useMyProfile } from "@/hooks/queries/usePatient";
 import {
   AppointmentCreateRequest,
   AppointmentType,
@@ -83,11 +84,10 @@ function DoctorCard({
 export default function PatientBookingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
-  const [patientId, setPatientId] = useState<string>(() => {
-    const pid =
-      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    return pid || "p001";
-  });
+  
+  // Get patient ID from profile API
+  const { data: myProfile, isLoading: isLoadingProfile } = useMyProfile();
+  const patientId = myProfile?.id || "";
 
   // Step 1 state
   const [departmentId, setDepartmentId] = useState<string>("");

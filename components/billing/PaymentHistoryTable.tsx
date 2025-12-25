@@ -12,24 +12,28 @@ import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 import { PaymentMethodBadge } from "@/components/billing/PaymentMethodBadge";
 import { PaymentStatusBadge } from "@/components/billing/PaymentStatusBadge";
 import { format } from "date-fns";
-
-interface PaymentItem {
-  id: string;
-  amount: number;
-  method: "CASH" | "CREDIT_CARD" | "BANK_TRANSFER" | "INSURANCE";
-  status: "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
-  paymentDate: string;
-  notes?: string;
-}
+import { Payment, PaymentMethod, PaymentGateway } from "@/interfaces/billing";
 
 interface Props {
-  payments: PaymentItem[];
+  payments: Payment[];
   totalPaid: number;
   remainingBalance: number;
 }
 
 const formatDate = (date: string) =>
   format(new Date(date), "MMM d, yyyy, h:mm a");
+
+// Map gateway to legacy method for display
+const gatewayToMethod = (gateway?: PaymentGateway, method?: PaymentMethod): PaymentMethod => {
+  if (method) return method;
+  if (!gateway) return "CASH";
+  switch (gateway) {
+    case "VNPAY": return "CREDIT_CARD";
+    case "MOMO": return "CREDIT_CARD";
+    case "BANK_TRANSFER": return "BANK_TRANSFER";
+    default: return "CASH";
+  }
+};
 
 export function PaymentHistoryTable({
   payments,
@@ -60,7 +64,7 @@ export function PaymentHistoryTable({
         <TableBody>
           {payments.map((payment) => (
             <TableRow key={payment.id}>
-              <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+              <TableCell>{payment.paymentDate ? formatDate(payment.paymentDate) : "-"}</TableCell>
               <TableCell>
                 <CurrencyDisplay
                   amount={payment.amount}
@@ -68,7 +72,7 @@ export function PaymentHistoryTable({
                 />
               </TableCell>
               <TableCell>
-                <PaymentMethodBadge method={payment.method} />
+                <PaymentMethodBadge method={gatewayToMethod(payment.gateway, payment.method)} />
               </TableCell>
               <TableCell>
                 <PaymentStatusBadge status={payment.status} />

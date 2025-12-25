@@ -56,6 +56,7 @@ export interface MedicalExam {
   hasPrescription?: boolean;
   prescription?: Prescription;
   cancelReason?: string;
+  followUpDate?: string;
 }
 
 export interface MedicalExamListItem {
@@ -83,6 +84,7 @@ export interface MedicalExamCreateRequest {
   weight?: number;
   height?: number;
   notes?: string;
+  followUpDate?: string;
 }
 
 export interface MedicalExamUpdateRequest {
@@ -97,6 +99,7 @@ export interface MedicalExamUpdateRequest {
   weight?: number;
   height?: number;
   notes?: string;
+  followUpDate?: string;
 }
 
 export interface MedicalExamListParams {
@@ -131,6 +134,9 @@ export interface Prescription {
   prescribedAt: string;
   notes?: string;
   items: PrescriptionItem[];
+  status: PrescriptionStatus;
+  dispensedAt?: string;
+  dispensedBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -157,6 +163,8 @@ export interface PrescriptionCreateRequest {
 }
 
 export type ExamStatus = "PENDING" | "IN_PROGRESS" | "FINALIZED" | "CANCELLED";
+
+export type PrescriptionStatus = "ACTIVE" | "DISPENSED" | "CANCELLED";
 
 // ============ Paginated Response ============
 

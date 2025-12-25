@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { addDays, format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -20,18 +20,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useDoctorSchedules } from "@/hooks/queries/useHr";
+import { useDoctorSchedules, useMyEmployeeProfile } from "@/hooks/queries/useHr";
+import { useAppointmentList } from "@/hooks/queries/useAppointment";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle, CalendarDays } from "lucide-react";
 
 type ScheduleStatus = "AVAILABLE" | "BOOKED" | "CANCELLED";
 
@@ -83,12 +78,10 @@ export default function MySchedulesPage() {
   const [dateRange, setDateRange] = useState<
     { from: Date; to: Date } | undefined
   >(undefined);
-  const [status, setStatus] = useState<ScheduleStatus | "ALL">("ALL");
-  const [doctorId, setDoctorId] = useState<string | undefined>(() => {
-    const stored =
-      typeof window !== "undefined" ? localStorage.getItem("doctorId") : null;
-    return stored || undefined;
-  });
+  
+  // Get current doctor's employee profile
+  const { data: myProfile, isLoading: isLoadingProfile } = useMyEmployeeProfile();
+  const doctorId = myProfile?.id;
 
   useEffect(() => {
     setDateRange({
@@ -97,16 +90,54 @@ export default function MySchedulesPage() {
     });
   }, []);
 
-  const { data, isLoading, refetch } = useDoctorSchedules({
+  const { data, isLoading } = useDoctorSchedules({
     startDate: dateRange ? format(dateRange.from, "yyyy-MM-dd") : undefined,
     endDate: dateRange ? format(dateRange.to, "yyyy-MM-dd") : undefined,
-    status: status === "ALL" ? undefined : status,
     doctorId,
-    enabled: !!dateRange,
+    enabled: !!dateRange && !!doctorId,
   });
 
-  if (!dateRange) {
+  // Fetch appointments for the doctor to count per day
+  // Note: Only filtering by doctorId to avoid backend RSQL issues with combined filters
+  const { data: appointmentsData } = useAppointmentList({
+    doctorId,
+    status: "SCHEDULED", // Only count scheduled appointments
+    size: 100, // Reasonable limit for schedule view
+  });
+
+  // Create a map of appointment counts per date
+  const appointmentCountsByDate = useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (appointmentsData?.content) {
+      appointmentsData.content.forEach((apt: { appointmentTime: string }) => {
+        const dateKey = apt.appointmentTime.split("T")[0];
+        counts[dateKey] = (counts[dateKey] || 0) + 1;
+      });
+    }
+    return counts;
+  }, [appointmentsData]);
+
+  if (!dateRange || isLoadingProfile) {
     return <SchedulePageSkeleton />;
+  }
+
+  // Show message if employee profile not found
+  if (!doctorId && !isLoadingProfile) {
+    return (
+      <div className="container mx-auto py-6">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="flex items-center gap-3 pt-6">
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+            <div>
+              <p className="font-medium text-amber-800">Employee Profile Not Found</p>
+              <p className="text-sm text-amber-700">
+                Your account is not linked to an employee record. Please contact an administrator.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
@@ -180,22 +211,6 @@ export default function MySchedulesPage() {
               defaultMonth={dateRange.from}
               numberOfMonths={1}
             />
-            <div className="flex items-center gap-2 pt-2">
-              <Select value={status} onValueChange={(v) => setStatus(v as any)}>
-                <SelectTrigger className="h-10 w-[180px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All statuses</SelectItem>
-                  <SelectItem value="AVAILABLE">Available</SelectItem>
-                  <SelectItem value="BOOKED">Booked</SelectItem>
-                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
-                Refresh
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -231,31 +246,53 @@ export default function MySchedulesPage() {
                       </TableCell>
                     </TableRow>
                   ) : data?.content && data.content.length > 0 ? (
-                    data.content.map((schedule: any) => (
-                      <TableRow key={schedule.id}>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(schedule.workDate), "dd/MM/yyyy")}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {schedule.startTime} - {schedule.endTime}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={`px-3 py-1 text-xs font-medium ${
-                              statusTone[schedule.status as ScheduleStatus] ||
-                              ""
-                            }`}
-                          >
-                            {schedule.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {schedule.notes ||
-                            `${schedule.appointments || 0} appointments`}
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    data.content.map((schedule: any) => {
+                      const dateKey = schedule.workDate;
+                      const appointmentCount = appointmentCountsByDate[dateKey] || 0;
+                      const isBooked = schedule.status === "BOOKED" || appointmentCount > 0;
+                      const displayStatus = appointmentCount > 0 ? "BOOKED" : schedule.status;
+                      
+                      return (
+                        <TableRow 
+                          key={schedule.id}
+                          className={isBooked ? "cursor-pointer hover:bg-blue-50" : ""}
+                          onClick={() => {
+                            if (isBooked) {
+                              router.push(`/doctor/appointments?date=${dateKey}`);
+                            }
+                          }}
+                        >
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(schedule.workDate), "dd/MM/yyyy")}
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {schedule.startTime} - {schedule.endTime}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="secondary"
+                              className={`px-3 py-1 text-xs font-medium ${
+                                statusTone[displayStatus as ScheduleStatus] || ""
+                              }`}
+                            >
+                              {displayStatus}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {isBooked ? (
+                              <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                                <CalendarDays className="h-4 w-4" />
+                                {appointmentCount} cuộc hẹn
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">
+                                {schedule.notes || "Trống"}
+                              </span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell

@@ -54,8 +54,7 @@ export interface EmployeeRequest {
   address?: string;
   status: EmployeeStatus;
   hiredAt?: string;
-  email?: string;
-  // Note: email is NOT part of backend EmployeeRequest DTO - NOW IT IS
+  // Note: email is NOT part of backend EmployeeRequest DTO
 }
 
 export type ScheduleStatus = "AVAILABLE" | "BOOKED" | "CANCELLED";

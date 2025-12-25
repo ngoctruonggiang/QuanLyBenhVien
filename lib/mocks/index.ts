@@ -414,11 +414,11 @@ const generateDynamicSchedules = () => {
 
 export const mockSchedules = generateDynamicSchedules();
 
-// Use consistent patient IDs (p001, p002, etc.) matching patient.service.ts
-export const mockInvoices: Invoice[] = [
+export const mockInvoices: any[] = [
   {
     id: "INV-001",
     invoiceNumber: "INV-001",
+    patient: { id: "p001", fullName: "Nguyen Van An" },
     patientId: "p001",
     patientName: "Nguyen Van An",
     appointmentId: "apt-001",
@@ -429,6 +429,7 @@ export const mockInvoices: Invoice[] = [
     totalAmount: 500000,
     paidAmount: 0,
     balance: 500000,
+    balanceDue: 500000,
     invoiceDate: "2025-11-20T10:00:00Z",
     dueDate: "2025-12-01T00:00:00Z",
     createdAt: "2025-11-20T10:00:00Z",

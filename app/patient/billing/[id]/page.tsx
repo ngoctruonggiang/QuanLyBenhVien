@@ -105,9 +105,9 @@ export default function PatientInvoiceDetailPage() {
           <div className="flex justify-between">
             <span>Còn nợ</span>
             <CurrencyDisplay
-              amount={invoice.balance}
+              amount={invoice.balance ?? invoice.balanceDue ?? 0}
               className={
-                invoice.balance > 0 ? "text-destructive" : "text-primary"
+                (invoice.balance ?? invoice.balanceDue ?? 0) > 0 ? "text-destructive" : "text-primary"
               }
             />
           </div>
@@ -122,7 +122,7 @@ export default function PatientInvoiceDetailPage() {
           <PaymentHistoryTable
             payments={invoice.payments ?? []}
             totalPaid={invoice.paidAmount}
-            remainingBalance={invoice.balance}
+            remainingBalance={invoice.balance ?? invoice.balanceDue ?? 0}
           />
         </CardContent>
       </Card>

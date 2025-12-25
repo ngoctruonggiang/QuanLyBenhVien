@@ -349,6 +349,85 @@ export const hrService = {
     return employeeData.find((e) => e.id === id);
   },
 
+  getEmployeeByEmail: async (email: string): Promise<Employee | null> => {
+    if (!USE_MOCK) {
+      // Employee entity doesn't have email field - we need 2-step lookup:
+      // Step 1: Get accountId from auth service by email
+      // Step 2: Find employee by accountId
+      try {
+        // Step 1: Get account by email from auth service
+        const accountResponse = await axiosInstance.get("/auth/accounts/all", {
+          params: {
+            filter: `email==${email}`,
+            page: 0,
+            size: 1,
+          }
+        });
+        const accountContent = accountResponse.data.data?.content;
+        if (!accountContent || accountContent.length === 0) {
+          console.log(`[HR Service] No account found for email: ${email}`);
+          return null;
+        }
+        const accountId = accountContent[0].id;
+        console.log(`[HR Service] Found accountId ${accountId} for email ${email}`);
+
+        // Step 2: Find employee by accountId
+        const employeeResponse = await axiosInstance.get("/hr/employees/all", {
+          params: {
+            filter: `accountId==${accountId}`,
+            page: 0,
+            size: 1,
+          }
+        });
+        const employeeContent = employeeResponse.data.data?.content;
+        if (!employeeContent || employeeContent.length === 0) {
+          console.log(`[HR Service] No employee found for accountId: ${accountId}`);
+          return null;
+        }
+        console.log(`[HR Service] Found employee: ${employeeContent[0].fullName}`);
+        return employeeContent[0];
+      } catch (error) {
+        console.error("[HR Service] Error in getEmployeeByEmail:", error);
+        return null;
+      }
+    }
+
+    await delay(300);
+    return employeeData.find((e) => e.email === email) || null;
+  },
+
+  /**
+   * Find employee by accountId - simpler than getEmployeeByEmail 
+   * since it directly queries HR service (doctors have access to this)
+   */
+  getEmployeeByAccountId: async (accountId: string): Promise<Employee | null> => {
+    if (!USE_MOCK) {
+      try {
+        console.log(`[HR Service] Looking up employee by accountId: ${accountId}`);
+        const response = await axiosInstance.get("/hr/employees/all", {
+          params: {
+            filter: `accountId==${accountId}`,
+            page: 0,
+            size: 1,
+          }
+        });
+        const content = response.data.data?.content;
+        if (!content || content.length === 0) {
+          console.log(`[HR Service] No employee found for accountId: ${accountId}`);
+          return null;
+        }
+        console.log(`[HR Service] Found employee: ${content[0].fullName} (ID: ${content[0].id})`);
+        return content[0];
+      } catch (error) {
+        console.error("[HR Service] Error in getEmployeeByAccountId:", error);
+        return null;
+      }
+    }
+
+    await delay(300);
+    return employeeData.find((e) => e.accountId === accountId) || null;
+  },
+
   createEmployee: async (data: EmployeeRequest) => {
     if (!USE_MOCK) {
       const response = await axiosInstance.post("/hr/employees", data);
@@ -394,7 +473,6 @@ export const hrService = {
     }
   },
 
-  // --- Schedules ---
   getDoctorSchedules: async (params: {
     departmentId?: string;
     doctorId?: string;
@@ -410,6 +488,7 @@ export const hrService = {
         page: params.page && params.page > 0 ? params.page - 1 : 0,
       };
       
+      console.log("[HR Service] getDoctorSchedules API params:", apiParams);
       const response = await axiosInstance.get("/hr/schedules/doctors", { 
         params: apiParams 
       });
