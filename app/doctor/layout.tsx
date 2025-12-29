@@ -1,235 +1,140 @@
 "use client";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { NAV_ICONS } from "@/config/icons";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarRail,
-} from "@/components/ui/sidebar";
+import { ReactNode, useMemo } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React, { useMemo } from "react";
-
-import { useAuth } from "@/contexts/AuthContext";
 import {
-  CalendarDays,
+  Home,
+  ClipboardList,
+  Stethoscope,
   FileText,
-  CalendarClock,
+  UserCircle,
   LogOut,
-  User,
-  Users,
   Bell,
   Search,
-  FlaskConical,
+  ChevronDown,
+  Calendar,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const navItems = [
-  {
-    title: "My Appointments",
-    href: "/doctor/appointments",
-    icon: CalendarDays,
-  },
-  { title: "My Exams", href: "/doctor/exams", icon: FileText },
-  { title: "Lab Results", href: "/doctor/lab-results", icon: FlaskConical },
-  { title: "My Schedule", href: "/doctor/schedules", icon: CalendarClock },
-  { title: "Patients", href: "/doctor/patients", icon: Users },
-  { title: "My Profile", href: "/doctor/profile", icon: User },
+  { title: "Dashboard", href: "/doctor/dashboard", icon: Home },
+  { title: "Hàng đợi", href: "/doctor/queue", icon: ClipboardList },
+  { title: "Khám bệnh", href: "/doctor/exam", icon: Stethoscope },
+  { title: "Lịch làm việc", href: "/doctor/schedule", icon: Calendar },
+  { title: "Đơn thuốc", href: "/doctor/prescriptions", icon: FileText },
 ];
 
-function buildBreadcrumbs(pathname: string) {
-  const segments = pathname.split("/").filter(Boolean);
-  let path = "";
-  return segments.map((segment, index) => {
-    path += "/" + segment;
-    const name = segment
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
-    return {
-      name,
-      href: path,
-      isLast: index === segments.length - 1,
-    };
-  });
-}
-
-export default function DoctorLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DoctorLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const breadcrumbs = buildBreadcrumbs(pathname);
-  const queryClient = useMemo(() => new QueryClient(), []);
   const { user, logout } = useAuth();
+  const queryClient = useMemo(() => new QueryClient(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SidebarProvider>
-        <div className="bg-slate-50 text-foreground flex min-h-screen w-screen">
-          <Sidebar
-            className="border-r-0"
-            collapsible="icon"
-          >
-            {/* Sidebar with gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900" />
-            
-            <SidebarHeader className="relative z-10 gap-3 px-4 py-5 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-sky-400 to-teal-500 text-white grid h-10 w-10 place-items-center rounded-xl text-sm font-bold shadow-lg shadow-sky-500/20">
-                  HMS
-                </div>
-                <div className="leading-tight group-data-[collapsible=icon]:hidden">
-                  <p className="text-sm font-semibold text-white">
-                    Doctor Portal
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {user?.department || "HMS"}
-                  </p>
-                </div>
-              </div>
-            </SidebarHeader>
-            
-            <SidebarContent className="relative z-10">
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider px-4 mb-2">
-                  Navigation
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu className="px-2 space-y-1">
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = pathname.startsWith(item.href);
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive}
-                            className={cn(
-                              "h-10 rounded-lg px-3 py-2.5 font-medium transition-all duration-200",
-                              isActive
-                                ? "bg-gradient-to-r from-sky-500/20 to-teal-500/10 text-white border-l-2 border-sky-400 shadow-sm"
-                                : "text-slate-300 hover:bg-white/5 hover:text-white"
-                            )}
-                          >
-                            <Link href={item.href}>
-                              <Icon className={cn(
-                                "size-4 transition-colors",
-                                isActive ? "text-sky-400" : "text-slate-400"
-                              )} />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-            
-            <SidebarFooter className="relative z-10 px-3 pb-4 border-t border-white/10 pt-4">
-              <div className="space-y-3">
-                {/* User profile card */}
-                <div className="flex items-center gap-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2.5 group-data-[collapsible=icon]:justify-center">
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-400 to-teal-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                    {(user?.fullName || user?.email || "D").charAt(0).toUpperCase()}
-                  </div>
-                  <div className="group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                      {user?.fullName || user?.email}
-                    </p>
-                    <p className="text-xs text-slate-400">Doctor</p>
-                  </div>
-                </div>
-                
-                {/* Logout button */}
-                <Button
-                  onClick={logout}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center"
-                >
-                  <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
-                  <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-                </Button>
-              </div>
-            </SidebarFooter>
-            <SidebarRail className="bg-white/5 hover:bg-white/10" />
-          </Sidebar>
-
-          <div className="flex-1 min-w-0 w-full">
-            {/* Enhanced header */}
-            <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-              <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6">
-                <div className="flex items-center gap-3">
-                  <SidebarTrigger className="md:hidden text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg p-2" />
-                  <div className="hidden sm:flex items-center gap-2 text-sm">
-                    <Breadcrumb>
-                      <BreadcrumbList>
-                        {breadcrumbs.map((item) => (
-                          <React.Fragment key={item.href}>
-                            <BreadcrumbItem>
-                              {item.isLast ? (
-                                <span className="text-slate-900 font-medium">
-                                  {item.name}
-                                </span>
-                              ) : (
-                                <span className="text-slate-500 hover:text-slate-700 transition-colors">
-                                  {item.name}
-                                </span>
-                              )}
-                            </BreadcrumbItem>
-                            {!item.isLast && <BreadcrumbSeparator className="text-slate-300" />}
-                          </React.Fragment>
-                        ))}
-                      </BreadcrumbList>
-                    </Breadcrumb>
-                  </div>
-                </div>
-                
-                {/* Header actions */}
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100">
-                    <Search className="size-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative">
-                    <Bell className="size-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full" />
-                  </Button>
-                </div>
-              </div>
-            </header>
-
-            <main className="w-full max-w-full py-8">
-              <div className="page-shell">
-                <div className="space-y-6">{children}</div>
-              </div>
-            </main>
+      <div className="min-h-screen bg-[hsl(var(--background))]">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {/* Logo */}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(173,58%,35%)] to-[hsl(173,58%,28%)] flex items-center justify-center text-white font-bold text-sm shadow-lg mb-4">
+            HMS
           </div>
+
+          {/* Navigation */}
+          <nav className="flex flex-col items-center gap-1 flex-1 overflow-y-auto py-2">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "sidebar-icon",
+                    isActive && "active"
+                  )}
+                  title={item.title}
+                >
+                  <Icon className="w-5 h-5" />
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Bottom Actions */}
+          <div className="flex flex-col items-center gap-1 mt-auto pt-4 border-t border-white/10">
+            <Link
+              href="/doctor/profile"
+              className={cn(
+                "sidebar-icon",
+                pathname.includes("/profile") && "active"
+              )}
+              title="Profile"
+            >
+              <UserCircle className="w-5 h-5" />
+            </Link>
+            <button
+              onClick={logout}
+              className="sidebar-icon hover:bg-red-500/10 hover:text-red-500"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="content-area">
+          {/* Top Navigation */}
+          <header className="topnav">
+            <div className="flex items-center gap-6">
+              <h1 className="text-title">
+                {navItems.find((item) => pathname.startsWith(item.href))?.title || "Bác sĩ"}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Search */}
+              <div className="search-input hidden md:flex">
+                <Search className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+                <input type="text" placeholder="Tìm bệnh nhân..." />
+              </div>
+
+              {/* Notifications */}
+              <button className="btn-icon relative">
+                <Bell className="w-5 h-5" />
+                <span className="notification-badge">3</span>
+              </button>
+
+              {/* User Profile */}
+              <button className="flex items-center gap-3 py-2 px-3 rounded-full hover:bg-[hsl(var(--secondary))] transition-colors">
+                <div className="avatar">
+                  {user?.fullName?.charAt(0) || user?.email?.charAt(0) || "D"}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    BS. {user?.fullName || user?.email || "Bác sĩ"}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Doctor
+                  </p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-[hsl(var(--muted-foreground))] hidden md:block" />
+              </button>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className="py-6 animate-fadeIn">
+            {children}
+          </main>
         </div>
-        <Toaster />
-      </SidebarProvider>
+      </div>
+      <Toaster position="top-right" />
     </QueryClientProvider>
   );
 }

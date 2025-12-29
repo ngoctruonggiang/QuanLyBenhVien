@@ -1,483 +1,253 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
-import { format, subDays } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  Download,
-  Loader2,
+import { useState, useEffect } from "react";
+import { 
   Calendar,
   CheckCircle,
   XCircle,
-  AlertTriangle,
+  Clock,
+  Users,
+  Loader2,
+  Download,
+  TrendingUp,
 } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-import { ReportPageHeader } from "../_components/report-page-header";
-import {
-  DateRangePicker,
-  useDateRangePresets,
-} from "../_components/date-range-picker";
-import { MetricCard } from "../_components/metric-card";
-import { ChartCard } from "../_components/chart-card";
-import { useAppointmentStats } from "@/hooks/queries/useReports";
-import { useDepartments, useEmployees } from "@/hooks/queries/useHr";
-import { Department, Employee } from "@/interfaces/hr";
-import { exportToCSV } from "@/lib/utils/export";
-import { useRouter } from "next/navigation";
-import { EmptyReportState } from "@/components/reports/EmptyReportState";
-import { CacheInfoBanner } from "@/components/reports/CacheInfoBanner";
-import { RetryButton } from "@/components/reports/RetryButton";
 import { toast } from "sonner";
-import { Spinner } from "@/components/ui/spinner";
+import { StatCard } from "@/components/dashboard";
+import { reportsService } from "@/services/reports.service";
+import type { AppointmentStats } from "@/interfaces/reports";
 
-// Pie Chart
-function PieChart({
-  data,
-}: {
-  data: { name: string; value: number; color: string }[];
-}) {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
-  // Pre-calculate segments to avoid direct reassignment in render
-  const segments = useMemo(() => {
-    let cumulativePercent = 0;
-    return data.map((item) => {
-      const percent = (item.value / total) * 100;
-      const dashArray = `${percent} ${100 - percent}`;
-      const dashOffset = -cumulativePercent;
-      cumulativePercent += percent;
-      return { ...item, dashArray, dashOffset };
-    });
-  }, [data, total]);
-
-  return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-8">
-      <div className="flex justify-center">
-        <div className="relative h-44 w-44">
-          <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-            {segments.map((segment, i) => (
-              <circle
-                key={i}
-                cx="50"
-                cy="50"
-                r="40"
-                fill="transparent"
-                stroke={segment.color}
-                strokeWidth="20"
-                strokeDasharray={segment.dashArray}
-                strokeDashoffset={segment.dashOffset}
-                className="transition-all duration-500"
-              />
-            ))}
-          </svg>
-        </div>
-      </div>
-      <div className="flex flex-col gap-2">
-        {data.map((item, i) => (
-          <div key={i} className="flex items-center gap-3 text-sm">
-            <div
-              className="h-3 w-3 rounded-full"
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="flex-1">{item.name}</span>
-            <span className="font-medium">{item.value}</span>
-            <span className="w-12 text-right text-muted-foreground">
-              {((item.value / total) * 100).toFixed(1)}%
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Bar Chart
-function BarChart({ data }: { data: { name: string; value: number }[] }) {
-  const maxValue = Math.max(...data.map((d) => d.value));
-
-  return (
-    <div className="space-y-3">
-      {data.map((item, i) => (
-        <div key={i} className="space-y-1">
-          <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">{item.name}</span>
-            <span className="text-muted-foreground">{item.value}</span>
-          </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${(item.value / maxValue) * 100}%` }}
-            />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Line Chart
-function LineChart({ data }: { data: { label: string; value: number }[] }) {
-  const maxValue = Math.max(...data.map((d) => d.value));
-  const minValue = Math.min(...data.map((d) => d.value));
-  const range = maxValue - minValue || 1;
-
-  return (
-    <div className="flex h-[200px] items-end gap-1">
-      {data.map((item, i) => {
-        const height = ((item.value - minValue) / range) * 100 + 10;
-        return (
-          <div key={i} className="flex flex-1 flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">{item.value}</span>
-            <div
-              className="w-full rounded-t bg-primary/80 transition-all duration-300 hover:bg-primary"
-              style={{ height: `${height}%` }}
-            />
-            <span className="text-[10px] text-muted-foreground">
-              {item.label}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// Horizontal Bar Chart
-function HorizontalBarChart({
-  data,
-}: {
-  data: { name: string; value: number }[];
-}) {
-  const maxValue = Math.max(...data.map((d) => d.value));
-  const sortedData = [...data].sort((a, b) => b.value - a.value);
-
-  return (
-    <div className="space-y-2">
-      {sortedData.map((item, i) => (
-        <div key={i} className="flex items-center gap-3">
-          <span className="w-32 truncate text-sm font-medium">{item.name}</span>
-          <div className="flex-1">
-            <div className="h-6 w-full overflow-hidden rounded bg-muted">
-              <div
-                className="flex h-full items-center justify-end rounded bg-primary px-2 text-xs text-primary-foreground transition-all duration-500"
-                style={{ width: `${(item.value / maxValue) * 100}%` }}
-              >
-                {item.value}
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-const statusColors: Record<string, string> = {
-  COMPLETED: "#22c55e",
-  SCHEDULED: "#3b82f6",
-  CONFIRMED: "#8b5cf6",
-  CANCELLED: "#ef4444",
-  NO_SHOW: "#f59e0b",
-};
-
-export default function AppointmentStatsPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const presets = useDateRangePresets();
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    presets.last30Days.startDate
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
-    presets.last30Days.endDate
-  );
-  const [departmentId, setDepartmentId] = useState<string>("ALL");
-  const [doctorId, setDoctorId] = useState<string>("ALL");
-  const [role, setRole] = useState<string>("ADMIN");
+export default function AppointmentReportPage() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<AppointmentStats | null>(null);
+  const [period, setPeriod] = useState<"week" | "month" | "year">("month");
 
   useEffect(() => {
-    const r = user?.role || null;
-    setRole(r || "ADMIN");
-  }, [user]);
+    fetchData();
+  }, [period]);
 
-  useEffect(() => {
-    if (role && role !== "ADMIN") {
-      router.replace("/doctor/reports/appointments");
+  const getDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+    
+    if (period === "week") {
+      startDate.setDate(endDate.getDate() - 7);
+    } else if (period === "month") {
+      startDate.setDate(endDate.getDate() - 30);
+    } else {
+      startDate.setFullYear(endDate.getFullYear() - 1);
     }
-  }, [role, router]);
-
-  // Fetch departments and doctors for filters
-  const { data: departmentsData } = useDepartments({ size: 100 });
-  const departments = departmentsData?.content ?? [];
-
-  const { data: employeesData } = useEmployees({
-    size: 100,
-    role: "DOCTOR",
-    departmentId: departmentId !== "ALL" ? departmentId : undefined,
-  });
-  const doctors = employeesData?.content ?? [];
-
-  // Fetch appointment stats
-  const { data, isLoading, refetch } = useAppointmentStats({
-    startDate: startDate ? format(startDate, "yyyy-MM-dd") : "",
-    endDate: endDate ? format(endDate, "yyyy-MM-dd") : "",
-    departmentId: departmentId !== "ALL" ? departmentId : undefined,
-    doctorId: doctorId !== "ALL" ? doctorId : undefined,
-  });
-
-  // Chart data
-  const statusPieData = useMemo(() => {
-    if (!data?.appointmentsByStatus) return [];
-    return data.appointmentsByStatus.map((item) => ({
-      name: item.status.replace("_", " "),
-      value: item.count,
-      color: statusColors[item.status] || "#94a3b8",
-    }));
-  }, [data]);
-
-  const typeBarData = useMemo(() => {
-    if (!data?.appointmentsByType) return [];
-    return data.appointmentsByType.map((item) => ({
-      name: item.type.replace("_", " "),
-      value: item.count,
-    }));
-  }, [data]);
-
-  const dailyTrendData = useMemo(() => {
-    if (!data?.dailyTrend) return [];
-    return data.dailyTrend.map((item) => ({
-      label: format(new Date(item.date), "dd/MM"),
-      value: item.count,
-    }));
-  }, [data]);
-
-  const departmentBarData = useMemo(() => {
-    if (!data?.appointmentsByDepartment) return [];
-    return data.appointmentsByDepartment.map((item) => ({
-      name: item.departmentName,
-      value: item.count,
-    }));
-  }, [data]);
-
-  const handleExport = () => {
-    const rows: any[] = [];
-    data?.appointmentsByStatus?.forEach((s) =>
-      rows.push({ section: "status", status: s.status, count: s.count })
-    );
-    data?.appointmentsByType?.forEach((t) =>
-      rows.push({ section: "type", type: t.type, count: t.count })
-    );
-    data?.appointmentsByDepartment?.forEach((d) =>
-      rows.push({
-        section: "department",
-        department: d.departmentName,
-        count: d.count,
-      })
-    );
-    data?.dailyTrend?.forEach((d) =>
-      rows.push({ section: "daily", date: d.date, count: d.count })
-    );
-    exportToCSV(rows, "appointments-report.csv");
+    
+    return {
+      startDate: startDate.toISOString().split("T")[0],
+      endDate: endDate.toISOString().split("T")[0],
+    };
   };
 
-  const validateRange = () => {
-    if (!startDate || !endDate) return true;
-    const diff = endDate.getTime() - startDate.getTime();
-    const max = 365 * 24 * 60 * 60 * 1000;
-    if (diff > max) {
-      toast.error("Khoảng ngày tối đa 1 năm");
-      return false;
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const { startDate, endDate } = getDateRange();
+      const stats = await reportsService.getAppointmentStats({ startDate, endDate });
+      setData(stats);
+    } catch (error) {
+      console.error("Failed to fetch appointment stats:", error);
+      toast.error("Không thể tải báo cáo lịch hẹn");
+    } finally {
+      setLoading(false);
     }
-    return true;
   };
 
-  // Reset doctor when department changes
-  const handleDepartmentChange = (value: string) => {
-    setDepartmentId(value);
-    setDoctorId("ALL");
+  const handleExport = async () => {
+    try {
+      const { startDate, endDate } = getDateRange();
+      const blob = await reportsService.exportToCSV("appointments", { startDate, endDate });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `appointments-report-${startDate}-${endDate}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success("Đã xuất báo cáo");
+    } catch (error) {
+      toast.error("Không thể xuất báo cáo");
+    }
   };
+
+  const STATUS_LABELS: Record<string, { label: string; color: string; icon: typeof CheckCircle }> = {
+    COMPLETED: { label: "Hoàn thành", color: "text-green-600", icon: CheckCircle },
+    CANCELLED: { label: "Đã hủy", color: "text-red-600", icon: XCircle },
+    SCHEDULED: { label: "Đã đặt", color: "text-blue-600", icon: Calendar },
+    NO_SHOW: { label: "Vắng mặt", color: "text-orange-600", icon: Clock },
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full space-y-6">
-      <ReportPageHeader
-        title="Appointment Statistics"
-        description="Comprehensive analysis of appointments by status, type, and department"
-        actions={
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-        }
-      />
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-display">Báo cáo lịch hẹn</h1>
+          <p className="text-[hsl(var(--muted-foreground))] mt-1">
+            Thống kê lịch hẹn và tỷ lệ hoàn thành
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={handleExport} className="btn-secondary">
+            <Download className="w-4 h-4" />
+            Xuất báo cáo
+          </button>
+        </div>
+      </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Filter Options</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap items-end gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Date Range</label>
-              <DateRangePicker
-                startDate={startDate}
-                endDate={endDate}
-                onStartDateChange={setStartDate}
-                onEndDateChange={setEndDate}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Department</label>
-              <Select
-                value={departmentId}
-                onValueChange={handleDepartmentChange}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Departments" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Departments</SelectItem>
-                  {departments.map((dept: Department) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Doctor</label>
-              <Select value={doctorId} onValueChange={setDoctorId}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="All Doctors" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Doctors</SelectItem>
-                  {doctors.map((doc: Employee) => (
-                    <SelectItem key={doc.id} value={doc.id}>
-                      {doc.fullName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              onClick={() => {
-                if (!validateRange()) return;
-                refetch();
-              }}
-              disabled={isLoading}
+      {/* Period Filter */}
+      <div className="card-base">
+        <div className="flex gap-2">
+          {[
+            { value: "week", label: "7 ngày" },
+            { value: "month", label: "30 ngày" },
+            { value: "year", label: "12 tháng" },
+          ].map((p) => (
+            <button
+              key={p.value}
+              onClick={() => setPeriod(p.value as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                period === p.value
+                  ? "bg-[hsl(var(--primary))] text-white"
+                  : "bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary))]/80"
+              }`}
             >
-              {isLoading && <Spinner size="sm" className="mr-2" />}
-              Generate Report
-            </Button>
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Tổng lịch hẹn"
+          value={data?.totalAppointments?.toString() || "0"}
+          icon={<Calendar className="w-5 h-5" />}
+          trend={{ value: "Trong kỳ", direction: "neutral" }}
+        />
+        <StatCard
+          title="Hoàn thành"
+          value={data?.completedCount?.toString() || "0"}
+          icon={<CheckCircle className="w-5 h-5" />}
+          trend={{ 
+            value: `${data?.completionRate?.toFixed(1) || 0}%`, 
+            direction: (data?.completionRate || 0) >= 80 ? "up" : "down"
+          }}
+        />
+        <StatCard
+          title="Đã hủy"
+          value={data?.cancelledCount?.toString() || "0"}
+          icon={<XCircle className="w-5 h-5" />}
+          trend={{ value: "Cần giảm", direction: (data?.cancelledCount || 0) > 0 ? "down" : "neutral" }}
+        />
+        <StatCard
+          title="Vắng mặt"
+          value={data?.noShowCount?.toString() || "0"}
+          icon={<Users className="w-5 h-5" />}
+          trend={{ 
+            value: `${data?.noShowRate?.toFixed(1) || 0}%`, 
+            direction: (data?.noShowRate || 0) > 5 ? "down" : "up"
+          }}
+        />
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Status Breakdown */}
+        <div className="card-base">
+          <h3 className="text-section mb-4">Phân bổ theo trạng thái</h3>
+          <div className="space-y-3">
+            {data?.appointmentsByStatus?.map((status, i) => {
+              const config = STATUS_LABELS[status.status] || { label: status.status, color: "text-gray-600", icon: Calendar };
+              const StatusIcon = config.icon;
+              return (
+                <div key={i} className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-lg bg-[hsl(var(--secondary))] flex items-center justify-center ${config.color}`}>
+                    <StatusIcon className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <span className="font-medium">{config.label}</span>
+                      <span className="font-bold">{status.count}</span>
+                    </div>
+                    <div className="mt-1 h-2 bg-[hsl(var(--secondary))] rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[hsl(var(--primary))] rounded-full" 
+                        style={{ width: `${status.percentage || 0}%` }} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="Total Appointments"
-          value={data?.totalAppointments?.toLocaleString() ?? "---"}
-          icon={Calendar}
-          loading={isLoading}
-        />
-        <MetricCard
-          title="Completed"
-          value={data?.completedCount?.toLocaleString() ?? "---"}
-          icon={CheckCircle}
-          subLabel={`${
-            data?.completionRate?.toFixed(1) ?? "--"
-          }% completion rate`}
-          loading={isLoading}
-        />
-        <MetricCard
-          title="Cancelled"
-          value={data?.cancelledCount?.toLocaleString() ?? "---"}
-          icon={XCircle}
-          loading={isLoading}
-        />
-        <MetricCard
-          title="No-Show Rate"
-          value={`${data?.noShowRate?.toFixed(1) ?? "--"}%`}
-          icon={AlertTriangle}
-          subLabel={`${data?.noShowCount ?? 0} appointments`}
-          loading={isLoading}
-        />
+        {/* Type Breakdown */}
+        <div className="card-base">
+          <h3 className="text-section mb-4">Phân bổ theo loại</h3>
+          <div className="space-y-3">
+            {data?.appointmentsByType?.map((type, i) => (
+              <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-[hsl(var(--secondary))]">
+                <span className="font-medium">
+                  {type.type === "CONSULTATION" ? "Khám mới" : 
+                   type.type === "FOLLOW_UP" ? "Tái khám" : 
+                   type.type === "EMERGENCY" ? "Cấp cứu" : type.type}
+                </span>
+                <span className="badge badge-info">{type.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard
-          title="Appointments by Status"
-          description="Distribution across status types"
-          loading={isLoading}
-        >
-          {statusPieData.length > 0 ? (
-            <PieChart data={statusPieData} />
-          ) : (
-            <EmptyReportState description="No data available" />
-          )}
-        </ChartCard>
+      {/* Daily Trend */}
+      {data?.dailyTrend && data.dailyTrend.length > 0 && (
+        <div className="card-base">
+          <h3 className="text-section mb-4">Xu hướng theo ngày</h3>
+          <div className="h-48 flex items-end gap-1">
+            {data.dailyTrend.slice(-14).map((day, i) => {
+              const maxCount = Math.max(...data.dailyTrend.map(d => d.count));
+              const height = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                  <div className="relative w-full flex justify-center">
+                    <div 
+                      className="w-full max-w-[24px] bg-[hsl(var(--primary))] rounded-t-md transition-all hover:bg-[hsl(var(--primary))]/80 cursor-pointer"
+                      style={{ height: `${Math.max(height, 4)}%` }}
+                    />
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[hsl(var(--foreground))] text-[hsl(var(--background))] text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                      {day.count} lịch hẹn
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-[hsl(var(--muted-foreground))]">
+                    {new Date(day.date).getDate()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
-        <ChartCard
-          title="Appointments by Type"
-          description="Breakdown by appointment type"
-          loading={isLoading}
-        >
-          {typeBarData.length > 0 ? (
-            <BarChart data={typeBarData} />
-          ) : (
-            <EmptyReportState description="No data available" />
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <ChartCard
-          title="Daily Trend"
-          description="Appointments over time"
-          loading={isLoading}
-        >
-          {dailyTrendData.length > 0 ? (
-            <LineChart data={dailyTrendData} />
-          ) : (
-            <EmptyReportState description="No data available" />
-          )}
-        </ChartCard>
-
-        <ChartCard
-          title="Appointments by Department"
-          description="Distribution across departments"
-          loading={isLoading}
-        >
-          {departmentBarData.length > 0 ? (
-            <HorizontalBarChart data={departmentBarData} />
-          ) : (
-            <EmptyReportState description="No data available" />
-          )}
-        </ChartCard>
-      </div>
-
-      {/* Cache Info */}
-      {data?.cached && <CacheInfoBanner generatedAt={data.generatedAt} />}
+      {/* Cache info */}
+      {data?.cached && (
+        <div className="text-center text-small">
+          Dữ liệu được cập nhật lúc {new Date(data.generatedAt).toLocaleString("vi-VN")}
+        </div>
+      )}
     </div>
   );
 }

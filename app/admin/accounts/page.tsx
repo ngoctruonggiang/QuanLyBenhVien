@@ -1,24 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { authService, Account, AccountCreateRequest } from "@/services/auth.service";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { useState, useEffect } from "react";
+import { 
+  Plus, 
+  Search, 
+  Edit, 
+  Trash2, 
+  MoreHorizontal,
+  User,
+  Shield,
+  Mail,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Key,
+} from "lucide-react";
+import { toast } from "sonner";
+import { authService, Account } from "@/services/auth.service";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,244 +40,436 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Pencil, Trash2, CheckCircle, XCircle } from "lucide-react";
-import { toast } from "sonner";
-import { AccountForm, AccountFormValues } from "./_components/account-form";
-import { useDebounce } from "@/hooks/useDebounce";
-import { Spinner } from "@/components/ui/spinner";
 
-const roleBadgeColors: Record<string, string> = {
-  ADMIN: "bg-red-100 text-red-700 border-red-200",
-  DOCTOR: "bg-blue-100 text-blue-700 border-blue-200",
-  NURSE: "bg-green-100 text-green-700 border-green-200",
-  RECEPTIONIST: "bg-purple-100 text-purple-700 border-purple-200",
-  PATIENT: "bg-amber-100 text-amber-700 border-amber-200",
-};
+const ROLES = [
+  { value: "ADMIN", label: "Quản trị viên", color: "badge-danger" },
+  { value: "DOCTOR", label: "Bác sĩ", color: "badge-info" },
+  { value: "NURSE", label: "Y tá", color: "badge-success" },
+  { value: "RECEPTIONIST", label: "Lễ tân", color: "badge-warning" },
+  { value: "PATIENT", label: "Bệnh nhân", color: "bg-gray-100 text-gray-700" },
+];
 
 export default function AccountsPage() {
-  const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 300);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
+  
+  // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
-  const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
+  const [deleteAccount, setDeleteAccount] = useState<Account | null>(null);
+  const [resetPasswordAccount, setResetPasswordAccount] = useState<Account | null>(null);
 
-  // Fetch accounts
-  const { data, isLoading } = useQuery({
-    queryKey: ["accounts", { search: debouncedSearch }],
-    queryFn: () => authService.getAccounts(debouncedSearch || undefined),
-  });
+  useEffect(() => {
+    fetchAccounts();
+  }, [searchQuery, roleFilter]);
 
-  const accounts = data?.content ?? [];
-
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: (data: AccountCreateRequest) => authService.createAccount(data),
-    onSuccess: () => {
-      toast.success("Account created successfully");
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      setIsFormOpen(false);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create account: ${error.message}`);
-    },
-  });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<AccountCreateRequest> }) =>
-      authService.updateAccount(id, data),
-    onSuccess: () => {
-      toast.success("Account updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      setEditingAccount(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to update account: ${error.message}`);
-    },
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => authService.deleteAccount(id),
-    onSuccess: () => {
-      toast.success("Account deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["accounts"] });
-      setDeletingAccount(null);
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete account: ${error.message}`);
-    },
-  });
-
-  const handleCreate = (data: AccountFormValues) => {
-    if (!data.password) {
-      toast.error("Password is required for new accounts");
-      return;
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const response = await authService.getAccounts(
+        searchQuery || undefined,
+        roleFilter || undefined
+      );
+      setAccounts(response.content || []);
+    } catch (error) {
+      console.error("Failed to fetch accounts:", error);
+      toast.error("Không thể tải danh sách tài khoản");
+    } finally {
+      setLoading(false);
     }
-    createMutation.mutate(data as AccountCreateRequest);
   };
 
-  const handleUpdate = (data: AccountFormValues) => {
-    if (!editingAccount) return;
-    updateMutation.mutate({ id: editingAccount.id, data });
+  const handleDelete = async () => {
+    if (!deleteAccount) return;
+    
+    try {
+      await authService.deleteAccount(deleteAccount.id);
+      toast.success("Đã xóa tài khoản thành công");
+      setDeleteAccount(null);
+      fetchAccounts();
+    } catch (error) {
+      toast.error("Không thể xóa tài khoản");
+    }
   };
 
-  const handleDelete = () => {
-    if (!deletingAccount) return;
-    deleteMutation.mutate(deletingAccount.id);
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    setEditingAccount(null);
+    fetchAccounts();
+  };
+
+  const getRoleBadge = (role: string) => {
+    const roleConfig = ROLES.find((r) => r.value === role);
+    return {
+      label: roleConfig?.label || role,
+      class: roleConfig?.color || "badge-info",
+    };
   };
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Account Management</h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Create and manage user accounts for all roles
+          <h1 className="text-display">Quản lý tài khoản</h1>
+          <p className="text-[hsl(var(--muted-foreground))] mt-1">
+            {accounts.length} tài khoản trong hệ thống
           </p>
         </div>
-        <Button
-          onClick={() => setIsFormOpen(true)}
-          className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Account
-        </Button>
-      </div>
-
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input
-          placeholder="Search by email..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
-      {/* Accounts Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        ) : accounts.length === 0 ? (
-          <div className="text-center py-12 text-slate-500">
-            {search ? "No accounts found matching your search." : "No accounts yet. Create one to get started."}
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="font-semibold">Email</TableHead>
-                <TableHead className="font-semibold">Role</TableHead>
-                <TableHead className="font-semibold">Verified</TableHead>
-                <TableHead className="font-semibold w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {accounts.map((account) => (
-                <TableRow key={account.id} className="hover:bg-slate-50/50">
-                  <TableCell className="font-medium">{account.email}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={roleBadgeColors[account.role] || "bg-slate-100 text-slate-700"}
-                    >
-                      {account.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {account.emailVerified ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-slate-300" />
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setEditingAccount(account)}
-                        className="h-8 w-8 text-slate-500 hover:text-sky-600"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeletingAccount(account)}
-                        className="h-8 w-8 text-slate-500 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {/* Create Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create Account</DialogTitle>
-          </DialogHeader>
-          <AccountForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsFormOpen(false)}
-            isLoading={createMutation.isPending}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={!!editingAccount} onOpenChange={() => setEditingAccount(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Account</DialogTitle>
-          </DialogHeader>
-          {editingAccount && (
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <button className="btn-primary" onClick={() => setEditingAccount(null)}>
+              <Plus className="w-5 h-5" />
+              Tạo tài khoản
+            </button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                {editingAccount ? "Chỉnh sửa tài khoản" : "Tạo tài khoản mới"}
+              </DialogTitle>
+            </DialogHeader>
             <AccountForm
-              initialData={editingAccount}
-              onSubmit={handleUpdate}
-              onCancel={() => setEditingAccount(null)}
-              isLoading={updateMutation.isPending}
+              account={editingAccount}
+              onSuccess={handleFormSuccess}
+              onCancel={() => setIsFormOpen(false)}
             />
-          )}
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Filters */}
+      <div className="card-base">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="flex-1">
+            <div className="search-input w-full max-w-none">
+              <Search className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+              <input
+                type="text"
+                placeholder="Tìm theo email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {/* Role Filter */}
+          <select
+            className="dropdown min-w-[180px]"
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+          >
+            <option value="">Tất cả vai trò</option>
+            {ROLES.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="table-container">
+        <table className="table-base">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Vai trò</th>
+              <th>Xác thực email</th>
+              <th className="w-12"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="text-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto text-[hsl(var(--primary))]" />
+                  <p className="text-small mt-2">Đang tải...</p>
+                </td>
+              </tr>
+            ) : accounts.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="text-center py-12">
+                  <User className="w-12 h-12 mx-auto text-[hsl(var(--muted-foreground))] opacity-50" />
+                  <p className="text-[hsl(var(--muted-foreground))] mt-2">
+                    {searchQuery || roleFilter ? "Không tìm thấy tài khoản phù hợp" : "Chưa có tài khoản nào"}
+                  </p>
+                </td>
+              </tr>
+            ) : (
+              accounts.map((account) => {
+                const roleBadge = getRoleBadge(account.role);
+                return (
+                  <tr key={account.id}>
+                    {/* Email */}
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="avatar">
+                          {account.email?.charAt(0).toUpperCase() || "?"}
+                        </div>
+                        <div>
+                          <p className="font-medium">{account.email}</p>
+                          <p className="text-small text-[hsl(var(--muted-foreground))]">
+                            ID: {account.id.slice(0, 8)}...
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Role */}
+                    <td>
+                      <span className={`badge ${roleBadge.class}`}>
+                        <Shield className="w-3 h-3" />
+                        {roleBadge.label}
+                      </span>
+                    </td>
+
+                    {/* Email Verified */}
+                    <td>
+                      {account.emailVerified ? (
+                        <span className="badge badge-success">
+                          <CheckCircle className="w-3 h-3" />
+                          Đã xác thực
+                        </span>
+                      ) : (
+                        <span className="badge badge-warning">
+                          <XCircle className="w-3 h-3" />
+                          Chưa xác thực
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="btn-icon w-8 h-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setEditingAccount(account);
+                              setIsFormOpen(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Chỉnh sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setResetPasswordAccount(account)}
+                          >
+                            <Key className="w-4 h-4 mr-2" />
+                            Đặt lại mật khẩu
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => setDeleteAccount(account)}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deletingAccount} onOpenChange={() => setDeletingAccount(null)}>
+      <AlertDialog open={!!deleteAccount} onOpenChange={() => setDeleteAccount(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa tài khoản</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the account for{" "}
-              <span className="font-semibold">{deletingAccount?.email}</span>?
-              This action cannot be undone.
+              Bạn có chắc chắn muốn xóa tài khoản "{deleteAccount?.email}"?
+              Hành động này không thể hoàn tác.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              {deleteMutation.isPending ? <Spinner size="sm" /> : "Delete"}
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Password Modal */}
+      <AlertDialog open={!!resetPasswordAccount} onOpenChange={() => setResetPasswordAccount(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Đặt lại mật khẩu</AlertDialogTitle>
+            <AlertDialogDescription>
+              Email đặt lại mật khẩu sẽ được gửi đến "{resetPasswordAccount?.email}".
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                toast.success("Đã gửi email đặt lại mật khẩu");
+                setResetPasswordAccount(null);
+              }}
+              className="btn-primary"
+            >
+              Gửi email
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+// Account Form Component
+interface AccountFormProps {
+  account: Account | null;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: account?.email || "",
+    password: "",
+    role: account?.role || "PATIENT",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      if (account) {
+        // Update - only send changed fields
+        const updateData: any = {};
+        if (formData.email !== account.email) updateData.email = formData.email;
+        if (formData.role !== account.role) updateData.role = formData.role;
+        if (formData.password) updateData.password = formData.password;
+        
+        await authService.updateAccount(account.id, updateData);
+        toast.success("Đã cập nhật tài khoản thành công");
+      } else {
+        // Create new
+        if (!formData.password) {
+          toast.error("Vui lòng nhập mật khẩu");
+          setLoading(false);
+          return;
+        }
+        await authService.createAccount({
+          email: formData.email,
+          password: formData.password,
+          role: formData.role as any,
+        });
+        toast.success("Đã tạo tài khoản mới thành công");
+      }
+      onSuccess();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || (account ? "Không thể cập nhật tài khoản" : "Không thể tạo tài khoản"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Email */}
+      <div className="space-y-2">
+        <label className="text-label">Email *</label>
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+          <input
+            type="email"
+            className="input-base pl-10"
+            placeholder="email@example.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+      </div>
+
+      {/* Password */}
+      <div className="space-y-2">
+        <label className="text-label">
+          Mật khẩu {account ? "(để trống nếu không thay đổi)" : "*"}
+        </label>
+        <div className="relative">
+          <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+          <input
+            type={showPassword ? "text" : "password"}
+            className="input-base pl-10 pr-20"
+            placeholder={account ? "••••••••" : "Nhập mật khẩu"}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            required={!account}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[hsl(var(--primary))]"
+          >
+            {showPassword ? "Ẩn" : "Hiện"}
+          </button>
+        </div>
+      </div>
+
+      {/* Role */}
+      <div className="space-y-2">
+        <label className="text-label">Vai trò *</label>
+        <div className="relative">
+          <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+          <select
+            className="input-base pl-10"
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            required
+          >
+            {ROLES.map((role) => (
+              <option key={role.value} value={role.value}>
+                {role.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Role Description */}
+      <div className="p-3 rounded-lg bg-[hsl(var(--secondary))]">
+        <p className="text-small">
+          {formData.role === "ADMIN" && "Quản trị viên có toàn quyền truy cập hệ thống."}
+          {formData.role === "DOCTOR" && "Bác sĩ có thể xem/khám bệnh nhân, kê đơn thuốc."}
+          {formData.role === "NURSE" && "Y tá hỗ trợ bác sĩ, quản lý xét nghiệm."}
+          {formData.role === "RECEPTIONIST" && "Lễ tân quản lý lịch hẹn, tiếp nhận bệnh nhân."}
+          {formData.role === "PATIENT" && "Bệnh nhân có thể đặt lịch và xem hồ sơ cá nhân."}
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(var(--border))]">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          Hủy
+        </button>
+        <button type="submit" disabled={loading} className="btn-primary">
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {account ? "Cập nhật" : "Tạo tài khoản"}
+        </button>
+      </div>
+    </form>
   );
 }
