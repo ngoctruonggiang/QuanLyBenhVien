@@ -1,150 +1,232 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { useMyProfile } from "@/hooks/queries/usePatient";
-import { Spinner } from "@/components/ui/spinner";
-
-const formatDate = (value?: string | null) =>
-  value ? new Date(value).toLocaleDateString("vi-VN") : "Không có";
-
-const calcAge = (dob?: string | null) => {
-  if (!dob) return null;
-  const d = new Date(dob);
-  const now = new Date();
-  let age = now.getFullYear() - d.getFullYear();
-  const m = now.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
-  return age;
-};
+import { useState, useEffect } from "react";
+import { 
+  User,
+  Phone,
+  MapPin,
+  Calendar,
+  Heart,
+  Users,
+  Save,
+  Loader2,
+  Camera,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
+import { getMyProfile, updateMyProfile } from "@/services/patient.service";
+import { Patient } from "@/interfaces/patient";
 
 export default function PatientProfilePage() {
-  const { data: profile, isLoading, error } = useMyProfile();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<Patient | null>(null);
+  const [formData, setFormData] = useState({
+    phoneNumber: "",
+    address: "",
+    allergies: "",
+    relativeFullName: "",
+    relativePhoneNumber: "",
+    relativeRelationship: "",
+  });
 
-  const age = useMemo(
-    () => calcAge(profile?.dateOfBirth),
-    [profile?.dateOfBirth],
-  );
+  useEffect(() => {
+    fetchProfile();
+  }, []);
 
-  if (isLoading) {
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await getMyProfile();
+      setProfile(data);
+      setFormData({
+        phoneNumber: data.phoneNumber || "",
+        address: data.address || "",
+        allergies: data.allergies || "",
+        relativeFullName: data.relativeFullName || "",
+        relativePhoneNumber: data.relativePhoneNumber || "",
+        relativeRelationship: data.relativeRelationship || "",
+      });
+    } catch (error) {
+      toast.error("Không thể tải thông tin hồ sơ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await updateMyProfile(formData);
+      toast.success("Đã cập nhật hồ sơ thành công!");
+      fetchProfile();
+    } catch (error) {
+      toast.error("Không thể cập nhật hồ sơ");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("vi-VN");
+  };
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Spinner size="lg" variant="muted" />
+        <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
       </div>
     );
   }
-
-  if (error || !profile) {
-    return (
-      <div className="py-10 space-y-3 text-center">
-        <p className="text-lg font-semibold text-destructive">
-          Không tải được hồ sơ
-        </p>
-        <p className="text-sm text-muted-foreground">Vui lòng thử lại sau.</p>
-      </div>
-    );
-  }
-
-  const allergies = profile.allergies
-    ? profile.allergies
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Hồ sơ của tôi</h1>
-          <p className="text-muted-foreground">
-            Thông tin cá nhân và liên hệ khẩn cấp.
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/patient/profile/edit">Chỉnh sửa</Link>
-        </Button>
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-display">Hồ sơ cá nhân</h1>
+        <p className="text-[hsl(var(--muted-foreground))] mt-1">
+          Quản lý thông tin cá nhân của bạn
+        </p>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Thông tin cá nhân</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <InfoRow label="Họ tên" value={profile.fullName} />
-          <InfoRow label="Email" value={profile.email || "Không có"} />
-          <InfoRow label="Số điện thoại" value={profile.phoneNumber} />
-          <InfoRow
-            label="Ngày sinh"
-            value={`${formatDate(profile.dateOfBirth)}${age ? ` (${age} tuổi)` : ""}`}
-          />
-          <InfoRow label="Giới tính" value={profile.gender || "Không có"} />
-          <InfoRow label="Địa chỉ" value={profile.address || "Không có"} />
-          <InfoRow
-            label="Số BHYT"
-            value={profile.healthInsuranceNumber || "Không có"}
-          />
-          <InfoRow
-            label="CMND/CCCD"
-            value={profile.identificationNumber || "Không có"}
-          />
-        </CardContent>
-      </Card>
+      {/* Avatar & Basic Info */}
+      <div className="card-base">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-[hsl(var(--primary-light))] flex items-center justify-center text-4xl font-bold text-[hsl(var(--primary))]">
+              {profile?.fullName?.charAt(0) || "?"}
+            </div>
+            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center shadow-lg">
+              <Camera className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl font-bold">{profile?.fullName}</h2>
+            <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+              <span className="flex items-center gap-1">
+                <Calendar className="w-4 h-4" />
+                {formatDate(profile?.dateOfBirth || null)}
+              </span>
+              <span className="flex items-center gap-1">
+                <User className="w-4 h-4" />
+                {profile?.gender === "MALE" ? "Nam" : profile?.gender === "FEMALE" ? "Nữ" : "Khác"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Thông tin sức khỏe</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Nhóm máu:</span>
-            <Badge variant="secondary">{profile.bloodType || "Không có"}</Badge>
+      {/* Contact Info */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <Phone className="w-5 h-5" />
+          Thông tin liên hệ
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-label">Số điện thoại</label>
+            <input
+              type="tel"
+              className="input-base"
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">Dị ứng</p>
-            {allergies.length ? (
-              <div className="flex flex-wrap gap-2">
-                {allergies.map((a) => (
-                  <Badge key={a} variant="outline" className="rounded-full">
-                    {a}
-                  </Badge>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Chưa ghi nhận</p>
-            )}
+            <label className="text-label">Địa chỉ</label>
+            <input
+              type="text"
+              className="input-base"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Liên hệ khẩn cấp</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <InfoRow label="Tên" value={profile.relativeFullName || "Không có"} />
-          <InfoRow
-            label="Số điện thoại"
-            value={profile.relativePhoneNumber || "Không có"}
-          />
-          <InfoRow
-            label="Quan hệ"
-            value={profile.relativeRelationship || "Không có"}
-          />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+      {/* Emergency Contact */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <Users className="w-5 h-5" />
+          Người thân liên hệ
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-label">Họ tên</label>
+            <input
+              type="text"
+              className="input-base"
+              value={formData.relativeFullName}
+              onChange={(e) => setFormData({ ...formData, relativeFullName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-label">Số điện thoại</label>
+            <input
+              type="tel"
+              className="input-base"
+              value={formData.relativePhoneNumber}
+              onChange={(e) => setFormData({ ...formData, relativePhoneNumber: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-label">Quan hệ</label>
+            <select
+              className="dropdown w-full"
+              value={formData.relativeRelationship}
+              onChange={(e) => setFormData({ ...formData, relativeRelationship: e.target.value })}
+            >
+              <option value="">-- Chọn --</option>
+              <option value="PARENT">Cha/Mẹ</option>
+              <option value="SPOUSE">Vợ/Chồng</option>
+              <option value="SIBLING">Anh/Chị/Em</option>
+              <option value="CHILD">Con</option>
+              <option value="OTHER">Khác</option>
+            </select>
+          </div>
+        </div>
+      </div>
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="font-medium">{value}</p>
+      {/* Medical Info */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <Heart className="w-5 h-5" />
+          Thông tin y tế
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Nhóm máu</p>
+            <p className="text-lg font-semibold">{profile?.bloodType || "Chưa cập nhật"}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Số BHYT</p>
+            <p className="text-lg font-semibold">{profile?.healthInsuranceNumber || "Chưa cập nhật"}</p>
+          </div>
+        </div>
+        <div className="mt-4 space-y-2">
+          <label className="text-label">Dị ứng</label>
+          <textarea
+            className="input-base min-h-[80px] resize-none"
+            placeholder="Liệt kê các dị ứng (nếu có)..."
+            value={formData.allergies}
+            onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
+          />
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-primary"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          <Save className="w-4 h-4" />
+          Lưu thay đổi
+        </button>
+      </div>
     </div>
   );
 }

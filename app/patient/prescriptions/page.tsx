@@ -1,149 +1,248 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Pill, FileText } from "lucide-react";
-import { format } from "date-fns";
-import { useMedicalExamList } from "@/hooks/queries/useMedicalExam";
-import { useAuth } from "@/contexts/AuthContext";
-import { Spinner } from "@/components/ui/spinner";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { useState, useEffect } from "react";
+import { 
+  Search,
+  Pill,
+  Calendar,
+  User,
+  Eye,
+  Loader2,
+  CheckCircle,
+  Clock,
+  XCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+import medicalExamService from "@/services/medical-exam.service";
+import type { Prescription, PrescriptionStatus, PrescriptionItem } from "@/interfaces/medical-exam";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+const STATUS_CONFIG: Record<PrescriptionStatus, { label: string; class: string; icon: typeof Clock }> = {
+  ACTIVE: { label: "Chờ lấy thuốc", class: "badge-warning", icon: Clock },
+  DISPENSED: { label: "Đã lấy thuốc", class: "badge-success", icon: CheckCircle },
+  CANCELLED: { label: "Đã hủy", class: "badge-danger", icon: XCircle },
+};
 
 export default function PatientPrescriptionsPage() {
-  const router = useRouter();
-  const { user } = useAuth();
-  const [page, setPage] = useState(0);
-  const pageSize = 10;
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
 
-  // Get patientId from authenticated user
-  const patientId = user?.patientId || "";
+  useEffect(() => {
+    fetchPrescriptions();
+  }, []);
 
-  const { data, isLoading } = useMedicalExamList({
-    patientId,
-    page,
-    size: pageSize,
-    sort: "examDate,desc",
+  const fetchPrescriptions = async () => {
+    try {
+      setLoading(true);
+      // Get current patient's prescriptions via medical exams
+      const response = await medicalExamService.getList({ size: 50 });
+      const exams = response.content || [];
+      // Extract prescriptions from exams that have them
+      const rxList: Prescription[] = [];
+      for (const exam of exams) {
+        if (exam.hasPrescription && exam.prescription) {
+          rxList.push(exam.prescription);
+        }
+      }
+      setPrescriptions(rxList);
+    } catch (error) {
+      console.error("Failed to fetch prescriptions:", error);
+      toast.error("Không thể tải danh sách đơn thuốc");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  };
+
+  const calculateTotal = (items: PrescriptionItem[]) => {
+    return items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+  };
+
+  const filteredPrescriptions = prescriptions.filter(rx => {
+    const matchesSearch = rx.doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (rx.notes?.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = !statusFilter || rx.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
-  // Filter for exams that have prescriptions
-  const allExams = data?.content || [];
-  const examsWithPrescriptions = useMemo(
-    () => allExams.filter((exam) => exam.prescription),
-    [allExams]
-  );
-
-  const prescriptions = examsWithPrescriptions.map((exam) => ({
-    id: exam.id,
-    examId: exam.id,
-    prescription: exam.prescription,
-    doctor: exam.doctor,
-    prescribedAt: exam.examDate,
-    patient: exam.patient,
-  }));
-
-  const totalElements = prescriptions.length;
-
-  if (!user || user.role !== "PATIENT") {
-    return (
-      <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive">Access Denied</h2>
-          <p className="text-muted-foreground mt-2">
-            Only patients can access prescriptions.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">My Prescriptions</h1>
-        <p className="text-muted-foreground">
-          View your prescribed medications and dosage instructions
+        <h1 className="text-display">Đơn thuốc của tôi</h1>
+        <p className="text-[hsl(var(--muted-foreground))] mt-1">
+          Xem lịch sử đơn thuốc được kê
         </p>
       </div>
 
-      {/* Prescriptions List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Spinner size="lg" variant="muted" />
+      {/* Filters */}
+      <div className="card-base">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="search-input w-full max-w-none">
+              <Search className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+              <input
+                type="text"
+                placeholder="Tìm theo bác sĩ, ghi chú..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            {[
+              { value: "", label: "Tất cả" },
+              { value: "ACTIVE", label: "Chờ lấy" },
+              { value: "DISPENSED", label: "Đã lấy" },
+            ].map((f) => (
+              <button
+                key={f.value}
+                onClick={() => setStatusFilter(f.value)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  statusFilter === f.value
+                    ? "bg-[hsl(var(--primary))] text-white"
+                    : "bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary))]/80"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
-      ) : prescriptions.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center">
-            <Pill className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No Prescriptions Found</h3>
-            <p className="text-muted-foreground mt-2">
-              You don't have any prescriptions yet.
+      </div>
+
+      {/* Prescriptions List */}
+      <div className="space-y-4">
+        {loading ? (
+          <div className="card-base text-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto text-[hsl(var(--primary))]" />
+            <p className="text-small mt-2">Đang tải...</p>
+          </div>
+        ) : filteredPrescriptions.length === 0 ? (
+          <div className="card-base text-center py-12">
+            <Pill className="w-12 h-12 mx-auto text-[hsl(var(--muted-foreground))] opacity-50" />
+            <p className="text-[hsl(var(--muted-foreground))] mt-2">
+              Không có đơn thuốc nào
             </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {prescriptions.map((prescription) => (
-            <Card
-              key={prescription.id}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() =>
-                router.push(`/patient/prescriptions/${prescription.id}`)
-              }
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Pill className="h-5 w-5 text-blue-500" />
-                      <span className="text-lg font-semibold">
-                        Prescription #{prescription.id.slice(0, 8)}
-                      </span>
+          </div>
+        ) : (
+          filteredPrescriptions.map((rx) => {
+            const status = STATUS_CONFIG[rx.status];
+            const StatusIcon = status.icon;
+            const totalAmount = calculateTotal(rx.items);
+            
+            return (
+              <div key={rx.id} className="card-base">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-[hsl(var(--primary-light))] flex items-center justify-center text-[hsl(var(--primary))]">
+                      <Pill className="w-6 h-6" />
                     </div>
-                    <div className="space-y-1 text-sm text-muted-foreground">
-                      <div>
-                        <span className="font-medium">Prescribed by:</span>{" "}
-                        {prescription.doctor?.fullName || "Unknown Doctor"}
-                      </div>
-                      <div>
-                        <span className="font-medium">Date:</span>{" "}
-                        {format(
-                          new Date(prescription.prescribedAt),
-                          "MMMM dd, yyyy"
-                        )}
-                      </div>
-                      <div>
-                        <span className="font-medium">Medicines:</span>{" "}
-                        {prescription.prescription?.items?.length || 0}{" "}
-                        {(prescription.prescription?.items?.length || 0) === 1
-                          ? "item"
-                          : "items"}
+                    <div>
+                      <p className="font-semibold">{rx.notes || "Đơn thuốc"}</p>
+                      <div className="flex items-center gap-4 mt-1 text-small">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(rx.prescribedAt)}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3" />
+                          {rx.doctor.fullName}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost">
-                    View Details →
-                  </Button>
-                </div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      )}
 
-      {/* Pagination */}
-      {totalElements > 0 && data && (
-        <DataTablePagination
-          currentPage={page}
-          totalPages={data.totalPages || 1}
-          totalElements={totalElements}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          showRowsPerPage={false}
-        />
-      )}
+                  <div className="flex items-center gap-4">
+                    <span className={`badge ${status.class}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {status.label}
+                    </span>
+                    <span className="font-semibold text-lg">{rx.items.length} loại thuốc</span>
+                    <button
+                      onClick={() => setSelectedPrescription(rx)}
+                      className="btn-secondary text-sm py-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Chi tiết
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Detail Modal */}
+      <Dialog open={!!selectedPrescription} onOpenChange={() => setSelectedPrescription(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Chi tiết đơn thuốc</DialogTitle>
+          </DialogHeader>
+          {selectedPrescription && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+                <p className="font-semibold">{selectedPrescription.notes || "Đơn thuốc"}</p>
+                <div className="flex gap-4 mt-2 text-small">
+                  <span>{selectedPrescription.doctor.fullName}</span>
+                  <span>{formatDate(selectedPrescription.prescribedAt)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-label">Danh sách thuốc</p>
+                {selectedPrescription.items.map((item, i) => (
+                  <div key={i} className="p-3 rounded-lg border border-[hsl(var(--border))]">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{item.medicine.name}</p>
+                        <p className="text-small">{item.dosage}</p>
+                        {item.instructions && (
+                          <p className="text-small">{item.instructions}</p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="badge badge-info">x{item.quantity}</p>
+                        <p className="text-small mt-1">{formatCurrency(item.quantity * item.unitPrice)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-between items-center pt-4 border-t border-[hsl(var(--border))]">
+                <span className="font-semibold">Tổng cộng</span>
+                <span className="text-xl font-bold text-[hsl(var(--primary))]">
+                  {formatCurrency(calculateTotal(selectedPrescription.items))}
+                </span>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

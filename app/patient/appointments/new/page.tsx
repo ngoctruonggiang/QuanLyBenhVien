@@ -1,446 +1,238 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { format, parseISO } from "date-fns";
-import { cn } from "@/lib/utils";
-import {
-  useCreateAppointment,
-  useTimeSlots,
-} from "@/hooks/queries/useAppointment";
-import {
-  useDepartments,
-  useEmployees,
-  useDoctorSchedules,
-} from "@/hooks/queries/useHr";
-import { useMyProfile } from "@/hooks/queries/usePatient";
-import {
-  AppointmentCreateRequest,
-  AppointmentType,
-  TimeSlot,
-} from "@/interfaces/appointment";
+import Link from "next/link";
+import { 
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Stethoscope,
+  Save,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
-import { Department, Employee } from "@/interfaces/hr";
-import { Loader2, User } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Spinner } from "@/components/ui/spinner";
+import { appointmentService } from "@/services/appointment.service";
+import { hrService } from "@/services/hr.service";
+import { useAuth } from "@/contexts/AuthContext";
 
-type Step = 1 | 2 | 3;
-
-function DoctorCard({
-  doctor,
-  isSelected,
-  onSelect,
-}: {
-  doctor: Employee;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <Card
-      className={cn("cursor-pointer", {
-        "border-primary ring-2 ring-primary": isSelected,
-      })}
-    >
-      <CardHeader
-        className="flex flex-row items-center gap-4"
-        onClick={() => onSelect(doctor.id)}
-      >
-        <div className="p-3 bg-muted rounded-full">
-          <User className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <div>
-          <CardTitle className="text-base">{doctor.fullName}</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {doctor.specialization}
-          </p>
-        </div>
-      </CardHeader>
-    </Card>
-  );
+interface Doctor {
+  id: string;
+  fullName: string;
+  department?: string;
 }
 
-export default function PatientBookingPage() {
+export default function NewAppointmentPage() {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(1);
-  
-  // Get patient ID from profile API
-  const { data: myProfile, isLoading: isLoadingProfile } = useMyProfile();
-  const patientId = myProfile?.id || "";
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loadingDoctors, setLoadingDoctors] = useState(true);
 
-  // Step 1 state
-  const [departmentId, setDepartmentId] = useState<string>("");
-  const [doctorId, setDoctorId] = useState<string>("");
-
-  // Step 2 state
-  const [date, setDate] = useState<Date | undefined>(undefined);
-  const [slot, setSlot] = useState<string>("");
-  const [displayMonth, setDisplayMonth] = useState(new Date());
-
-  // Step 3 state
-  const [reason, setReason] = useState<string>("");
-  const [type, setType] = useState<AppointmentType>("CONSULTATION");
-  const [isConfirming, setIsConfirming] = useState(false);
-
-  const { data: departmentsData, isLoading: isLoadingDepartments } =
-    useDepartments({});
-  const departments = useMemo(
-    () => departmentsData?.content || [],
-    [departmentsData],
-  );
-
-  const { data: doctorsData, isLoading: isLoadingDoctors } = useEmployees({
-    departmentId: departmentId === "all-departments" ? undefined : departmentId,
-    role: "DOCTOR",
-    size: 999,
+  const [formData, setFormData] = useState({
+    doctorId: "",
+    appointmentDate: "",
+    appointmentTime: "",
+    reason: "",
+    type: "CONSULTATION" as "CONSULTATION" | "FOLLOW_UP" | "EMERGENCY",
   });
-  const doctors = useMemo(() => doctorsData?.content || [], [doctorsData]);
 
-  const isoDate = useMemo(
-    () => (date ? date.toISOString().split("T")[0] : ""),
-    [date],
-  );
-  const { data: slots, isLoading: isLoadingSlots } = useTimeSlots(
-    doctorId,
-    isoDate,
-  );
-
-  // For Calendar Highlighting
-  const { data: monthlySchedule } = useDoctorSchedules({
-    doctorId,
-    startDate: new Date(displayMonth.getFullYear(), displayMonth.getMonth(), 1)
-      .toISOString()
-      .split("T")[0],
-    endDate: new Date(
-      displayMonth.getFullYear(),
-      displayMonth.getMonth() + 1,
-      0,
-    )
-      .toISOString()
-      .split("T")[0],
-    status: "AVAILABLE",
-  });
-  const availableDays = useMemo(() => {
-    return (
-      monthlySchedule?.content.map((schedule: any) => parseISO(schedule.workDate)) ||
-      []
-    );
-  }, [monthlySchedule]);
-
-  // Reset dependent state when selections change
   useEffect(() => {
-    setDoctorId("");
-  }, [departmentId]);
-  useEffect(() => {
-    setDate(undefined);
-  }, [doctorId]);
-  useEffect(() => {
-    setSlot("");
-  }, [date]);
+    fetchDoctors();
+  }, []);
 
-  // Navigation enablement
-  const canNextStep2 = !!doctorId;
-  const canNextStep3 = !!date && !!slot;
-  const canConfirm = !!reason;
-
-  const createMutation = useCreateAppointment();
-  const submitBooking = async () => {
-    const payload: AppointmentCreateRequest = {
-      patientId,
-      doctorId,
-      appointmentTime: `${isoDate}T${slot}:00Z`, // Full ISO-8601 format with seconds and UTC timezone
-      type,
-      reason,
-    };
+  const fetchDoctors = async () => {
     try {
-      await createMutation.mutateAsync(payload);
-      router.push("/patient/appointments");
-    } catch (e) {
-      // onError in the hook handles toast
+      setLoadingDoctors(true);
+      const response = await hrService.getEmployees({ role: "DOCTOR" });
+      setDoctors(response.content.map((emp: any) => ({
+        id: emp.id,
+        fullName: emp.fullName,
+        department: emp.department?.name,
+      })));
+    } catch (error) {
+      console.error("Failed to fetch doctors:", error);
+      toast.error("Không thể tải danh sách bác sĩ");
     } finally {
-      setIsConfirming(false);
+      setLoadingDoctors(false);
     }
   };
 
-  const selectedDoctor = useMemo(
-    () => doctors.find((d: Employee) => d.id === doctorId),
-    [doctors, doctorId],
-  );
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.doctorId || !formData.appointmentDate || !formData.appointmentTime) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const appointmentTime = `${formData.appointmentDate}T${formData.appointmentTime}:00`;
+      
+      await appointmentService.create({
+        patientId: user?.accountId || "",
+        doctorId: formData.doctorId,
+        appointmentTime,
+        type: formData.type,
+        reason: formData.reason || "Khám tổng quát",
+      });
+
+      toast.success("Đặt lịch hẹn thành công!");
+      router.push("/patient/appointments");
+    } catch (error) {
+      toast.error("Không thể đặt lịch hẹn. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Generate time slots
+  const timeSlots = [];
+  for (let h = 8; h <= 17; h++) {
+    for (let m = 0; m < 60; m += 30) {
+      if (h === 17 && m > 0) break;
+      timeSlots.push(`${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`);
+    }
+  }
+
+  // Get min date (today)
+  const today = new Date().toISOString().split("T")[0];
 
   return (
-    <div className="page-shell space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Đặt lịch khám</h1>
-        <p className="text-muted-foreground">
-          Quy trình 3 bước: Chọn bác sĩ → Chọn thời gian → Xác nhận
-        </p>
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Link href="/patient/appointments" className="btn-icon">
+          <ArrowLeft className="w-5 h-5" />
+        </Link>
+        <div>
+          <h1 className="text-display">Đặt lịch hẹn mới</h1>
+          <p className="text-[hsl(var(--muted-foreground))] mt-1">
+            Chọn bác sĩ và thời gian khám
+          </p>
+        </div>
       </div>
 
-      <div className="flex gap-2 text-sm">
-        <span
-          className={cn(
-            "p-2 rounded",
-            step === 1 ? "font-semibold bg-muted" : "text-muted-foreground",
-          )}
-        >
-          Bước 1: Chọn Bác sĩ
-        </span>
-        <span
-          className={cn(
-            "p-2 rounded",
-            step === 2 ? "font-semibold bg-muted" : "text-muted-foreground",
-          )}
-        >
-          Bước 2: Chọn Thời gian
-        </span>
-        <span
-          className={cn(
-            "p-2 rounded",
-            step === 3 ? "font-semibold bg-muted" : "text-muted-foreground",
-          )}
-        >
-          Bước 3: Xác nhận
-        </span>
-      </div>
-
-      {step === 1 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Chọn bác sĩ</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Lọc theo chuyên khoa</Label>
-              <Select
-                value={departmentId}
-                onValueChange={setDepartmentId}
-                disabled={isLoadingDepartments}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tất cả chuyên khoa" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all-departments">
-                    Tất cả chuyên khoa
-                  </SelectItem>
-                  {departments.map((dept: Department) => (
-                    <SelectItem key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="card-base space-y-6">
+        {/* Doctor Selection */}
+        <div className="space-y-2">
+          <label className="text-label flex items-center gap-2">
+            <Stethoscope className="w-4 h-4" />
+            Chọn bác sĩ *
+          </label>
+          {loadingDoctors ? (
+            <div className="flex items-center gap-2 py-3">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-small">Đang tải danh sách bác sĩ...</span>
             </div>
-            <div className="space-y-4">
-              {isLoadingDoctors ? (
-                <div className="flex items-center justify-center py-10">
-                  <Spinner className="h-8 w-8" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {doctors.map((doctor: Employee) => (
-                    <DoctorCard
-                      key={doctor.id}
-                      doctor={doctor}
-                      isSelected={doctorId === doctor.id}
-                      onSelect={setDoctorId}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button onClick={() => setStep(2)} disabled={!canNextStep2}>
-                Tiếp tục
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 2 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Chọn ngày & giờ khám</CardTitle>
-            <p className="text-muted-foreground">
-              Chọn lịch cho bác sĩ: <strong>{selectedDoctor?.fullName}</strong>
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  onMonthChange={setDisplayMonth}
-                  initialFocus
-                  disabled={(d) =>
-                    d < new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                  modifiers={{ available: availableDays }}
-                  modifiersClassNames={{
-                    available: "bg-primary/20 rounded-full",
-                  }}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  Giờ khám có sẵn (Ngày {date ? format(date, "dd/MM") : ""})
-                </Label>
-                {isLoadingSlots && (
-                  <div className="flex items-center">
-                    <Spinner className="h-4 w-4 mr-2" /> Đang
-                    tải...
-                  </div>
-                )}
-                {date && !isLoadingSlots && (
-                  <div className="grid grid-cols-3 gap-2">
-                    {(slots || []).map((t: TimeSlot) => (
-                      <Button
-                        key={t.time}
-                        type="button"
-                        variant={slot === t.time ? "default" : "outline"}
-                        disabled={!t.available}
-                        onClick={() => setSlot(t.time)}
-                      >
-                        {t.time}
-                      </Button>
-                    ))}
-                    {(slots || []).length === 0 && (
-                      <p className="col-span-3 text-sm text-muted-foreground">
-                        Không có lịch trống cho ngày này.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex justify-between pt-4 border-t">
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Quay lại
-              </Button>
-              <Button onClick={() => setStep(3)} disabled={!canNextStep3}>
-                Tiếp tục
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {step === 3 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Xác nhận thông tin</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 border rounded-lg bg-muted/50 text-sm space-y-2">
-              <p>
-                <strong>Bác sĩ:</strong> {selectedDoctor?.fullName}
-              </p>
-              <p>
-                <strong>Chuyên khoa:</strong>{" "}
-                {departments.find((d: Department) => d.id === selectedDoctor?.departmentId)
-                  ?.name || "N/A"}
-              </p>
-              <p>
-                <strong>Thời gian:</strong> {slot} -{" "}
-                {date ? format(date, "dd/MM/yyyy") : ""}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Loại khám</Label>
-              <Select
-                value={type}
-                onValueChange={(value) => setType(value as AppointmentType)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CONSULTATION">Khám mới</SelectItem>
-                  <SelectItem value="FOLLOW_UP">Tái khám</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Lý do khám (bắt buộc)</Label>
-              <Textarea
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Mô tả ngắn gọn triệu chứng..."
-              />
-            </div>
-            <div className="flex justify-between pt-4 border-t">
-              <Button variant="outline" onClick={() => setStep(2)}>
-                Quay lại
-              </Button>
-              <Button
-                onClick={() => setIsConfirming(true)}
-                disabled={!canConfirm || createMutation.isPending}
-              >
-                Xác nhận
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận đặt lịch?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Vui lòng kiểm tra lại thông tin trước khi xác nhận.
-            </AlertDialogDescription>
-            <div className="p-4 border rounded-lg bg-muted/50 text-sm space-y-1 my-4">
-              <p>
-                <strong>Bác sĩ:</strong> {selectedDoctor?.fullName}
-              </p>
-              <p>
-                <strong>Thời gian:</strong> {slot} -{" "}
-                {date ? format(date, "dd/MM/yyyy") : ""}
-              </p>
-              <p>
-                <strong>Lý do:</strong> {reason || "Chưa nhập"}
-              </p>
-            </div>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={submitBooking}
-              disabled={createMutation.isPending}
+          ) : (
+            <select
+              className="dropdown w-full"
+              value={formData.doctorId}
+              onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
+              required
             >
-              {createMutation.isPending && (
-                <Spinner className="mr-2 h-4 w-4" />
-              )}
-              Xác nhận
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              <option value="">-- Chọn bác sĩ --</option>
+              {doctors.map((doc) => (
+                <option key={doc.id} value={doc.id}>
+                  BS. {doc.fullName} {doc.department && `- ${doc.department}`}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Date */}
+        <div className="space-y-2">
+          <label className="text-label flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Ngày khám *
+          </label>
+          <input
+            type="date"
+            className="input-base"
+            min={today}
+            value={formData.appointmentDate}
+            onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+            required
+          />
+        </div>
+
+        {/* Time */}
+        <div className="space-y-2">
+          <label className="text-label flex items-center gap-2">
+            <Clock className="w-4 h-4" />
+            Giờ khám *
+          </label>
+          <select
+            className="dropdown w-full"
+            value={formData.appointmentTime}
+            onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
+            required
+          >
+            <option value="">-- Chọn giờ --</option>
+            {timeSlots.map((time) => (
+              <option key={time} value={time}>
+                {time}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Type */}
+        <div className="space-y-2">
+          <label className="text-label">Loại khám</label>
+          <div className="flex gap-2">
+            {[
+              { value: "CONSULTATION", label: "Khám mới" },
+              { value: "FOLLOW_UP", label: "Tái khám" },
+            ].map((type) => (
+              <button
+                key={type.value}
+                type="button"
+                onClick={() => setFormData({ ...formData, type: type.value as any })}
+                className={`flex-1 py-3 rounded-xl font-medium transition-colors ${
+                  formData.type === type.value
+                    ? "bg-[hsl(var(--primary))] text-white"
+                    : "bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--secondary))]/80"
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Reason */}
+        <div className="space-y-2">
+          <label className="text-label">Lý do khám</label>
+          <textarea
+            className="input-base min-h-[100px] resize-none"
+            placeholder="Mô tả triệu chứng hoặc lý do khám..."
+            value={formData.reason}
+            onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 pt-4 border-t border-[hsl(var(--border))]">
+          <Link href="/patient/appointments" className="btn-secondary flex-1">
+            Hủy
+          </Link>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary flex-1"
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            <Save className="w-4 h-4" />
+            Đặt lịch
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -1,288 +1,434 @@
 "use client";
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { NAV_ICONS } from "@/config/icons";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarRail,
-} from "@/components/ui/sidebar";
-import { Toaster } from "@/components/ui/sonner";
+import { ReactNode, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React from "react";
-
-import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Bell, Search } from "lucide-react";
-import { RoleGuard } from "@/components/auth/RoleGuard";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useMemo } from "react";
+import {
+  Home,
+  Calendar,
+  Users,
+  FileText,
+  Building2,
+  CreditCard,
+  BarChart3,
+  Settings,
+  TestTube,
+  Pill,
+  UserCircle,
+  LogOut,
+  Bell,
+  Search,
+  ChevronDown,
+  Stethoscope,
+  ClipboardList,
+  X,
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useEffect } from "react";
+import axiosInstance from "@/config/axios";
 
-const allNavItems = [
-  {
-    title: "Dashboard",
-    href: "/admin",
-    icon: NAV_ICONS.dashboard,
-    roles: ["ADMIN", "DOCTOR", "NURSE"],
-  },
-  {
-    title: "Appointments",
-    href: "/admin/appointments",
-    icon: NAV_ICONS.appointments,
-    roles: ["ADMIN", "NURSE", "RECEPTIONIST"],
-  },
-  {
-    title: "Examinations",
-    href: "/admin/exams",
-    icon: NAV_ICONS.exams,
-    roles: ["ADMIN", "DOCTOR", "NURSE"],
-  },
-  {
-    title: "Lab Tests",
-    href: "/admin/lab-tests",
-    icon: NAV_ICONS.labTests,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Lab Results",
-    href: "/admin/lab-results",
-    icon: NAV_ICONS.labResults,
-    roles: ["ADMIN", "DOCTOR", "NURSE"],
-  },
-  {
-    title: "Patients",
-    href: "/admin/patients",
-    icon: NAV_ICONS.patients,
-    roles: ["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"],
-  },
-  {
-    title: "Medicines",
-    href: "/admin/medicines",
-    icon: NAV_ICONS.medicines,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "HR Management",
-    href: "/admin/hr",
-    icon: NAV_ICONS.hr,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Accounts",
-    href: "/admin/accounts",
-    icon: NAV_ICONS.accounts,
-    roles: ["ADMIN"],
-  },
-  {
-    title: "Billing",
-    href: "/admin/billing",
-    icon: NAV_ICONS.billing,
-    roles: ["ADMIN", "RECEPTIONIST"],
-  },
-  {
-    title: "Reports",
-    href: "/admin/reports",
-    icon: NAV_ICONS.reports,
-    roles: ["ADMIN", "DOCTOR"],
-  },
+const navItems = [
+  { title: "Dashboard", href: "/admin/dashboard", icon: Home },
+  { title: "Appointments", href: "/admin/appointments", icon: Calendar },
+  { title: "Patients", href: "/admin/patients", icon: Users },
+  { title: "Employees", href: "/admin/employees", icon: Stethoscope },
+  { title: "Departments", href: "/admin/departments", icon: Building2 },
+  { title: "Schedules", href: "/admin/schedules", icon: ClipboardList },
+  { title: "Medicines", href: "/admin/medicines", icon: Pill },
+  { title: "Lab Tests", href: "/admin/lab-tests", icon: TestTube },
+  { title: "Billing", href: "/admin/billing", icon: CreditCard },
+  { title: "Reports", href: "/admin/reports", icon: BarChart3 },
+  { title: "Accounts", href: "/admin/accounts", icon: Settings },
 ];
 
-function buildBreadcrumbs(pathname: string) {
-  const segments = pathname.split("/").filter(Boolean);
-  let path = "";
-  return segments.map((segment, index) => {
-    path += "/" + segment;
-    const name = segment
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-
-    return {
-      name,
-      href: path,
-      isLast: index === segments.length - 1,
-    };
-  });
+interface SearchResult {
+  type: "patient" | "appointment" | "employee";
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const breadcrumbs = buildBreadcrumbs(pathname);
+  const router = useRouter();
   const { user, logout } = useAuth();
+  const queryClient = useMemo(() => new QueryClient(), []);
+  
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  // Filter navigation items based on user role
-  const navItems = allNavItems.filter(
-    (item) => user && item.roles.includes(user.role)
-  );
+  // Global search function
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const searchTimeout = setTimeout(async () => {
+      try {
+        setSearching(true);
+        const results: SearchResult[] = [];
+
+        // Search patients
+        try {
+          const patientsRes = await axiosInstance.get("/patients/all", {
+            params: { search: searchQuery, size: 5 },
+          });
+          const patients = patientsRes.data.data?.content || [];
+          patients.forEach((p: any) => {
+            results.push({
+              type: "patient",
+              id: p.id,
+              title: p.fullName,
+              subtitle: p.phoneNumber || p.email,
+              href: `/receptionist/patients`,
+            });
+          });
+        } catch (e) {
+          console.error("Patient search failed:", e);
+        }
+
+        // Search appointments
+        try {
+          const apptsRes = await axiosInstance.get("/appointments/all", {
+            params: { size: 5 },
+          });
+          const appointments = (apptsRes.data.data?.content || []).filter((a: any) =>
+            a.patient?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          appointments.slice(0, 5).forEach((a: any) => {
+            results.push({
+              type: "appointment",
+              id: a.id,
+              title: `Appointment - ${a.patient?.fullName}`,
+              subtitle: new Date(a.appointmentTime).toLocaleString("vi-VN"),
+              href: `/receptionist/appointments`,
+            });
+          });
+        } catch (e) {
+          console.error("Appointment search failed:", e);
+        }
+
+        // Search employees
+        try {
+          const employeesRes = await axiosInstance.get("/hr/employees/all", {
+            params: { search: searchQuery, size: 5 },
+          });
+          const employees = employeesRes.data.data?.content || [];
+          employees.forEach((e: any) => {
+            results.push({
+              type: "employee",
+              id: e.id,
+              title: e.fullName,
+              subtitle: e.role + (e.departmentName ? ` - ${e.departmentName}` : ""),
+              href: `/admin/employees`,
+            });
+          });
+        } catch (e) {
+          console.error("Employee search failed:", e);
+        }
+
+        setSearchResults(results);
+      } catch (error) {
+        console.error("Search error:", error);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [searchQuery]);
+
+  // Fetch notifications (mock for now - backend doesn't have notification API yet)
+  useEffect(() => {
+    // In a real app, this would fetch from /notifications API
+    // For now, we'll use appointment data as "notifications"
+    const fetchNotifications = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const res = await axiosInstance.get("/appointments/all", {
+          params: { size: 10 },
+        });
+        const todayAppts = (res.data.data?.content || [])
+          .filter((a: any) => a.appointmentTime.startsWith(today) && a.status === "SCHEDULED")
+          .slice(0, 5);
+        
+        const notifs = todayAppts.map((a: any) => ({
+          id: a.id,
+          type: "appointment",
+          title: "Lịch hẹn mới",
+          message: `${a.patient?.fullName} - ${new Date(a.appointmentTime).toLocaleTimeString("vi-VN")}`,
+          time: a.appointmentTime,
+          read: false,
+        }));
+        
+        setNotifications(notifs);
+        setUnreadCount(notifs.length);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+    // Refresh every 5 minutes
+    const interval = setInterval(fetchNotifications, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleSearchResultClick = (result: SearchResult) => {
+    router.push(result.href);
+    setSearchOpen(false);
+    setSearchQuery("");
+  };
+
+  const getResultIcon = (type: string) => {
+    switch (type) {
+      case "patient": return <Users className="w-4 h-4" />;
+      case "appointment": return <Calendar className="w-4 h-4" />;
+      case "employee": return <Stethoscope className="w-4 h-4" />;
+      default: return <FileText className="w-4 h-4" />;
+    }
+  };
 
   return (
-    <RoleGuard allowedRoles={["ADMIN", "DOCTOR", "NURSE", "RECEPTIONIST"]}>
-      <SidebarProvider>
-        <div className="bg-slate-50 text-foreground flex min-h-screen w-screen">
-          <Sidebar
-            className="border-r-0"
-            collapsible="icon"
-          >
-            {/* Sidebar with gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900" />
-            
-            <SidebarHeader className="relative z-10 gap-3 px-4 py-5 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-sky-400 to-teal-500 text-white grid h-10 w-10 place-items-center rounded-xl text-sm font-bold shadow-lg shadow-sky-500/20">
-                  HMS
-                </div>
-                <div className="leading-tight group-data-[collapsible=icon]:hidden">
-                  <p className="text-sm font-semibold text-white">
-                    Health Management
-                  </p>
-                  <p className="text-xs text-slate-400">Hospital System</p>
-                </div>
-              </div>
-            </SidebarHeader>
-            
-            <SidebarContent className="relative z-10">
-              <SidebarGroup>
-                <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider px-4 mb-2">
-                  Navigation
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu className="px-2 space-y-1">
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      // Fix active logic: exact match for Dashboard, startsWith for others
-                      const isActive =
-                        item.href === "/admin"
-                          ? pathname === "/admin"
-                          : pathname.startsWith(item.href);
-                      return (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={isActive}
-                            className={cn(
-                              "h-10 rounded-lg px-3 py-2.5 font-medium transition-all duration-200",
-                              isActive
-                                ? "bg-gradient-to-r from-sky-500/20 to-teal-500/10 text-white border-l-2 border-sky-400 shadow-sm"
-                                : "text-slate-300 hover:bg-white/5 hover:text-white"
-                            )}
-                          >
-                            <Link href={item.href}>
-                              <Icon className={cn(
-                                "size-4 transition-colors",
-                                isActive ? "text-sky-400" : "text-slate-400"
-                              )} />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      );
-                    })}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            </SidebarContent>
-            
-            <SidebarFooter className="relative z-10 px-3 pb-4 border-t border-white/10 pt-4">
-              <div className="space-y-3">
-                {/* User profile card */}
-                <div className="flex items-center gap-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2.5 group-data-[collapsible=icon]:justify-center">
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-sky-400 to-teal-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                    {(user?.fullName || user?.email || "U").charAt(0).toUpperCase()}
-                  </div>
-                  <div className="group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                      {user?.fullName || user?.email}
-                    </p>
-                    <p className="text-xs text-slate-400">{user?.role}</p>
-                  </div>
-                </div>
-                
-                {/* Logout button */}
-                <Button
-                  onClick={logout}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center"
-                >
-                  <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
-                  <span className="group-data-[collapsible=icon]:hidden">Logout</span>
-                </Button>
-              </div>
-            </SidebarFooter>
-            <SidebarRail className="bg-white/5 hover:bg-white/10" />
-          </Sidebar>
-
-          <div className="flex-1 min-w-0 w-full">
-            {/* Enhanced header */}
-            <header className="sticky top-0 z-20 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
-              <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6">
-                <div className="flex items-center gap-3">
-                  <SidebarTrigger className="md:hidden text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg p-2" />
-                  <div className="hidden sm:flex items-center gap-2 text-sm">
-                    <Breadcrumb>
-                      <BreadcrumbList>
-                        {breadcrumbs.map((item) => (
-                          <React.Fragment key={item.href}>
-                            <BreadcrumbItem>
-                              {item.isLast ? (
-                                <span className="text-slate-900 font-medium">
-                                  {item.name}
-                                </span>
-                              ) : (
-                                <span className="text-slate-500 hover:text-slate-700 transition-colors">
-                                  {item.name}
-                                </span>
-                              )}
-                            </BreadcrumbItem>
-                            {!item.isLast && <BreadcrumbSeparator className="text-slate-300" />}
-                          </React.Fragment>
-                        ))}
-                      </BreadcrumbList>
-                    </Breadcrumb>
-                  </div>
-                </div>
-                
-                {/* Header actions */}
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100">
-                    <Search className="size-5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900 hover:bg-slate-100 relative">
-                    <Bell className="size-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-sky-500 rounded-full" />
-                  </Button>
-                </div>
-              </div>
-            </header>
-
-            <main className="w-full max-w-full py-8">
-              <div className="page-shell">
-                <div className="space-y-6">{children}</div>
-              </div>
-            </main>
+    <QueryClientProvider client={queryClient}>
+      <div className="min-h-screen bg-[hsl(var(--background))]">
+        {/* Sidebar */}
+        <aside className="sidebar">
+          {/* Logo */}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[hsl(173,58%,35%)] to-[hsl(173,58%,28%)] flex items-center justify-center text-white font-bold text-sm shadow-lg mb-4">
+            HMS
           </div>
+
+          {/* Navigation */}
+          <nav className="flex flex-col items-center gap-1 flex-1 overflow-y-auto py-2">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const Icon = item.icon;
+              
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "sidebar-icon",
+                    isActive && "active"
+                  )}
+                  title={item.title}
+                >
+                  <Icon className="w-5 h-5" />
+                </Link>
+              );
+            })}
+          </nav>
+
+          {/* Bottom Actions */}
+          <div className="flex flex-col items-center gap-1 mt-auto pt-4 border-t border-white/10">
+            <Link
+              href="/admin/profile"
+              className={cn(
+                "sidebar-icon",
+                pathname.includes("/profile") && "active"
+              )}
+              title="Profile"
+            >
+              <UserCircle className="w-5 h-5" />
+            </Link>
+            <button
+              onClick={logout}
+              className="sidebar-icon hover:bg-red-500/10 hover:text-red-500"
+              title="Logout"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="content-area">
+          {/* Top Navigation */}
+          <header className="topnav">
+            <div className="flex items-center gap-6">
+              <h1 className="text-title">
+                {navItems.find((item) => pathname.startsWith(item.href))?.title || "Admin"}
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-4">
+              {/* Search */}
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="search-input hidden md:flex cursor-pointer"
+              >
+                <Search className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+                <span className="text-[hsl(var(--muted-foreground))]">Search...</span>
+              </button>
+
+              {/* Notifications */}
+              <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                <DropdownMenuTrigger asChild>
+                  <button className="btn-icon relative">
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="notification-badge">{unreadCount}</span>
+                    )}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="p-3 border-b border-[hsl(var(--border))]">
+                    <h3 className="font-semibold">Thông báo</h3>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                      {unreadCount} thông báo mới
+                    </p>
+                  </div>
+                  <div className="max-h-[400px] overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
+                        Không có thông báo mới
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <DropdownMenuItem
+                          key={notif.id}
+                          className="p-3 cursor-pointer hover:bg-[hsl(var(--secondary))]"
+                        >
+                          <div className="flex gap-3">
+                            <div className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] mt-2" />
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{notif.title}</p>
+                              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                                {notif.message}
+                              </p>
+                              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                                {new Date(notif.time).toLocaleTimeString("vi-VN")}
+                              </p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-center text-sm text-[hsl(var(--primary))] cursor-pointer">
+                    Xem tất cả
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* User Profile */}
+              <button className="flex items-center gap-3 py-2 px-3 rounded-full hover:bg-[hsl(var(--secondary))] transition-colors">
+                <div className="avatar">
+                  {user?.fullName?.charAt(0) || user?.email?.charAt(0) || "A"}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    {user?.fullName || user?.email || "Admin"}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Administrator
+                  </p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-[hsl(var(--muted-foreground))] hidden md:block" />
+              </button>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className="py-6 animate-fadeIn">
+            {children}
+          </main>
         </div>
-        <Toaster />
-      </SidebarProvider>
-    </RoleGuard>
+      </div>
+
+      {/* Search Dialog */}
+      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tìm kiếm</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="search-input w-full">
+              <Search className="w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+              <input
+                type="text"
+                placeholder="Tìm bệnh nhân, lịch hẹn, nhân viên..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+                className="flex-1 bg-transparent border-none outline-none"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")}>
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-[400px] overflow-y-auto space-y-1">
+              {searching ? (
+                <div className="text-center py-8 text-sm text-[hsl(var(--muted-foreground))]">
+                  Đang tìm kiếm...
+                </div>
+              ) : searchResults.length === 0 && searchQuery ? (
+                <div className="text-center py-8 text-sm text-[hsl(var(--muted-foreground))]">
+                  Không tìm thấy kết quả
+                </div>
+              ) : searchResults.length === 0 ? (
+                <div className="text-center py-8 text-sm text-[hsl(var(--muted-foreground))]">
+                  Nhập từ khóa để tìm kiếm
+                </div>
+              ) : (
+                searchResults.map((result) => (
+                  <button
+                    key={`${result.type}-${result.id}`}
+                    onClick={() => handleSearchResultClick(result)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-[hsl(var(--secondary))] transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-[hsl(var(--primary-light))] flex items-center justify-center text-[hsl(var(--primary))]">
+                      {getResultIcon(result.type)}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{result.title}</p>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        {result.subtitle}
+                      </p>
+                    </div>
+                    <span className="text-xs px-2 py-1 rounded bg-[hsl(var(--secondary))] text-[hsl(var(--muted-foreground))]">
+                      {result.type === "patient" ? "Bệnh nhân" : result.type === "appointment" ? "Lịch hẹn" : "Nhân viên"}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Toaster position="top-right" />
+    </QueryClientProvider>
   );
 }
-

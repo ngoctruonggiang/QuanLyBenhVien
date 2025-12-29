@@ -1,206 +1,185 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DetailPageHeader } from "@/components/ui/detail-page-header";
-import { StatsSummaryBar } from "@/components/ui/stats-summary-bar";
-import { InfoItem, InfoGrid } from "@/components/ui/info-item";
-import { Card, CardContent } from "@/components/ui/card";
-import {
+import { useState, useEffect } from "react";
+import { 
   User,
-  Briefcase,
   Phone,
   MapPin,
-  Building2,
+  Briefcase,
   Award,
+  Save,
+  Loader2,
+  Camera,
   Stethoscope,
-  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { hrService } from "@/services/hr.service";
+import { useAuth } from "@/contexts/AuthContext";
+import type { Employee } from "@/interfaces/hr";
 
-export default function MyProfilePage() {
-  const { data: employee, isLoading, error } = useMyEmployeeProfile();
+export default function DoctorProfilePage() {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profile, setProfile] = useState<Employee | null>(null);
+  const [formData, setFormData] = useState({
+    phoneNumber: "",
+    address: "",
+  });
 
-  if (isLoading) {
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      if (user?.accountId) {
+        const employee = await hrService.getEmployeeByAccountId(user.accountId);
+        if (employee) {
+          setProfile(employee);
+          setFormData({
+            phoneNumber: employee.phoneNumber || "",
+            address: employee.address || "",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch profile:", error);
+      toast.error("Không thể tải thông tin hồ sơ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!profile) return;
+    
+    try {
+      setSaving(true);
+      await hrService.updateEmployee(profile.id, formData);
+      toast.success("Đã cập nhật thông tin thành công!");
+      fetchProfile();
+    } catch (error) {
+      console.error("Failed to update profile:", error);
+      toast.error("Không thể cập nhật thông tin");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <Skeleton className="h-32 w-full rounded-xl" />
-        <Skeleton className="h-20 w-full rounded-xl" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[hsl(var(--primary))]" />
       </div>
     );
   }
-
-  if (error || !employee) {
-    return (
-      <div className="container mx-auto py-6">
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="flex items-center gap-3 pt-6">
-            <AlertCircle className="h-5 w-5 text-amber-600" />
-            <div>
-              <p className="font-medium text-amber-800">Profile Not Found</p>
-              <p className="text-sm text-amber-700">
-                Your account is not linked to an employee record. Please contact an administrator.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status: string) => {
-    const normalized = status?.toLowerCase();
-    if (normalized === "active") return "emerald";
-    if (normalized === "inactive") return "slate";
-    if (normalized === "on leave") return "amber";
-    return "slate";
-  };
-
-  const getRoleBadge = (role: string) => {
-    const roleLabels: Record<string, { label: string; color: string }> = {
-      DOCTOR: { label: "Doctor", color: "bg-violet-100 text-violet-700 border-violet-200" },
-      NURSE: { label: "Nurse", color: "bg-pink-100 text-pink-700 border-pink-200" },
-      RECEPTIONIST: { label: "Receptionist", color: "bg-sky-100 text-sky-700 border-sky-200" },
-      ADMIN: { label: "Admin", color: "bg-amber-100 text-amber-700 border-amber-200" },
-    };
-    const config = roleLabels[role] || { label: role, color: "bg-slate-100 text-slate-600" };
-    return (
-      <Badge variant="outline" className={config.color}>
-        {config.label}
-      </Badge>
-    );
-  };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
-      <DetailPageHeader
-        title={employee.fullName}
-        backHref="/doctor/appointments"
-        theme="violet"
-        avatar={{
-          initials: employee.fullName.charAt(0).toUpperCase(),
-        }}
-        metaItems={[
-          { icon: <Phone className="h-4 w-4" />, text: employee.phoneNumber || "No phone" },
-        ]}
-        statusBadge={getRoleBadge(employee.role)}
-      />
+      <div>
+        <h1 className="text-display">Hồ sơ cá nhân</h1>
+        <p className="text-[hsl(var(--muted-foreground))] mt-1">
+          Quản lý thông tin cá nhân của bạn
+        </p>
+      </div>
 
-      {/* Stats Summary */}
-      <StatsSummaryBar
-        stats={[
-          {
-            label: "Department",
-            value: employee.departmentName || "N/A",
-            icon: <Building2 className="h-5 w-5" />,
-            color: "violet",
-          },
-          {
-            label: "Role",
-            value: employee.role.replace(/_/g, " "),
-            icon: <Briefcase className="h-5 w-5" />,
-            color: "sky",
-          },
-          {
-            label: "Status",
-            value: employee.status.replace(/_/g, " "),
-            icon: <User className="h-5 w-5" />,
-            color: getStatusColor(employee.status) as any,
-          },
-          {
-            label: "Specialization",
-            value: employee.specialization || "N/A",
-            icon: <Stethoscope className="h-5 w-5" />,
-            color: "teal",
-          },
-        ]}
-      />
-
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <div className="detail-section-card">
-          <div className="detail-section-card-header">
-            <User className="h-4 w-4" />
-            <h3>Personal Information</h3>
+      {/* Avatar & Basic Info */}
+      <div className="card-base">
+        <div className="flex flex-col md:flex-row items-center gap-6">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-[hsl(var(--primary-light))] flex items-center justify-center text-4xl font-bold text-[hsl(var(--primary))]">
+              {profile?.fullName?.charAt(0) || "?"}
+            </div>
+            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center shadow-lg">
+              <Camera className="w-4 h-4" />
+            </button>
           </div>
-          <div className="detail-section-card-content">
-            <InfoGrid columns={1}>
-              <InfoItem
-                icon={<User className="h-4 w-4" />}
-                label="Full Name"
-                value={employee.fullName}
-                color="violet"
-              />
-              <InfoItem
-                icon={<Phone className="h-4 w-4" />}
-                label="Phone"
-                value={employee.phoneNumber}
-                color="teal"
-              />
-              <InfoItem
-                icon={<MapPin className="h-4 w-4" />}
-                label="Address"
-                value={employee.address}
-                color="rose"
-              />
-            </InfoGrid>
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl font-bold">{profile?.fullName}</h2>
+            <div className="flex items-center gap-2 mt-1 text-[hsl(var(--muted-foreground))]">
+              <Stethoscope className="w-4 h-4" />
+              {profile?.specialization || "Chưa có chuyên khoa"}
+            </div>
+            <p className="text-small mt-1">{profile?.departmentName || "Chưa có phòng ban"}</p>
+            <span className={`badge mt-2 ${profile?.status === "ACTIVE" ? "badge-success" : "badge-warning"}`}>
+              {profile?.status === "ACTIVE" ? "Đang làm việc" : profile?.status}
+            </span>
           </div>
         </div>
+      </div>
 
-        {/* Professional Information */}
-        <div className="detail-section-card">
-          <div className="detail-section-card-header">
-            <Briefcase className="h-4 w-4" />
-            <h3>Professional Information</h3>
+      {/* Contact Info */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <Phone className="w-5 h-5" />
+          Thông tin liên hệ
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-label">Số điện thoại</label>
+            <input
+              type="tel"
+              className="input-base"
+              value={formData.phoneNumber}
+              onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            />
           </div>
-          <div className="detail-section-card-content">
-            <InfoGrid columns={1}>
-              <InfoItem
-                icon={<Building2 className="h-4 w-4" />}
-                label="Department"
-                value={employee.departmentName}
-                color="violet"
-              />
-              <InfoItem
-                icon={<Stethoscope className="h-4 w-4" />}
-                label="Specialization"
-                value={employee.specialization}
-                color="teal"
-              />
-              <InfoItem
-                icon={<Award className="h-4 w-4" />}
-                label="License Number"
-                value={employee.licenseNumber}
-                color="amber"
-              />
-              <InfoItem
-                icon={<Briefcase className="h-4 w-4" />}
-                label="Status"
-                value={
-                  <Badge
-                    variant="outline"
-                    className={
-                      employee.status?.toLowerCase() === "active"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : employee.status?.toLowerCase() === "inactive"
-                        ? "bg-slate-50 text-slate-600 border-slate-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
-                    }
-                  >
-                    {employee.status}
-                  </Badge>
-                }
-                color="slate"
-              />
-            </InfoGrid>
+          <div className="space-y-2">
+            <label className="text-label">Địa chỉ</label>
+            <input
+              type="text"
+              className="input-base"
+              value={formData.address}
+              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+            />
           </div>
         </div>
+      </div>
+
+      {/* Professional Info (Read-only) */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <Award className="w-5 h-5" />
+          Thông tin chuyên môn
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Chuyên khoa</p>
+            <p className="text-lg font-semibold">{profile?.specialization || "-"}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Số giấy phép hành nghề</p>
+            <p className="text-lg font-semibold">{profile?.licenseNumber || "-"}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Phòng ban</p>
+            <p className="text-lg font-semibold">{profile?.departmentName || "-"}</p>
+          </div>
+          {profile?.hiredDate && (
+            <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+              <p className="text-label">Ngày vào làm</p>
+              <p className="text-lg font-semibold">
+                {new Date(profile.hiredDate).toLocaleDateString("vi-VN")}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="btn-primary"
+        >
+          {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+          <Save className="w-4 h-4" />
+          Lưu thay đổi
+        </button>
       </div>
     </div>
   );
