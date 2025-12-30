@@ -18,6 +18,8 @@ import {
 import { toast } from "sonner";
 import { hrService } from "@/services/hr.service";
 import { Employee, EmployeeRequest, EmployeeRole, EmployeeStatus } from "@/interfaces/hr";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   Dialog,
   DialogContent,
@@ -296,9 +298,11 @@ export default function EmployeesPage() {
                   {/* Employee Info */}
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="avatar">
-                        {employee.fullName?.charAt(0) || "?"}
-                      </div>
+                      <UserAvatar
+                        imageUrl={employee.profileImageUrl}
+                        userName={employee.fullName}
+                        size="sm"
+                      />
                       <div>
                         <p className="font-medium">{employee.fullName}</p>
                         <p className="text-small">ID: {employee.id}</p>
@@ -383,23 +387,47 @@ export default function EmployeesPage() {
 
       {/* Employee Detail Modal */}
       <Dialog open={!!viewingEmployee} onOpenChange={() => setViewingEmployee(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Chi tiết nhân viên</DialogTitle>
           </DialogHeader>
+          <div className="overflow-y-auto pr-2" style={{ maxHeight: 'calc(90vh - 120px)' }}>
           {viewingEmployee && (
             <div className="space-y-4">
+              {/* Avatar Upload */}
+              <div className="flex justify-center py-4">
+                <AvatarUpload
+                  currentImageUrl={viewingEmployee.profileImageUrl}
+                  userName={viewingEmployee.fullName}
+                  size="xl"
+                  editable={true}
+                  onUpload={async (file) => {
+                    try {
+                      await hrService.uploadEmployeeProfileImage(viewingEmployee.id, file);
+                      toast.success("Đã cập nhật ảnh đại diện");
+                      fetchEmployees();
+                    } catch (error) {
+                      toast.error("Không thể upload ảnh");
+                    }
+                  }}
+                  onDelete={async () => {
+                    try {
+                      await hrService.deleteEmployeeProfileImage(viewingEmployee.id);
+                      toast.success("Đã xóa ảnh đại diện");
+                      fetchEmployees();
+                    } catch (error) {
+                      toast.error("Không thể xóa ảnh");
+                    }
+                  }}
+                />
+              </div>
+
               {/* Profile Header */}
-              <div className="flex items-center gap-4 p-4 bg-white border-2 border-gray-200 rounded-xl shadow-sm">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--primary)/0.7)] flex items-center justify-center text-white font-bold text-2xl shadow-lg">
-                  {viewingEmployee.fullName?.charAt(0) || "?"}
-                </div>
-                <div>
-                  <p className="font-bold text-lg text-gray-900">{viewingEmployee.fullName}</p>
-                  <span className={`badge ${getRoleBadge(viewingEmployee.role || "")}`}>
-                    {getRoleLabel(viewingEmployee.role || "")}
-                  </span>
-                </div>
+              <div className="text-center">
+                <p className="font-bold text-lg text-gray-900">{viewingEmployee.fullName}</p>
+                <span className={`badge ${getRoleBadge(viewingEmployee.role || "")}`}>
+                  {getRoleLabel(viewingEmployee.role || "")}
+                </span>
               </div>
 
               {/* Info Grid */}
@@ -446,6 +474,7 @@ export default function EmployeesPage() {
               </div>
             </div>
           )}
+          </div>
         </DialogContent>
       </Dialog>
 

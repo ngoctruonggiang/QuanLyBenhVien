@@ -17,6 +17,11 @@ import {
   Calendar,
   FileText,
   Banknote,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getInvoiceList, createCashPayment, getPaymentsByInvoice, InvoiceListParams, PageResponse } from "@/services/billing.service";
@@ -57,6 +62,15 @@ export default function ReceptionistBillingPage() {
   const [loadingPayments, setLoadingPayments] = useState(false);
   const [partialAmount, setPartialAmount] = useState<string>("");
   const [paymentNotes, setPaymentNotes] = useState<string>("");
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
+  // Sort
+  type SortField = "invoiceNumber" | "invoiceDate" | "totalAmount" | "status";
+  const [sortField, setSortField] = useState<SortField>("invoiceDate");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
     fetchInvoices();
@@ -104,6 +118,36 @@ export default function ReceptionistBillingPage() {
           return invDate <= end;
         });
       }
+      
+      // 4. Sort
+      data.sort((a, b) => {
+        let aVal: any, bVal: any;
+        
+        switch (sortField) {
+          case "invoiceNumber":
+            aVal = a.invoiceNumber || "";
+            bVal = b.invoiceNumber || "";
+            break;
+          case "invoiceDate":
+            aVal = new Date(a.createdAt || a.invoiceDate).getTime();
+            bVal = new Date(b.createdAt || b.invoiceDate).getTime();
+            break;
+          case "totalAmount":
+            aVal = a.totalAmount;
+            bVal = b.totalAmount;
+            break;
+          case "status":
+            aVal = a.status;
+            bVal = b.status;
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+        return 0;
+      });
       
       setInvoices(data);
     } catch (error) {
@@ -196,6 +240,28 @@ export default function ReceptionistBillingPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // Pagination
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+  const paginatedInvoices = invoices.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Sort handler
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("desc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 opacity-30" />;
+    return sortDirection === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />;
   };
 
   const pendingCount = invoices.filter(i => i.status === "UNPAID" || i.status === "OVERDUE").length;
@@ -310,13 +376,33 @@ export default function ReceptionistBillingPage() {
         <table className="table-base">
           <thead>
             <tr>
-              <th>Mã hóa đơn</th>
-              <th>Ngày tạo</th>
-              <th className="text-right">Tổng tiền</th>
+              <th onClick={() => handleSort("invoiceNumber")} className="cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center gap-1">
+                  Mã hóa đơn
+                  <SortIcon field="invoiceNumber" />
+                </div>
+              </th>
+              <th onClick={() => handleSort("invoiceDate")} className="cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center gap-1">
+                  Ngày tạo
+                  <SortIcon field="invoiceDate" />
+                </div>
+              </th>
+              <th onClick={() => handleSort("totalAmount")} className="text-right cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center justify-end gap-1">
+                  Tổng tiền
+                  <SortIcon field="totalAmount" />
+                </div>
+              </th>
               <th className="text-right">Giảm giá</th>
               <th className="text-right">Đã thanh toán</th>
               <th className="text-right">Còn nợ</th>
-              <th>Trạng thái</th>
+              <th onClick={() => handleSort("status")} className="cursor-pointer hover:bg-gray-50">
+                <div className="flex items-center gap-1">
+                  Trạng thái
+                  <SortIcon field="status" />
+                </div>
+              </th>
               <th className="w-12"></th>
             </tr>
           </thead>
@@ -328,7 +414,7 @@ export default function ReceptionistBillingPage() {
                   <p className="text-small mt-2">Đang tải...</p>
                 </td>
               </tr>
-            ) : invoices.length === 0 ? (
+            ) : paginatedInvoices.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center py-12">
                   <Receipt className="w-12 h-12 mx-auto text-[hsl(var(--muted-foreground))] opacity-50" />
@@ -338,7 +424,7 @@ export default function ReceptionistBillingPage() {
                 </td>
               </tr>
             ) : (
-              invoices.map((invoice) => {
+              paginatedInvoices.map((invoice) => {
                 const status = STATUS_CONFIG[invoice.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.UNPAID;
                 const StatusIcon = status.icon;
                 return (
@@ -419,6 +505,49 @@ export default function ReceptionistBillingPage() {
             )}
           </tbody>
         </table>
+        
+        {/* Pagination */}
+        {!loading && paginatedInvoices.length > 0 && (
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Hiển thị {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, invoices.length)} / {invoices.length}
+              </span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="input-base py-1 text-sm"
+              >
+                <option value={10}>10 / trang</option>
+                <option value={20}>20 / trang</option>
+                <option value={50}>50 / trang</option>
+              </select>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="btn-icon disabled:opacity-50"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="px-4 py-2 text-sm font-medium">
+                Trang {currentPage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="btn-icon disabled:opacity-50"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Invoice Detail Modal - Enhanced */}

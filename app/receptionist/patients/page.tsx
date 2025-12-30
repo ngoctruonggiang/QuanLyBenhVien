@@ -15,8 +15,10 @@ import {
   MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getPatients } from "@/services/patient.service";
+import { getPatients, uploadProfileImage, deleteProfileImage } from "@/services/patient.service";
 import { Patient } from "@/interfaces/patient";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,9 +138,11 @@ export default function ReceptionistPatientsPage() {
                   {/* Patient Info */}
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="avatar">
-                        {patient.fullName?.charAt(0) || "?"}
-                      </div>
+                      <UserAvatar
+                        imageUrl={patient.profileImageUrl}
+                        userName={patient.fullName}
+                        size="sm"
+                      />
                       <div>
                         <p className="font-medium">{patient.fullName}</p>
                         <p className="text-small">ID: {patient.id.slice(0, 8)}...</p>
@@ -231,6 +235,34 @@ export default function ReceptionistPatientsPage() {
           <div className="overflow-y-auto pr-2" style={{ maxHeight: 'calc(85vh - 120px)' }}>
           {viewingPatient && (
             <div className="space-y-4">
+              {/* Avatar Upload */}
+              <div className="flex justify-center py-4">
+                <AvatarUpload
+                  currentImageUrl={viewingPatient.profileImageUrl}
+                  userName={viewingPatient.fullName}
+                  size="xl"
+                  editable={true}
+                  onUpload={async (file) => {
+                    try {
+                      await uploadProfileImage(viewingPatient.id, file);
+                      toast.success("Đã cập nhật ảnh đại diện");
+                      fetchPatients();
+                    } catch (error) {
+                      toast.error("Không thể upload ảnh");
+                    }
+                  }}
+                  onDelete={async () => {
+                    try {
+                      await deleteProfileImage(viewingPatient.id);
+                      toast.success("Đã xóa ảnh đại diện");
+                      fetchPatients();
+                    } catch (error) {
+                      toast.error("Không thể xóa ảnh");
+                    }
+                  }}
+                />
+              </div>
+
               {/* Basic Info */}
               <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 rounded-xl shadow-sm p-4">
                 <div className="flex items-center gap-2 mb-3">

@@ -1,0 +1,209 @@
+@import "tailwindcss";
+
+/* ============================================
+   HMS CarePoint Design System
+   Based on: ui-design-specification.md
+   ============================================ */
+
+/* ============================================
+   1. CSS CUSTOM PROPERTIES (Design Tokens)
+   ============================================ */
+:root {
+  /* Primary Colors - Teal Theme */
+  --primary: 173 58% 35%;           /* #1A9A9A */
+  --primary-light: 173 58% 92%;     /* #E6F7F7 */
+  --primary-dark: 173 58% 28%;      /* #147878 */
+  --primary-foreground: 0 0% 100%;  /* White */
+  
+  /* Background Colors */
+  --background: 210 17% 93%;        /* #E8ECEF - Main page bg */
+  --background-card: 0 0% 100%;     /* #FFFFFF - Card bg */
+  --background-sidebar: 210 20% 97%; /* #F5F7F9 */
+  --background-glass: 0 0% 100% / 0.7; /* Glassmorphism */
+  
+  /* Text Colors */
+  --foreground: 210 11% 11%;        /* #1A1D1F - Primary text */
+  --muted-foreground: 215 8% 46%;   /* #6F767E - Secondary */
+  --text-muted: 215 7% 62%;         /* #9A9FA5 - Muted labels */
+  
+  /* Status Colors */
+  --success: 142 71% 45%;           /* #22C55E - Green */
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;            /* #F59E0B - Orange */
+  --warning-foreground: 0 0% 0%;
+  --destructive: 0 84% 60%;         /* #EF4444 - Red */
+  --destructive-foreground: 0 0% 100%;
+  --info: 217 91% 60%;              /* #3B82F6 - Blue */
+  --info-foreground: 0 0% 100%;
+  
+  /* Badge Colors */
+  --badge-infectious: 0 84% 60%;
+  --badge-non-infectious: 142 71% 45%;
+  --badge-chronic: 38 92% 50%;
+  
+  /* Shadcn Required Variables */
+  --card: 0 0% 100%;
+  --card-foreground: 210 11% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 210 11% 11%;
+  --secondary: 210 17% 95%;
+  --secondary-foreground: 210 11% 11%;
+  --muted: 210 17% 95%;
+  --accent: 173 58% 35%;
+  --accent-foreground: 0 0% 100%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 173 58% 35%;
+  
+  /* Spacing & Sizing */
+  --radius: 0.75rem;                /* 12px - Base border radius */
+  --radius-lg: 1rem;                /* 16px - Cards */
+  --radius-xl: 1.5rem;              /* 24px - Large cards, sidebar */
+  --radius-pill: 1.5625rem;         /* 25px - Buttons */
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  
+  /* Layout */
+  --sidebar-width: 72px;
+  --topnav-height: 60px;
+  --side-panel-width: 320px;
+}
+
+/* Dark mode overrides */
+.dark {
+  --background: 222 47% 11%;
+  --background-card: 217 33% 17%;
+  --foreground: 210 40% 98%;
+  --muted-foreground: 215 20% 65%;
+  --border: 217 33% 25%;
+  --card: 217 33% 17%;
+  --card-foreground: 210 40% 98%;
+  --popover: 217 33% 17%;
+  --popover-foreground: 210 40% 98%;
+  --secondary: 217 33% 22%;
+  --muted: 217 33% 22%;
+}
+
+/* ============================================
+   GLASS MODAL & GRADIENT CARD STYLES
+   ============================================ */
+
+/* Glass Modal Overlay */
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  background: rgba(0, 0, 0, 0.3) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Glass Modal Content */
+.glass-modal [data-radix-dialog-content],
+.glass-modal [data-radix-alert-dialog-content] {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient Info Cards */
+.info-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient Info Card Variants */
+.info-card-blue {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 197, 253, 0.05) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.info-card-green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(134, 239, 172, 0.05) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.info-card-purple {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(216, 180, 254, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.info-card-amber {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(252, 211, 77, 0.05) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.info-card-red {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(252, 165, 165, 0.05) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.info-card-teal {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, rgba(153, 246, 228, 0.05) 100%);
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+/* Info Card Header */
+.info-card-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.5rem;
+}
+
+/* Info Card Value */
+.info-card-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  line-height: 1.2;
+}
+
+/* Info Card Label with Icon */
+.info-card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.25rem;
+}
+
+/* ============================================
+   2. BASE STYLES
+   ============================================ */
+* {
+  border-color: hsl(var(--border));
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

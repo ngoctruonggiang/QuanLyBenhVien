@@ -636,6 +636,29 @@ export const hrService = {
     return response.data.data;
   },
 
+  uploadMyEmployeeAvatar: async (file: File): Promise<Employee> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await axiosInstance.post<{ data: Employee }>(
+      "/hr/employees/me/profile-image",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    return response.data.data;
+  },
+
+  deleteMyEmployeeAvatar: async (): Promise<Employee> => {
+    const response = await axiosInstance.delete<{ data: Employee }>(
+      "/hr/employees/me/profile-image"
+    );
+    return response.data.data;
+  },
+
   // --- Schedules Extended ---
 
   getSchedules: async (params?: {

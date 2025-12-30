@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { hrService } from "@/services/hr.service";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Employee } from "@/interfaces/hr";
+import { AvatarUpload } from "@/components/ui/avatar-upload";
 
 export default function DoctorProfilePage() {
   const { user } = useAuth();
@@ -89,14 +90,30 @@ export default function DoctorProfilePage() {
       {/* Avatar & Basic Info */}
       <div className="card-base">
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-[hsl(var(--primary-light))] flex items-center justify-center text-4xl font-bold text-[hsl(var(--primary))]">
-              {profile?.fullName?.charAt(0) || "?"}
-            </div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[hsl(var(--primary))] text-white flex items-center justify-center shadow-lg">
-              <Camera className="w-4 h-4" />
-            </button>
-          </div>
+          <AvatarUpload
+            currentImageUrl={profile?.profileImageUrl}
+            userName={profile?.fullName}
+            size="xl"
+            editable={true}
+            onUpload={async (file) => {
+              try {
+                const updated = await hrService.uploadMyEmployeeAvatar(file);
+                setProfile(updated);
+                toast.success("Đã cập nhật ảnh đại diện");
+              } catch (error) {
+                toast.error("Không thể upload ảnh");
+              }
+            }}
+            onDelete={async () => {
+              try {
+                const updated = await hrService.deleteMyEmployeeAvatar();
+                setProfile(updated);
+                toast.success("Đã xóa ảnh đại diện");
+              } catch (error) {
+                toast.error("Không thể xóa ảnh");
+              }
+            }}
+          />
           <div className="text-center md:text-left">
             <h2 className="text-2xl font-bold">{profile?.fullName}</h2>
             <div className="flex items-center gap-2 mt-1 text-[hsl(var(--muted-foreground))]">
