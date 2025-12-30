@@ -135,6 +135,27 @@ export default function ReceptionistProfilePage() {
         </div>
       </div>
 
+      {/* Account Info */}
+      <div className="card-base">
+        <h3 className="text-section mb-4 flex items-center gap-2">
+          <User className="w-5 h-5" />
+          Thông tin tài khoản
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Email đăng nhập</p>
+            <p className="text-lg font-semibold">{user?.email || "-"}</p>
+          </div>
+          <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
+            <p className="text-label">Vai trò</p>
+            <p className="text-lg font-semibold">{user?.role || "RECEPTIONIST"}</p>
+          </div>
+        </div>
+        <p className="text-small text-[hsl(var(--muted-foreground))] mt-3">
+          Liên hệ quản trị viên để thay đổi email hoặc mật khẩu.
+        </p>
+      </div>
+
       {/* Work Info (Read-only) */}
       <div className="card-base">
         <h3 className="text-section mb-4 flex items-center gap-2">

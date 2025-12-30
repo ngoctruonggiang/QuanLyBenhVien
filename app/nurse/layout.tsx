@@ -106,11 +106,6 @@ export default function NurseLayout({ children }: { children: ReactNode }) {
                 <input type="text" placeholder="Tìm bệnh nhân..." />
               </div>
 
-              {/* Notifications */}
-              <button className="btn-icon relative">
-                <Bell className="w-5 h-5" />
-                <span className="notification-badge">5</span>
-              </button>
 
               {/* User Profile */}
               <button className="flex items-center gap-3 py-2 px-3 rounded-full hover:bg-[hsl(var(--secondary))] transition-colors">

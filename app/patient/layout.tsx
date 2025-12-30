@@ -17,12 +17,16 @@ import {
   Bell,
   Heart,
   ChevronDown,
+  TestTube,
+  Pill,
 } from "lucide-react";
 
 const navItems = [
   { title: "Tổng quan", href: "/patient/dashboard", icon: Home },
   { title: "Lịch hẹn", href: "/patient/appointments", icon: Calendar },
   { title: "Hồ sơ y tế", href: "/patient/medical-history", icon: FileText },
+  { title: "Xét nghiệm", href: "/patient/lab-results", icon: TestTube },
+  { title: "Đơn thuốc", href: "/patient/prescriptions", icon: Pill },
   { title: "Hóa đơn", href: "/patient/billing", icon: Receipt },
 ];
 
@@ -96,11 +100,6 @@ export default function PatientLayout({ children }: { children: ReactNode }) {
             </div>
 
             <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="btn-icon relative">
-                <Bell className="w-5 h-5" />
-                <span className="notification-badge">2</span>
-              </button>
 
               {/* User Profile */}
               <button className="flex items-center gap-3 py-2 px-3 rounded-full hover:bg-[hsl(var(--secondary))] transition-colors">

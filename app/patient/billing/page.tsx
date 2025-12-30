@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { getPatientInvoices } from "@/services/billing.service";
 
 interface Invoice {
   id: string;
@@ -45,7 +46,7 @@ export default function PatientInvoiceListPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | "unpaid" | "paid">("all");
 
   useEffect(() => {
-    if (user?.accountId) {
+    if (user?.patientId || user?.accountId) {
       fetchInvoices();
     }
   }, [user]);
@@ -57,10 +58,16 @@ export default function PatientInvoiceListPage() {
   const fetchInvoices = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/billing/invoices/by-patient/${user?.accountId}`);
-      const data = await response.json();
+      const patientId = user?.patientId || user?.accountId;
+      if (!patientId) {
+        toast.error("Không tìm thấy thông tin bệnh nhân");
+        return;
+      }
+      // Use getPatientInvoices instead of direct fetch
+      const response = await getPatientInvoices(patientId);
+      const data = response.data?.data || [];
       // Sort: unpaid first, then by date desc
-      const sorted = (data.data || []).sort((a: Invoice, b: Invoice) => {
+      const sorted = (data || []).sort((a: Invoice, b: Invoice) => {
         if (a.status === "UNPAID" && b.status !== "UNPAID") return -1;
         if (a.status !== "UNPAID" && b.status === "UNPAID") return 1;
         if (a.status === "PARTIALLY_PAID" && b.status !== "PARTIALLY_PAID" && b.status !== "UNPAID") return -1;

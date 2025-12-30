@@ -300,56 +300,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <span className="text-[hsl(var(--muted-foreground))]">Search...</span>
               </button>
 
-              {/* Notifications */}
-              <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-                <DropdownMenuTrigger asChild>
-                  <button className="btn-icon relative">
-                    <Bell className="w-5 h-5" />
-                    {unreadCount > 0 && (
-                      <span className="notification-badge">{unreadCount}</span>
-                    )}
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                  <div className="p-3 border-b border-[hsl(var(--border))]">
-                    <h3 className="font-semibold">Thông báo</h3>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                      {unreadCount} thông báo mới
-                    </p>
-                  </div>
-                  <div className="max-h-[400px] overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
-                        Không có thông báo mới
-                      </div>
-                    ) : (
-                      notifications.map((notif) => (
-                        <DropdownMenuItem
-                          key={notif.id}
-                          className="p-3 cursor-pointer hover:bg-[hsl(var(--secondary))]"
-                        >
-                          <div className="flex gap-3">
-                            <div className="w-2 h-2 rounded-full bg-[hsl(var(--primary))] mt-2" />
-                            <div className="flex-1">
-                              <p className="font-medium text-sm">{notif.title}</p>
-                              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                                {notif.message}
-                              </p>
-                              <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                                {new Date(notif.time).toLocaleTimeString("vi-VN")}
-                              </p>
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      ))
-                    )}
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-center text-sm text-[hsl(var(--primary))] cursor-pointer">
-                    Xem tất cả
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
 
               {/* User Profile */}
               <button className="flex items-center gap-3 py-2 px-3 rounded-full hover:bg-[hsl(var(--secondary))] transition-colors">
