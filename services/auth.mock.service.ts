@@ -14,6 +14,7 @@ export const MOCK_USERS = [
     password: "Admin123!@",
     role: "ADMIN",
     fullName: "Admin User",
+    accountId: "acc-admin-001",
     employeeId: "emp-admin-001",
     accessToken: "mock-access-token-admin",
     refreshToken: "mock-refresh-token-admin",
@@ -24,6 +25,7 @@ export const MOCK_USERS = [
     password: "doctor123",
     role: "DOCTOR",
     fullName: "Dr. John Smith",
+    accountId: "acc-doctor-001",
     employeeId: "emp-101",
     department: "Cardiology",
     accessToken: "mock-access-token-doctor",
@@ -35,6 +37,7 @@ export const MOCK_USERS = [
     password: "nurse123",
     role: "NURSE",
     fullName: "Nurse Mary Johnson",
+    accountId: "acc-nurse-001",
     employeeId: "emp-nurse-001",
     department: "General Ward",
     accessToken: "mock-access-token-nurse",
@@ -46,6 +49,7 @@ export const MOCK_USERS = [
     password: "receptionist123",
     role: "RECEPTIONIST",
     fullName: "Sarah Williams",
+    accountId: "acc-receptionist-001",
     employeeId: "emp-receptionist-001",
     accessToken: "mock-access-token-receptionist",
     refreshToken: "mock-refresh-token-receptionist",
@@ -56,6 +60,7 @@ export const MOCK_USERS = [
     password: "patient123",
     role: "PATIENT",
     fullName: "Patient Nguyen Van An",
+    accountId: "acc-patient-001",
     patientId: "p001",
     accessToken: "mock-access-token-patient",
     refreshToken: "mock-refresh-token-patient",
@@ -66,6 +71,7 @@ export const MOCK_USERS = [
     password: "password123",
     role: "DOCTOR",
     fullName: "Dr. New Test",
+    accountId: "acc-newdoctor-001",
     employeeId: "emp-new-doctor-001",
     department: "General",
     accessToken: "mock-access-token-newdoctor",
@@ -93,6 +99,7 @@ export const mockAuthService = {
     return {
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
+      accountId: user.accountId,
       email: user.email,
       role: user.role,
       employeeId: user.employeeId,
@@ -122,6 +129,7 @@ export const mockAuthService = {
     return {
       accessToken: "mock-access-token-new-user",
       refreshToken: "mock-refresh-token-new-user",
+      accountId: `acc-new-${Date.now()}`,
       email: credentials.email,
       role: "PATIENT", // Default role for new users
     };
@@ -154,6 +162,7 @@ export const mockAuthService = {
       password: credentials.password,
       role: "PATIENT", // Default role for new users
       fullName: credentials.username,
+      accountId: `acc-${Date.now()}`,
       patientId: `p-${Date.now()}`,
       accessToken: `mock-access-token-${credentials.username}`,
       refreshToken: `mock-refresh-token-${credentials.username}`,
@@ -166,6 +175,7 @@ export const mockAuthService = {
     return {
       accessToken: newUser.accessToken,
       refreshToken: newUser.refreshToken,
+      accountId: newUser.accountId,
       email: newUser.email,
       role: newUser.role,
     };

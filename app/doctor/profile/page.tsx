@@ -175,11 +175,11 @@ export default function DoctorProfilePage() {
             <p className="text-label">Phòng ban</p>
             <p className="text-lg font-semibold">{profile?.departmentName || "-"}</p>
           </div>
-          {profile?.hiredDate && (
+          {profile?.hiredAt && (
             <div className="p-4 rounded-xl bg-[hsl(var(--secondary))]">
               <p className="text-label">Ngày vào làm</p>
               <p className="text-lg font-semibold">
-                {new Date(profile.hiredDate).toLocaleDateString("vi-VN")}
+                {new Date(profile.hiredAt).toLocaleDateString("vi-VN")}
               </p>
             </div>
           )}

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { labResultService, labOrderService } from "@/services/lab.service";
-import type { LabTestResult, DiagnosticImage, ImageType } from "@/interfaces/lab";
+import type { LabTestResult, DiagnosticImage, ImageType, LabOrder } from "@/interfaces/lab";
 import {
   Dialog,
   DialogContent,
@@ -65,7 +65,7 @@ export default function ImagingPage() {
       const response = await labOrderService.getAll();
       const allResults: LabTestResult[] = [];
       
-      response.content?.forEach((order) => {
+      response.content?.forEach((order: LabOrder) => {
         order.results
           .filter((r) => r.labTestCategory === "IMAGING")
           .forEach((r) => allResults.push(r));

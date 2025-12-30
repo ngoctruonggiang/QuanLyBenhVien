@@ -7,7 +7,8 @@ test.describe("Reports - Admin", () => {
       page.getByRole("heading", { name: /Reports|Dashboard/i }),
     ).toBeVisible();
     const cards = page.locator("[data-testid='metric-card']");
-    await expect(cards).toHaveCountGreaterThan(0);
+    const count = await cards.count();
+    expect(count).toBeGreaterThan(0);
     const refresh = page.getByRole("button", {
       name: /Refresh|Clear Cache|Reload/i,
     });

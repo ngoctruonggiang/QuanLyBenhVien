@@ -64,8 +64,8 @@ export default function AdminReportsPage() {
         },
         appointments: {
           total: appointmentData.totalAppointments,
-          completed: appointmentData.completedCount,
-          completionRate: appointmentData.completionRate,
+          completed: appointmentData.completedCount || 0,
+          completionRate: appointmentData.completionRate || 0,
         },
         patients: {
           total: patientData.totalPatients,

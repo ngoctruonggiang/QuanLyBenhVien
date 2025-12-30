@@ -6,6 +6,12 @@ export type LoginRequest = {
   password: string;
 };
 
+export type RegisterRequest = {
+  email: string;
+  password: string;
+  fullName: string;
+};
+
 // Backend response structure
 type BackendLoginResponse = {
   accessToken: string;
@@ -75,7 +81,7 @@ export const authService = {
     await axiosInstance.post("/auth/logout", { refreshToken });
   },
 
-  register: async (credentials: LoginRequest): Promise<LoginResponse> => {
+  register: async (credentials: RegisterRequest): Promise<LoginResponse> => {
     const response = await axiosInstance.post<{ data: BackendLoginResponse }>(
       "/auth/register",
       credentials,

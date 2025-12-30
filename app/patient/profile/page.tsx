@@ -58,7 +58,10 @@ export default function PatientProfilePage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await updateMyProfile(formData);
+      await updateMyProfile({
+        ...formData,
+        relativeRelationship: formData.relativeRelationship as any || undefined,
+      });
       toast.success("Đã cập nhật hồ sơ thành công!");
       fetchProfile();
     } catch (error) {

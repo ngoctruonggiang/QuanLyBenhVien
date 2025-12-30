@@ -40,8 +40,8 @@ export default function PatientCreateProfilePage() {
         fullName: formData.fullName,
         dateOfBirth: formData.dateOfBirth,
         gender: formData.gender,
-        phoneNumber: formData.phoneNumber || undefined,
-        address: formData.address || undefined,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
       });
       toast.success("Tạo hồ sơ thành công!");
       router.push("/patient/dashboard");

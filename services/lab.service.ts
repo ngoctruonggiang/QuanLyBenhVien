@@ -18,6 +18,8 @@ import type {
   LabOrderUpdateRequest,
 } from "@/interfaces/lab";
 
+export type * from "@/interfaces/lab";
+
 const BASE_URL_LAB_TESTS = "/exams/lab-tests";
 const BASE_URL_LAB_RESULTS = "/exams/lab-results";
 const BASE_URL_LAB_ORDERS = "/exams/lab-orders";

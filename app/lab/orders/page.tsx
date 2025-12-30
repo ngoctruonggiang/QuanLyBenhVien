@@ -24,8 +24,10 @@ const STATUS_CONFIG: Record<LabOrderStatus, { label: string; color: string; icon
 };
 
 const PRIORITY_CONFIG: Record<OrderPriority, { label: string; color: string }> = {
+  ROUTINE: { label: "Thường quy", color: "text-gray-500" },
   NORMAL: { label: "Bình thường", color: "text-gray-600" },
   URGENT: { label: "Khẩn cấp", color: "text-red-600 font-semibold" },
+  STAT: { label: "Cấp cứu", color: "text-red-700 font-bold" },
 };
 
 export default function LabOrdersPage() {
@@ -71,7 +73,7 @@ export default function LabOrdersPage() {
       setLoading(true);
       const response = await labOrderService.getAll();
       // Sort by priority (URGENT first) then by date (newest first)
-      const sorted = (response.content || []).sort((a, b) => {
+      const sorted = (response.content || []).sort((a: LabOrder, b: LabOrder) => {
         if (a.priority === "URGENT" && b.priority !== "URGENT") return -1;
         if (a.priority !== "URGENT" && b.priority === "URGENT") return 1;
         return new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime();

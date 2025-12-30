@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { 
@@ -36,6 +36,14 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function ReceptionistNewAppointmentPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+      <ReceptionistNewAppointmentContent />
+    </Suspense>
+  );
+}
+
+function ReceptionistNewAppointmentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedPatientId = searchParams.get("patientId");
