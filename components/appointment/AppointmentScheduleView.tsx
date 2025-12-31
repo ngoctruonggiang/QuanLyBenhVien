@@ -28,6 +28,7 @@ const TIME_SLOTS = Array.from({ length: 25 }, (_, i) => {
 
 const STATUS_COLORS: Record<AppointmentStatus, { bg: string; border: string; text: string }> = {
   SCHEDULED: { bg: "bg-sky-50", border: "border-sky-200", text: "text-sky-700" },
+  IN_PROGRESS: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700" },
   COMPLETED: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700" },
   CANCELLED: { bg: "bg-red-50", border: "border-red-200", text: "text-red-500 line-through" },
   NO_SHOW: { bg: "bg-rose-50", border: "border-rose-200", text: "text-rose-600" },

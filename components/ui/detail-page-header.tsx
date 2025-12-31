@@ -12,8 +12,8 @@ interface DetailPageHeaderProps {
   title: string;
   /** Subtitle text (e.g., ID or role) */
   subtitle?: string;
-  /** Back link URL */
-  backHref: string;
+  /** Back link URL (optional - if not provided, back button is hidden) */
+  backHref?: string;
   /** Avatar initials or image */
   avatar?: {
     initials?: string;
@@ -70,17 +70,19 @@ export function DetailPageHeader({
 
       <div className="relative flex items-start justify-between gap-6">
         <div className="flex items-center gap-5">
-          {/* Back button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            asChild
-            className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
-          >
-            <Link href={backHref}>
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-          </Button>
+          {/* Back button - only show if backHref is provided */}
+          {backHref && (
+            <Button
+              variant="ghost"
+              size="icon"
+              asChild
+              className="text-white/90 hover:text-white hover:bg-white/20 shrink-0"
+            >
+              <Link href={backHref}>
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
 
           {/* Avatar */}
           {avatar && (

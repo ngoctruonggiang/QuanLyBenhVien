@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,10 +24,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { TagInput } from "@/components/ui/tag-input";
 import { useMyProfile, useUpdateMyProfile } from "@/hooks/queries/usePatient";
 import { RelationshipType } from "@/interfaces/patient";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  User,
+  Heart,
+  Phone,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  ArrowLeft,
+  Save,
+  AlertCircle,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const editSchema = z.object({
   phoneNumber: z
@@ -46,10 +70,21 @@ const editSchema = z.object({
 
 type EditFormValues = z.infer<typeof editSchema>;
 
+const relationships: { value: RelationshipType; label: string }[] = [
+  { value: "SPOUSE", label: "Vợ/Chồng" },
+  { value: "PARENT", label: "Cha/Mẹ" },
+  { value: "CHILD", label: "Con" },
+  { value: "SIBLING", label: "Anh/Chị/Em" },
+  { value: "FRIEND", label: "Bạn bè" },
+  { value: "OTHER", label: "Khác" },
+];
+
 export default function PatientEditProfilePage() {
   const router = useRouter();
   const { data: profile, isLoading, error } = useMyProfile();
   const updateProfile = useUpdateMyProfile();
+  const [healthInfoOpen, setHealthInfoOpen] = useState(true);
+  const [emergencyOpen, setEmergencyOpen] = useState(true);
 
   const form = useForm<EditFormValues>({
     resolver: zodResolver(editSchema),
@@ -94,25 +129,8 @@ export default function PatientEditProfilePage() {
       relativePhoneNumber: values.relativePhoneNumber || undefined,
       relativeRelationship: values.relativeRelationship || undefined,
     });
-    // Redirect to profile page after successful save
     router.push("/patient/profile");
   };
-
-  const readonlyBlock = useMemo(
-    () => [
-      { label: "Họ tên", value: profile?.fullName || "—" },
-      { label: "Email", value: profile?.email || "—" },
-      {
-        label: "Ngày sinh",
-        value: profile?.dateOfBirth
-          ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN")
-          : "—",
-      },
-      { label: "Giới tính", value: profile?.gender || "—" },
-      { label: "Nhóm máu", value: profile?.bloodType || "—" },
-    ],
-    [profile],
-  );
 
   if (isLoading) {
     return (
@@ -125,6 +143,7 @@ export default function PatientEditProfilePage() {
   if (error || !profile) {
     return (
       <div className="py-10 space-y-3 text-center">
+        <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
         <p className="text-lg font-semibold text-destructive">
           Không tải được hồ sơ
         </p>
@@ -137,12 +156,20 @@ export default function PatientEditProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Chỉnh sửa hồ sơ</h1>
-          <p className="text-muted-foreground">
-            Một số trường chỉ có thể được cập nhật bởi nhân viên.
-          </p>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/patient/profile">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Chỉnh sửa hồ sơ</h1>
+            <p className="text-muted-foreground">
+              Cập nhật thông tin cá nhân của {profile.fullName}
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
@@ -151,116 +178,265 @@ export default function PatientEditProfilePage() {
           <Button
             onClick={form.handleSubmit(onSubmit)}
             disabled={updateProfile.isPending}
+            className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600"
           >
-            {updateProfile.isPending ? "Đang lưu..." : "Lưu thay đổi"}
+            {updateProfile.isPending ? (
+              <>
+                <Spinner size="sm" className="mr-2" />
+                Đang lưu...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Lưu thay đổi
+              </>
+            )}
           </Button>
         </div>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Thông tin không chỉnh sửa</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          {readonlyBlock.map((item) => (
-            <div key={item.label} className="space-y-1">
-              <p className="text-sm text-muted-foreground">{item.label}</p>
-              <p className="font-medium">{item.value}</p>
+      {/* Readonly Info Notice */}
+      <Alert className="bg-amber-50 border-amber-200">
+        <Lock className="h-4 w-4 text-amber-600" />
+        <AlertDescription className="text-amber-800">
+          Một số thông tin như họ tên, ngày sinh, giới tính, nhóm máu chỉ có thể được cập nhật bởi nhân viên y tế.
+        </AlertDescription>
+      </Alert>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Readonly Personal Information */}
+          <div className="form-section-card">
+            <div className="form-section-card-title">
+              <Lock className="h-5 w-5 text-slate-400" />
+              Thông tin cá nhân (Chỉ xem)
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            <div className="grid gap-4 md:grid-cols-2 pt-4">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Họ và tên</p>
+                <p className="font-medium text-foreground">{profile.fullName || "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Email</p>
+                <p className="font-medium text-foreground">{profile.email || "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Ngày sinh</p>
+                <p className="font-medium text-foreground">
+                  {profile.dateOfBirth
+                    ? new Date(profile.dateOfBirth).toLocaleDateString("vi-VN")
+                    : "—"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Giới tính</p>
+                <p className="font-medium text-foreground">
+                  {profile.gender === "MALE" ? "Nam" : profile.gender === "FEMALE" ? "Nữ" : profile.gender || "—"}
+                </p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Nhóm máu</p>
+                <p className="font-medium text-foreground">{profile.bloodType || "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">CCCD/CMND</p>
+                <p className="font-medium text-foreground">{profile.identificationNumber || "—"}</p>
+              </div>
+            </div>
+          </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Thông tin liên hệ</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Số điện thoại</label>
-            <Input {...form.register("phoneNumber")} />
-            {form.formState.errors.phoneNumber && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.phoneNumber.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Địa chỉ</label>
-            <Textarea rows={3} {...form.register("address")} />
-            {form.formState.errors.address && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.address.message}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          {/* Editable Contact Information */}
+          <div className="form-section-card">
+            <div className="form-section-card-title">
+              <User className="h-5 w-5 text-sky-500" />
+              Thông tin liên hệ
+            </div>
+            <div className="space-y-4 pt-4">
+              <div className="form-grid">
+                <FormField
+                  control={form.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="form-label form-label-required">Số điện thoại</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Nhập số điện thoại" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Thông tin sức khỏe</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <label className="text-sm font-medium">Dị ứng</label>
-          <TagInput
-            value={form.watch("allergies") || []}
-            onChange={(tags) =>
-              form.setValue("allergies", tags, { shouldValidate: true })
-            }
-            placeholder="Thêm dị ứng và nhấn Enter"
-            suggestions={["Penicillin", "Peanut", "Seafood", "Dust", "NSAIDs"]}
-          />
-        </CardContent>
-      </Card>
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem className="form-full-width">
+                    <FormLabel className="form-label">Địa chỉ</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Nhập địa chỉ" rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Liên hệ khẩn cấp</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Tên</label>
-            <Input {...form.register("relativeFullName")} />
-            {form.formState.errors.relativeFullName && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.relativeFullName.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Số điện thoại</label>
-            <Input {...form.register("relativePhoneNumber")} />
-            {form.formState.errors.relativePhoneNumber && (
-              <p className="text-sm text-destructive">
-                {form.formState.errors.relativePhoneNumber.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Quan hệ</label>
-            <Select
-              value={form.watch("relativeRelationship") || "NONE"}
-              onValueChange={(v) =>
-                form.setValue("relativeRelationship", v === "NONE" ? "" : v as RelationshipType)
-              }
+          {/* Health Information - Collapsible */}
+          <Collapsible open={healthInfoOpen} onOpenChange={setHealthInfoOpen}>
+            <div className="form-section-card">
+              <CollapsibleTrigger asChild>
+                <div className="form-section-card-title cursor-pointer hover:text-sky-600 transition-colors">
+                  <Heart className="h-5 w-5 text-rose-500" />
+                  Thông tin sức khỏe
+                  <div className="ml-auto">
+                    {healthInfoOpen ? (
+                      <ChevronUp className="h-5 w-5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-4 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="allergies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label">Dị ứng</FormLabel>
+                        <FormControl>
+                          <TagInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            placeholder="Thêm dị ứng và nhấn Enter"
+                            suggestions={[
+                              "Penicillin",
+                              "Peanut",
+                              "Seafood",
+                              "Dust",
+                              "NSAIDs",
+                            ]}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+
+          {/* Emergency Contact - Collapsible */}
+          <Collapsible open={emergencyOpen} onOpenChange={setEmergencyOpen}>
+            <div className="form-section-card">
+              <CollapsibleTrigger asChild>
+                <div className="form-section-card-title cursor-pointer hover:text-sky-600 transition-colors">
+                  <Phone className="h-5 w-5 text-emerald-500" />
+                  Liên hệ khẩn cấp
+                  <div className="ml-auto">
+                    {emergencyOpen ? (
+                      <ChevronUp className="h-5 w-5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-slate-400" />
+                    )}
+                  </div>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="space-y-4 pt-4">
+                  <FormField
+                    control={form.control}
+                    name="relativeFullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="form-label">Tên người liên hệ</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Nhập tên người liên hệ" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="form-grid">
+                    <FormField
+                      control={form.control}
+                      name="relativeRelationship"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Mối quan hệ</FormLabel>
+                          <Select
+                            onValueChange={(v) => field.onChange(v === "NONE" ? "" : v)}
+                            value={field.value || "NONE"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Chọn mối quan hệ" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="NONE">Chưa chọn</SelectItem>
+                              {relationships.map((r) => (
+                                <SelectItem key={r.value} value={r.value}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="relativePhoneNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="form-label">Số điện thoại</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nhập số điện thoại" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+
+          {/* Action buttons (mobile) */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 md:hidden">
+            <Button type="button" variant="outline" asChild>
+              <Link href="/patient/profile">Hủy</Link>
+            </Button>
+            <Button
+              type="submit"
+              disabled={updateProfile.isPending}
+              className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Chọn quan hệ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NONE">Chưa chọn</SelectItem>
-                <SelectItem value="SPOUSE">Vợ/Chồng</SelectItem>
-                <SelectItem value="PARENT">Cha/Mẹ</SelectItem>
-                <SelectItem value="CHILD">Con</SelectItem>
-                <SelectItem value="SIBLING">Anh/Chị/Em</SelectItem>
-                <SelectItem value="FRIEND">Bạn bè</SelectItem>
-                <SelectItem value="OTHER">Khác</SelectItem>
-              </SelectContent>
-            </Select>
+              {updateProfile.isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Lưu thay đổi
+                </>
+              )}
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </form>
+      </Form>
     </div>
   );
 }

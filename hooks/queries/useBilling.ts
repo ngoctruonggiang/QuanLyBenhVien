@@ -87,7 +87,18 @@ export const useInvoiceByAppointment = (appointmentId: string) => {
   });
 };
 
-// Get patient invoices
+// Get my invoices (patient self-service - uses JWT to lookup patientId automatically)
+export const useMyInvoices = (
+  params?: { status?: string },
+) => {
+  return useQuery({
+    queryKey: [...billingKeys.invoices(), "my", params],
+    queryFn: () => billingService.getMyInvoices(params),
+    select: (response) => response.data.data,
+  });
+};
+
+// Get patient invoices (admin/staff use)
 export const usePatientInvoices = (
   patientId: string,
   params?: PatientInvoiceParams,

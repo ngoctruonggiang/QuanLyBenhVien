@@ -61,9 +61,9 @@ export default function PatientMedicalRecordsPage() {
     return (
       <div className="container mx-auto py-6">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive">Access Denied</h2>
+          <h2 className="text-2xl font-bold text-destructive">Truy cập bị từ chối</h2>
           <p className="text-muted-foreground mt-2">
-            Only patients can access medical records.
+            Chỉ bệnh nhân mới có thể xem hồ sơ bệnh án.
           </p>
         </div>
       </div>
@@ -75,17 +75,17 @@ export default function PatientMedicalRecordsPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          My Medical Records
+          Hồ sơ bệnh án
         </h1>
         <p className="text-muted-foreground">
-          View your examination history and prescriptions
+          Xem lịch sử khám bệnh và đơn thuốc của bạn
         </p>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Filter by Date</CardTitle>
+          <CardTitle className="text-lg">Lọc theo ngày</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap items-center gap-4">
@@ -93,7 +93,7 @@ export default function PatientMedicalRecordsPage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-[200px] justify-start">
                   <CalendarDays className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "MMM dd, yyyy") : "Start Date"}
+                  {startDate ? format(startDate, "dd/MM/yyyy") : "Từ ngày"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -112,7 +112,7 @@ export default function PatientMedicalRecordsPage() {
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-[200px] justify-start">
                   <CalendarDays className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "MMM dd, yyyy") : "End Date"}
+                  {endDate ? format(endDate, "dd/MM/yyyy") : "Đến ngày"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
@@ -136,7 +136,7 @@ export default function PatientMedicalRecordsPage() {
                   setPage(0);
                 }}
               >
-                Clear Filters
+                Xóa bộ lọc
               </Button>
             )}
           </div>
@@ -152,9 +152,9 @@ export default function PatientMedicalRecordsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center">
             <FileText className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No Medical Records Found</h3>
+            <h3 className="text-lg font-semibold">Không có hồ sơ</h3>
             <p className="text-muted-foreground mt-2">
-              You don't have any medical examination records yet.
+              Bạn chưa có lịch sử khám bệnh nào.
             </p>
           </CardContent>
         </Card>
@@ -172,7 +172,7 @@ export default function PatientMedicalRecordsPage() {
                     <div className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-muted-foreground" />
                       <span className="text-lg font-semibold">
-                        {format(new Date(exam.examDate), "MMMM dd, yyyy")}
+                        {format(new Date(exam.examDate), "dd/MM/yyyy")}
                       </span>
                       {exam.prescription && (
                         <Pill className="h-4 w-4 text-blue-500" />
@@ -183,14 +183,14 @@ export default function PatientMedicalRecordsPage() {
                     </div>
                   </div>
                   <Button size="sm" variant="ghost">
-                    View →
+                    Xem →
                   </Button>
                 </div>
               </CardHeader>
               {exam.diagnosis && (
                 <CardContent className="pt-0">
                   <div className="text-sm">
-                    <span className="font-medium">Diagnosis: </span>
+                    <span className="font-medium">Chẩn đoán: </span>
                     <span className="text-muted-foreground">
                       {exam.diagnosis}
                     </span>

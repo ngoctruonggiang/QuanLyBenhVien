@@ -52,11 +52,16 @@ export interface PageResponse<T> {
 export const getInvoiceList = async (params?: InvoiceListParams) =>
   api.get<{ code: number; data: PageResponse<Invoice> }>(`/invoices/all`, { params });
 
-// Get patient invoices
+// Get my invoices (patient self-service - uses JWT to lookup patientId automatically)
+export const getMyInvoices = async (
+  params?: { status?: string }
+) => api.get<{ code: number; data: Invoice[] }>(`/invoices/my`, { params });
+
+// Get patient invoices (admin/staff use - requires patientId)
 export const getPatientInvoices = async (
   patientId: string,
   params?: { status?: string; page?: number; size?: number }
-) => api.get(`/invoices/by-patient/${patientId}`, { params });
+) => api.get<{ code: number; data: Invoice[] }>(`/invoices/by-patient/${patientId}`, { params });
 
 // Cancel invoice
 export const cancelInvoice = async (

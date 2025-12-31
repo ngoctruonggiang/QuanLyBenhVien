@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
@@ -13,6 +14,7 @@ import {
   AlertTriangle,
   Download,
   ZoomIn,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +54,7 @@ const statusConfig: Record<ResultStatus, { label: string; icon: React.ElementTyp
 };
 
 export default function PatientLabResultsPage() {
+  const router = useRouter();
   const { data: profile, isLoading: profileLoading } = useMyProfile();
   const patientId = profile?.id;
 
@@ -254,6 +257,18 @@ export default function PatientLabResultsPage() {
                       {result.completedAt && (
                         <span className="ml-4">Hoàn thành: {formatDate(result.completedAt)}</span>
                       )}
+                    </div>
+
+                    {/* View Detail Button */}
+                    <div className="flex justify-end pt-2 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => router.push(`/patient/lab-results/${result.id}`)}
+                      >
+                        Xem chi tiết
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </AccordionContent>

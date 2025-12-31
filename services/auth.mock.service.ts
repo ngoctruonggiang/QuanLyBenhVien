@@ -9,6 +9,7 @@ export type SignUpRequest = {
 // Mock user database - Test accounts for each role
 export const MOCK_USERS = [
   {
+    accountId: "acc-admin-001",
     username: "admin",
     email: "admin@hms.com",
     password: "Admin123!@",
@@ -19,6 +20,7 @@ export const MOCK_USERS = [
     refreshToken: "mock-refresh-token-admin",
   },
   {
+    accountId: "acc-doctor-001",
     username: "doctor",
     email: "doctor@hms.com",
     password: "doctor123",
@@ -30,6 +32,7 @@ export const MOCK_USERS = [
     refreshToken: "mock-refresh-token-doctor",
   },
   {
+    accountId: "acc-nurse-001",
     username: "nurse",
     email: "nurse@hms.com",
     password: "nurse123",
@@ -41,6 +44,7 @@ export const MOCK_USERS = [
     refreshToken: "mock-refresh-token-nurse",
   },
   {
+    accountId: "acc-receptionist-001",
     username: "receptionist",
     email: "receptionist@hms.com",
     password: "receptionist123",
@@ -51,6 +55,7 @@ export const MOCK_USERS = [
     refreshToken: "mock-refresh-token-receptionist",
   },
   {
+    accountId: "acc-patient-001",
     username: "patient",
     email: "patient@hms.com",
     password: "patient123",
@@ -61,6 +66,7 @@ export const MOCK_USERS = [
     refreshToken: "mock-refresh-token-patient",
   },
   {
+    accountId: "acc-newdoctor-001",
     username: "newdoctor",
     email: "newdoctor@hms.com",
     password: "password123",
@@ -93,6 +99,7 @@ export const mockAuthService = {
     return {
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,
+      accountId: user.accountId,
       email: user.email,
       role: user.role,
       employeeId: user.employeeId,
@@ -122,6 +129,7 @@ export const mockAuthService = {
     return {
       accessToken: "mock-access-token-new-user",
       refreshToken: "mock-refresh-token-new-user",
+      accountId: `acc-new-${Date.now()}`,
       email: credentials.email,
       role: "PATIENT", // Default role for new users
     };
@@ -166,6 +174,7 @@ export const mockAuthService = {
     return {
       accessToken: newUser.accessToken,
       refreshToken: newUser.refreshToken,
+      accountId: `acc-${credentials.username}`,
       email: newUser.email,
       role: newUser.role,
     };

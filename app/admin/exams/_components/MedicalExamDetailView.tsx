@@ -39,6 +39,7 @@ interface MedicalExamDetailViewProps {
   userRole?: UserRole;
   patientProfileBaseHref?: string;
   examBaseHref?: string; // Base path for exam-related links
+  appointmentBaseHref?: string; // Base path for appointment links
 }
 
 export function MedicalExamDetailView({
@@ -46,11 +47,15 @@ export function MedicalExamDetailView({
   userRole,
   patientProfileBaseHref = "/admin/patients",
   examBaseHref = "/admin/exams", // Default to admin path
+  appointmentBaseHref = "/admin/appointments", // Default to admin path
 }: MedicalExamDetailViewProps) {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { data: patientData } = usePatient(medicalExam.patient.id);
+  // Only fetch additional patient data if not a PATIENT (they may not have permission)
+  const { data: patientData } = usePatient(
+    userRole !== "PATIENT" ? medicalExam.patient.id : ""
+  );
   const { data: appointmentData } = useAppointment(medicalExam.appointment.id);
 
   const [timeLeft, setTimeLeft] = useState("");
@@ -376,35 +381,30 @@ export function MedicalExamDetailView({
                   value={medicalExam.patient.fullName}
                   color="sky"
                 />
-                <InfoItem
-                  icon={<Calendar className="h-4 w-4" />}
-                  label="Date of Birth"
-                  value={
-                    patientData?.dateOfBirth
-                      ? format(new Date(patientData.dateOfBirth), "PPP")
-                      : "N/A"
-                  }
-                  color="slate"
-                />
-                <InfoItem
-                  icon={<User className="h-4 w-4" />}
-                  label="Gender"
-                  value={patientData?.gender || "N/A"}
-                  color="slate"
-                />
+                {medicalExam.patient.phoneNumber && (
+                  <InfoItem
+                    icon={<User className="h-4 w-4" />}
+                    label="Phone"
+                    value={medicalExam.patient.phoneNumber}
+                    color="slate"
+                  />
+                )}
               </InfoGrid>
-              <Button
-                variant="link"
-                className="p-0 h-auto mt-3 text-sky-600"
-                asChild
-              >
-                <Link
-                  href={`${patientProfileBaseHref}/${medicalExam.patient.id}`}
+              {/* Only show profile link for staff, not for patients viewing their own records */}
+              {userRole !== "PATIENT" && (
+                <Button
+                  variant="link"
+                  className="p-0 h-auto mt-3 text-sky-600"
+                  asChild
                 >
-                  View Patient Profile
-                  <ExternalLink className="ml-1 h-3 w-3" />
-                </Link>
-              </Button>
+                  <Link
+                    href={`${patientProfileBaseHref}/${medicalExam.patient.id}`}
+                  >
+                    View Patient Profile
+                    <ExternalLink className="ml-1 h-3 w-3" />
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -444,7 +444,7 @@ export function MedicalExamDetailView({
                 asChild
               >
                 <Link
-                  href={`/admin/appointments/${medicalExam.appointment.id}`}
+                  href={`${appointmentBaseHref}/${medicalExam.appointment.id}`}
                 >
                   View Appointment
                   <ExternalLink className="ml-1 h-3 w-3" />

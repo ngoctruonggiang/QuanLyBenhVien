@@ -30,19 +30,21 @@ import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard";
 import { CreditCard } from "lucide-react";
 
 interface PaymentFormProps {
-  invoice: Invoice; // Add invoice prop
+  invoice: Invoice;
   defaultAmount?: number;
   onSubmit: (data: PaymentFormValues) => void;
   isSubmitting?: boolean;
   maxAmount?: number;
+  hideCashOption?: boolean; // Hide cash option for patients (they can only use VNPay)
 }
 
 export function PaymentForm({
-  invoice, // Destructure invoice prop
+  invoice,
   defaultAmount,
   onSubmit,
   isSubmitting,
   maxAmount,
+  hideCashOption = false,
 }: PaymentFormProps) {
   const [idempotencyKey] = useState(() => {
     if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -65,7 +67,7 @@ export function PaymentForm({
     resolver: zodResolver(schema),
     defaultValues: {
       amount: defaultAmount || 0,
-      method: "CASH",
+      method: hideCashOption ? "VNPAY" : "CASH", // Default to VNPay if cash is hidden
       notes: "",
       idempotencyKey,
     },
@@ -130,7 +132,9 @@ export function PaymentForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="CASH">💵 Cash</SelectItem>
+                        {!hideCashOption && (
+                          <SelectItem value="CASH">💵 Cash</SelectItem>
+                        )}
                         <SelectItem value="VNPAY">💳 Card / Online (VNPay)</SelectItem>
                       </SelectContent>
                     </Select>

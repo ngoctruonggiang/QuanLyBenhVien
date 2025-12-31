@@ -3,11 +3,14 @@
 import { use } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Printer } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { ArrowLeft, Printer, Pill, FileText } from "lucide-react";
 import { useMedicalExam } from "@/hooks/queries/useMedicalExam";
 import { MedicalExamDetailView } from "@/app/admin/exams/_components/MedicalExamDetailView";
+import { LabResultsSection } from "@/components/lab/LabResultsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
+import Link from "next/link";
 
 export default function PatientMedicalRecordDetailPage({
   params,
@@ -30,22 +33,22 @@ export default function PatientMedicalRecordDetailPage({
   if (error || !medicalExam) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive">
-            Medical Record Not Found
+        <Card className="p-8 text-center">
+          <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-2xl font-bold tracking-tight text-destructive">
+            Không tìm thấy hồ sơ khám bệnh
           </h2>
           <p className="text-muted-foreground mt-2">
-            The medical record you're looking for doesn't exist or you don't
-            have permission to view it.
+            Hồ sơ bạn đang tìm không tồn tại hoặc bạn không có quyền xem.
           </p>
           <Button
             onClick={() => router.push("/patient/medical-records")}
             className="mt-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to My Records
+            Quay lại danh sách
           </Button>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -53,24 +56,49 @@ export default function PatientMedicalRecordDetailPage({
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header with Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <Button
           variant="ghost"
           onClick={() => router.push("/patient/medical-records")}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back to My Records
+          Quay lại danh sách
         </Button>
 
-        <Button variant="outline" onClick={() => window.print()}>
-          <Printer className="mr-2 h-4 w-4" />
-          Print
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          {/* View Prescription Button - only show if prescription exists */}
+          {medicalExam.prescription && (
+            <Button asChild variant="outline">
+              <Link href={`/patient/medical-records/${id}/prescription`}>
+                <Pill className="mr-2 h-4 w-4" />
+                Xem đơn thuốc
+              </Link>
+            </Button>
+          )}
+
+          <Button variant="outline" onClick={() => window.print()}>
+            <Printer className="mr-2 h-4 w-4" />
+            In
+          </Button>
+        </div>
       </div>
 
-      {/* Medical Exam Detail */}
-      <MedicalExamDetailView medicalExam={medicalExam} userRole="PATIENT" />
+      {/* Medical Exam Detail - Patient view only, no edit capabilities */}
+      <MedicalExamDetailView
+        medicalExam={medicalExam}
+        userRole="PATIENT"
+        patientProfileBaseHref="/patient/profile"
+        examBaseHref="/patient/medical-records"
+        appointmentBaseHref="/patient/appointments"
+      />
+
+      {/* Lab Test Results Section - Patient can view their lab results */}
+      <LabResultsSection
+        medicalExamId={id}
+        patientName={medicalExam.patient?.fullName}
+        basePath="/patient/lab-results"
+      />
     </div>
   );
 }

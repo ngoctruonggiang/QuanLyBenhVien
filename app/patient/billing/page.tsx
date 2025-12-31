@@ -1,28 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { usePatientInvoices } from "@/hooks/queries/useBilling";
+import { useMyInvoices } from "@/hooks/queries/useBilling";
 import { InvoiceStatusBadge } from "@/app/admin/billing/_components/invoice-status-badge";
-import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 import { InvoiceSummaryCard } from "@/components/billing/InvoiceSummaryCard";
 import { Invoice } from "@/interfaces/billing";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function PatientInvoiceListPage() {
-  const [patientId, setPatientId] = useState<string | null>(() => {
-    // Lấy patientId từ session/localStorage; fallback "p-1" khi dev
-    const fromStorage =
-      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    return fromStorage || "p-1";
-  });
   const [status, setStatus] = useState<string>("ALL");
-  const { data: invoices = [], isLoading } = usePatientInvoices(
-    patientId || "",
+  
+  // useMyInvoices uses /invoices/my endpoint which automatically looks up patientId from JWT
+  const { data: invoices = [], isLoading, isError, error } = useMyInvoices(
     { status: status === "ALL" ? undefined : status },
   );
+
+  if (isLoading) {
+    return (
+      <div className="page-shell flex items-center justify-center min-h-[60vh]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  // Show error message if API call failed
+  if (isError) {
+    const errorMessage = (error as any)?.response?.data?.message || "Không thể tải hóa đơn. Vui lòng thử lại.";
+    return (
+      <div className="page-shell">
+        <Card>
+          <CardContent className="py-10 text-center text-muted-foreground">
+            {errorMessage}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="page-shell space-y-6">

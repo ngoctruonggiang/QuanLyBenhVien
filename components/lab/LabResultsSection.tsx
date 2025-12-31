@@ -23,6 +23,7 @@ import { ResultStatus } from "@/services/lab.service";
 interface LabResultsSectionProps {
   medicalExamId: string;
   patientName?: string;
+  basePath?: string; // Base path for lab result detail links (default: /doctor/lab-results)
 }
 
 const statusConfig: Record<ResultStatus, { label: string; icon: React.ElementType; color: string }> = {
@@ -32,7 +33,11 @@ const statusConfig: Record<ResultStatus, { label: string; icon: React.ElementTyp
   CANCELLED: { label: "Đã hủy", icon: AlertTriangle, color: "bg-red-100 text-red-800" },
 };
 
-export function LabResultsSection({ medicalExamId, patientName }: LabResultsSectionProps) {
+export function LabResultsSection({ 
+  medicalExamId, 
+  patientName,
+  basePath = "/doctor/lab-results" 
+}: LabResultsSectionProps) {
   const { data: labResults, isLoading, refetch, isFetching } = useLabResultsByExam(medicalExamId);
 
   const formatDate = (dateString?: string) => {
@@ -96,7 +101,7 @@ export function LabResultsSection({ medicalExamId, patientName }: LabResultsSect
               return (
                 <Link
                   key={result.id}
-                  href={`/doctor/lab-results/${result.id}`}
+                  href={`${basePath}/${result.id}`}
                   className="block"
                 >
                   <div className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors">

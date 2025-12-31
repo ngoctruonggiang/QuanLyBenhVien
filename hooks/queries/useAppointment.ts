@@ -105,6 +105,20 @@ export const usePatientAppointments = (patientId?: string) => {
   });
 };
 
+// Get patient's own appointments using /appointments/my endpoint (uses JWT token)
+export const useMyAppointments = (params?: { size?: number }) => {
+  return useQuery({
+    queryKey: ["my-appointments", params],
+    queryFn: async () => {
+      const { default: api } = await import("@/config/axios");
+      const response = await api.get("/appointments/my", {
+        params: { size: params?.size ?? 50 },
+      });
+      return response.data.data?.content || response.data.data || [];
+    },
+  });
+};
+
 export const useDoctorAppointments = (doctorId?: string) => {
   return useQuery({
     queryKey: appointmentKeys.list({ doctorId } as AppointmentListParams),

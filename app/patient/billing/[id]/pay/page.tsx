@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useInvoice, useCreatePayment } from "@/hooks/queries/useBilling";
+import { useInvoice, useCreateCashPayment, useInitPayment } from "@/hooks/queries/useBilling";
 import {
   Card,
   CardContent,
@@ -15,48 +14,84 @@ import {
 import { PaymentForm } from "@/app/admin/billing/_components/payment-form";
 import { PaymentFormValues } from "@/lib/schemas/billing";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function PatientPaymentPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [patientId, setPatientId] = useState<string | null>(() => {
-    const pid =
-      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    return pid || "p-1";
-  });
-  const { data: invoice, isLoading } = useInvoice(id);
-  const { mutateAsync: createPayment, isPending } = useCreatePayment();
+  const { data: invoice, isLoading, isError, error } = useInvoice(id);
+  const { mutateAsync: createCashPayment, isPending: isCashPending } = useCreateCashPayment();
+  const { mutateAsync: initVNPayPayment, isPending: isVNPayPending } = useInitPayment();
+
+  const isPending = isCashPending || isVNPayPending;
 
   const onSubmit = async (data: PaymentFormValues) => {
     try {
-      await createPayment({
-        invoiceId: id,
-        amount: data.amount,
-        notes: data.notes,
-      });
-      toast.success("Thanh toán thành công");
-      router.push(`/patient/billing/${id}`);
+      if (data.method === "VNPAY") {
+        // VNPay payment - redirect to payment gateway
+        await initVNPayPayment({
+          invoiceId: id,
+          amount: data.amount,
+          returnUrl: `${window.location.origin}/payment/result`,
+        });
+        // User will be redirected to VNPay
+      } else {
+        // Cash payment - record immediately
+        await createCashPayment({
+          invoiceId: id,
+          amount: data.amount,
+          notes: data.notes,
+        });
+        toast.success("Thanh toán thành công");
+        router.push(`/patient/billing/${id}`);
+      }
     } catch (error) {
       toast.error("Thanh toán thất bại");
       console.error(error);
     }
   };
 
-  if (isLoading)
-    return <p className="p-6 text-muted-foreground">Đang tải...</p>;
-  if (!invoice) return <p className="p-6">Không tìm thấy hóa đơn</p>;
-  if (patientId && invoice.patientId !== patientId)
+  if (isLoading) {
+    return (
+      <div className="page-shell flex items-center justify-center min-h-[60vh]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  // Show error from API (including 403 Forbidden from backend)
+  if (isError) {
+    const errorMessage = (error as any)?.response?.data?.message || "Không thể tải hóa đơn.";
+    const statusCode = (error as any)?.response?.status;
     return (
       <div className="page-shell py-10 text-center space-y-2">
         <p className="text-lg font-semibold text-destructive">
-          Bạn không có quyền thanh toán hóa đơn này (403)
+          {statusCode === 403 
+            ? "Bạn không có quyền thanh toán hóa đơn này" 
+            : statusCode === 404 
+            ? "Không tìm thấy hóa đơn" 
+            : errorMessage}
         </p>
         <Button variant="link" onClick={() => router.push("/patient/billing")}>
           Về danh sách hóa đơn
         </Button>
       </div>
     );
+  }
+
+  if (!invoice) {
+    return (
+      <div className="page-shell py-10 text-center">
+        <p className="text-lg font-medium">Không tìm thấy hóa đơn</p>
+        <Button variant="link" onClick={() => router.back()}>
+          Quay lại
+        </Button>
+      </div>
+    );
+  }
+
+  // Backend validates access via JWT - if we got here, user has permission
 
   return (
     <div className="page-shell space-y-6">
@@ -93,6 +128,7 @@ export default function PatientPaymentPage() {
             isSubmitting={isPending}
             defaultAmount={invoice.balance ?? invoice.balanceDue ?? 0}
             maxAmount={invoice.balance ?? invoice.balanceDue ?? 0}
+            hideCashOption={true}
           />
         </CardContent>
       </Card>

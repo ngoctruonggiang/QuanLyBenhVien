@@ -1,29 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InvoiceStatusBadge } from "@/app/admin/billing/_components/invoice-status-badge";
 import { useInvoice } from "@/hooks/queries/useBilling";
-import { Badge } from "@/components/ui/badge";
 import { CurrencyDisplay } from "@/components/billing/CurrencyDisplay";
 import { PaymentHistoryTable } from "@/components/billing/PaymentHistoryTable";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function PatientInvoiceDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
-  const [patientId, setPatientId] = useState<string | null>(() => {
-    const pid =
-      typeof window !== "undefined" ? localStorage.getItem("patientId") : null;
-    return pid || "p-1";
-  });
-  const { data: invoice, isLoading } = useInvoice(id);
+  const { data: invoice, isLoading, isError, error } = useInvoice(id);
 
   if (isLoading) {
-    return <p className="text-muted-foreground p-6">Đang tải...</p>;
+    return (
+      <div className="page-shell flex items-center justify-center min-h-[60vh]">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  // Show error from API (including 403 Forbidden from backend)
+  if (isError) {
+    const errorMessage = (error as any)?.response?.data?.message || "Không thể tải hóa đơn. Vui lòng thử lại.";
+    const statusCode = (error as any)?.response?.status;
+    return (
+      <div className="page-shell py-10 text-center space-y-2">
+        <p className="text-lg font-semibold text-destructive">
+          {statusCode === 403 
+            ? "Bạn không có quyền xem hóa đơn này" 
+            : statusCode === 404 
+            ? "Không tìm thấy hóa đơn" 
+            : errorMessage}
+        </p>
+        <Button variant="link" onClick={() => router.push("/patient/billing")}>
+          Về danh sách hóa đơn
+        </Button>
+      </div>
+    );
   }
 
   if (!invoice) {
@@ -37,21 +55,7 @@ export default function PatientInvoiceDetailPage() {
     );
   }
 
-  const isOwner = patientId ? invoice.patientId === patientId : true;
-
-  if (!isOwner) {
-    return (
-      <div className="page-shell py-10 text-center space-y-2">
-        <p className="text-lg font-semibold text-destructive">
-          Bạn không có quyền xem hóa đơn này (403)
-        </p>
-        <Button variant="link" onClick={() => router.push("/patient/billing")}>
-          Về danh sách hóa đơn
-        </Button>
-      </div>
-    );
-  }
-
+  // Backend validates access via JWT - if we got here, user has permission
   const isPayable =
     invoice.status === "UNPAID" ||
     invoice.status === "PARTIALLY_PAID" ||
