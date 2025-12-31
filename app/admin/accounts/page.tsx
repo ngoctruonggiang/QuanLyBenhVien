@@ -14,9 +14,18 @@ import {
   XCircle,
   Loader2,
   Key,
+  Eye,
+  Phone,
+  Briefcase,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { authService, Account } from "@/services/auth.service";
+import { getPatientByAccountId } from "@/services/patient.service";
+import { hrService } from "@/services/hr.service";
+import { Patient } from "@/interfaces/patient";
+import { Employee } from "@/interfaces/hr";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +69,11 @@ export default function AccountsPage() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deleteAccount, setDeleteAccount] = useState<Account | null>(null);
   const [resetPasswordAccount, setResetPasswordAccount] = useState<Account | null>(null);
+  
+  // Detail view states
+  const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
+  const [ownerInfo, setOwnerInfo] = useState<Patient | Employee | null>(null);
+  const [loadingOwner, setLoadingOwner] = useState(false);
 
   useEffect(() => {
     fetchAccounts();
@@ -106,6 +120,26 @@ export default function AccountsPage() {
       label: roleConfig?.label || role,
       class: roleConfig?.color || "badge-info",
     };
+  };
+
+  const handleViewAccount = async (account: Account) => {
+    setViewingAccount(account);
+    setOwnerInfo(null);
+    setLoadingOwner(true);
+
+    try {
+      if (account.role === "PATIENT") {
+        const patient = await getPatientByAccountId(account.id);
+        setOwnerInfo(patient);
+      } else if (["DOCTOR", "NURSE", "RECEPTIONIST", "ADMIN"].includes(account.role)) {
+        const employee = await hrService.getEmployeeByAccountId(account.id);
+        setOwnerInfo(employee);
+      }
+    } catch (error) {
+      console.error("Failed to fetch owner info:", error);
+    } finally {
+      setLoadingOwner(false);
+    }
   };
 
   return (
@@ -204,7 +238,11 @@ export default function AccountsPage() {
               accounts.map((account) => {
                 const roleBadge = getRoleBadge(account.role);
                 return (
-                  <tr key={account.id}>
+                  <tr 
+                    key={account.id}
+                    onClick={() => handleViewAccount(account)}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
                     {/* Email */}
                     <td>
                       <div className="flex items-center gap-3">
@@ -244,7 +282,7 @@ export default function AccountsPage() {
                     </td>
 
                     {/* Actions */}
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="btn-icon w-8 h-8">
@@ -307,29 +345,198 @@ export default function AccountsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reset Password Modal */}
-      <AlertDialog open={!!resetPasswordAccount} onOpenChange={() => setResetPasswordAccount(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Đặt lại mật khẩu</AlertDialogTitle>
-            <AlertDialogDescription>
-              Email đặt lại mật khẩu sẽ được gửi đến "{resetPasswordAccount?.email}".
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                toast.success("Đã gửi email đặt lại mật khẩu");
+      {/* Reset Password Modal - Real implementation */}
+      <Dialog open={!!resetPasswordAccount} onOpenChange={() => setResetPasswordAccount(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5" />
+              Đặt lại mật khẩu
+            </DialogTitle>
+          </DialogHeader>
+          {resetPasswordAccount && (
+            <ResetPasswordForm 
+              account={resetPasswordAccount}
+              onSuccess={() => {
                 setResetPasswordAccount(null);
+                fetchAccounts();
               }}
-              className="btn-primary"
-            >
-              Gửi email
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              onCancel={() => setResetPasswordAccount(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Detail Modal */}
+      <Dialog open={!!viewingAccount} onOpenChange={() => setViewingAccount(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Chi tiết tài khoản
+            </DialogTitle>
+          </DialogHeader>
+          {viewingAccount && (
+            <div className="space-y-4">
+              {/* Account Info Section */}
+              <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-semibold text-blue-900">Thông tin tài khoản</h4>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">Email</label>
+                    <p className="text-sm font-medium mt-1">{viewingAccount.email}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">ID tài khoản</label>
+                    <p className="text-sm font-mono mt-1">{viewingAccount.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">Vai trò</label>
+                    <div className="mt-1">
+                      <span className={`badge ${getRoleBadge(viewingAccount.role).class}`}>
+                        <Shield className="w-3 h-3" />
+                        {getRoleBadge(viewingAccount.role).label}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500">Trạng thái email</label>
+                    <div className="mt-1">
+                      {viewingAccount.emailVerified ? (
+                        <span className="badge badge-success">
+                          <CheckCircle className="w-3 h-3" />
+                          Đã xác thực
+                        </span>
+                      ) : (
+                        <span className="badge badge-warning">
+                          <XCircle className="w-3 h-3" />
+                          Chưa xác thực
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {/* Password note */}
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-800">
+                    <Key className="w-4 h-4" />
+                    <span className="text-sm font-medium">Mật khẩu</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Vì lý do bảo mật, mật khẩu không thể hiển thị. Sử dụng chức năng "Đặt lại mật khẩu" để thay đổi.
+                  </p>
+                </div>
+              </div>
+
+              {/* Owner Info Section */}
+              <div className="bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Briefcase className="w-5 h-5 text-green-600" />
+                  <h4 className="font-semibold text-green-900">
+                    Thông tin chủ tài khoản ({viewingAccount.role === "PATIENT" ? "Bệnh nhân" : "Nhân viên"})
+                  </h4>
+                </div>
+                
+                {loadingOwner ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-green-600" />
+                  </div>
+                ) : ownerInfo ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">Họ và tên</label>
+                      <p className="text-sm font-medium mt-1">{ownerInfo.fullName}</p>
+                    </div>
+                    {'phoneNumber' in ownerInfo && ownerInfo.phoneNumber && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Số điện thoại</label>
+                        <p className="text-sm mt-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {ownerInfo.phoneNumber}
+                        </p>
+                      </div>
+                    )}
+                    {'gender' in ownerInfo && ownerInfo.gender && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Giới tính</label>
+                        <p className="text-sm mt-1">
+                          {ownerInfo.gender === 'MALE' ? 'Nam' : ownerInfo.gender === 'FEMALE' ? 'Nữ' : 'Khác'}
+                        </p>
+                      </div>
+                    )}
+                    {'dateOfBirth' in ownerInfo && ownerInfo.dateOfBirth && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Ngày sinh</label>
+                        <p className="text-sm mt-1 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(ownerInfo.dateOfBirth).toLocaleDateString('vi-VN')}
+                        </p>
+                      </div>
+                    )}
+                    {'address' in ownerInfo && ownerInfo.address && (
+                      <div className="col-span-2">
+                        <label className="text-xs font-medium text-gray-500">Địa chỉ</label>
+                        <p className="text-sm mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {ownerInfo.address}
+                        </p>
+                      </div>
+                    )}
+                    {/* Employee-specific fields */}
+                    {'role' in ownerInfo && 'departmentName' in ownerInfo && (
+                      <>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500">Chức vụ</label>
+                          <p className="text-sm mt-1">{getRoleBadge((ownerInfo as Employee).role).label}</p>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-500">Phòng ban</label>
+                          <p className="text-sm mt-1">{(ownerInfo as Employee).departmentName || '-'}</p>
+                        </div>
+                      </>
+                    )}
+                    {/* Patient-specific fields */}
+                    {'bloodType' in ownerInfo && ownerInfo.bloodType && (
+                      <div>
+                        <label className="text-xs font-medium text-gray-500">Nhóm máu</label>
+                        <p className="text-sm mt-1">{ownerInfo.bloodType}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Chưa có thông tin chủ tài khoản được liên kết
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setViewingAccount(null);
+                    setEditingAccount(viewingAccount);
+                    setIsFormOpen(true);
+                  }}
+                  className="btn-secondary"
+                >
+                  <Edit className="w-4 h-4" />
+                  Chỉnh sửa
+                </button>
+                <button
+                  onClick={() => setViewingAccount(null)}
+                  className="btn-primary"
+                >
+                  Đóng
+                </button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -356,11 +563,21 @@ function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) {
 
     try {
       if (account) {
-        // Update - only send changed fields
-        const updateData: any = {};
-        if (formData.email !== account.email) updateData.email = formData.email;
+        // Update - only send changed fields, but always include email (required)
+        const updateData: any = { email: formData.email };
         if (formData.role !== account.role) updateData.role = formData.role;
         if (formData.password) updateData.password = formData.password;
+        
+        // Check if there are any actual changes
+        const hasChanges = formData.email !== account.email || 
+                           formData.role !== account.role || 
+                           formData.password;
+        
+        if (!hasChanges) {
+          toast.info("Không có thay đổi nào để cập nhật");
+          setLoading(false);
+          return;
+        }
         
         await authService.updateAccount(account.id, updateData);
         toast.success("Đã cập nhật tài khoản thành công");
@@ -468,6 +685,124 @@ function AccountForm({ account, onSuccess, onCancel }: AccountFormProps) {
         <button type="submit" disabled={loading} className="btn-primary">
           {loading && <Loader2 className="w-4 h-4 animate-spin" />}
           {account ? "Cập nhật" : "Tạo tài khoản"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// Reset Password Form Component
+interface ResetPasswordFormProps {
+  account: Account;
+  onSuccess: () => void;
+  onCancel: () => void;
+}
+
+function ResetPasswordForm({ account, onSuccess, onCancel }: ResetPasswordFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword.length < 8) {
+      toast.error("Mật khẩu phải có ít nhất 8 ký tự");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.updateAccount(account.id, {
+        email: account.email, // Required by backend
+        password: newPassword,
+      });
+      toast.success(`Đã đặt lại mật khẩu cho tài khoản ${account.email}`);
+      onSuccess();
+    } catch (error) {
+      console.error("Failed to reset password:", error);
+      toast.error("Không thể đặt lại mật khẩu. Vui lòng thử lại.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Account Info */}
+      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+        <p className="text-sm">
+          <span className="text-gray-500">Tài khoản:</span>{" "}
+          <span className="font-medium">{account.email}</span>
+        </p>
+      </div>
+
+      {/* New Password */}
+      <div className="space-y-2">
+        <label className="text-label">Mật khẩu mới *</label>
+        <div className="relative">
+          <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+          <input
+            type={showPassword ? "text" : "password"}
+            className="input-base pl-10 pr-10"
+            placeholder="Nhập mật khẩu mới"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            minLength={8}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            {showPassword ? (
+              <XCircle className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+        <p className="text-xs text-gray-500">Tối thiểu 8 ký tự</p>
+      </div>
+
+      {/* Confirm Password */}
+      <div className="space-y-2">
+        <label className="text-label">Xác nhận mật khẩu *</label>
+        <div className="relative">
+          <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[hsl(var(--muted-foreground))]" />
+          <input
+            type={showPassword ? "text" : "password"}
+            className="input-base pl-10"
+            placeholder="Nhập lại mật khẩu mới"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+        </div>
+        {confirmPassword && newPassword !== confirmPassword && (
+          <p className="text-xs text-red-500">Mật khẩu không khớp</p>
+        )}
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-end gap-3 pt-4 border-t border-[hsl(var(--border))]">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          Hủy
+        </button>
+        <button 
+          type="submit" 
+          disabled={loading || !newPassword || !confirmPassword || newPassword !== confirmPassword} 
+          className="btn-primary"
+        >
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          Đặt lại mật khẩu
         </button>
       </div>
     </form>

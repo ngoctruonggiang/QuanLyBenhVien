@@ -45,11 +45,29 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      await authService.register({
+      // Step 1: Create account
+      const accountResponse = await authService.register({
         email: formData.email,
         password: formData.password,
         fullName: formData.fullName,
       });
+      
+      // Step 2: Auto-create patient record linked to this account
+      try {
+        const { createPatient } = await import("@/services/patient.service");
+        await createPatient({
+          accountId: accountResponse.accountId,
+          fullName: formData.fullName,
+          email: formData.email,
+          phoneNumber: "0000000000", // Placeholder - user updates in profile
+        });
+        console.log("[Register] Patient record created successfully");
+      } catch (patientError) {
+        // Don't block registration if patient creation fails
+        // User can complete profile later
+        console.warn("[Register] Failed to auto-create patient record:", patientError);
+      }
+      
       toast.success("Đăng ký thành công! Vui lòng đăng nhập.");
       router.push("/login");
     } catch (error: any) {

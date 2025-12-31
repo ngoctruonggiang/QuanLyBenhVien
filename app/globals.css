@@ -538,12 +538,21 @@ body {
 .input-base {
   width: 100%;
   padding: 0.625rem 0.875rem;
+  padding-left: 0.875rem; /* Default left padding */
   background: hsl(var(--background-card));
   border: 1px solid hsl(var(--border));
   border-radius: var(--radius);
   font-size: 0.875rem;
   color: hsl(var(--foreground));
   transition: all 0.2s ease;
+}
+
+/* Input with left icon - ensure text doesn't overlap icon */
+.input-base.input-with-icon,
+.input-base[class*="pl-10"],
+input.input-base[style*="padding-left"],
+.relative > .input-base:not(:first-child) {
+  padding-left: 2.75rem; /* ~44px to ensure space for icon */
 }
 
 .input-base:focus {

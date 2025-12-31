@@ -28,6 +28,7 @@ const patientSchema = z.object({
   dateOfBirth: z.string().min(1, "Vui lòng chọn ngày sinh"),
   gender: z.enum(["MALE", "FEMALE"], { message: "Vui lòng chọn giới tính" }),
   address: z.string().optional(),
+  identificationNumber: z.string().max(20, "Số CMND/CCCD không quá 20 ký tự").optional(),
   // Medical info (optional)
   bloodType: z.string().optional(),
   healthInsuranceNumber: z.string().max(20, "Số BHYT không quá 20 ký tự").optional(),
@@ -36,6 +37,8 @@ const patientSchema = z.object({
   relativeFullName: z.string().max(100).optional(),
   relativePhoneNumber: z.string().regex(/^(0|\+84)(\d{9})$/, "Số điện thoại không hợp lệ").optional().or(z.literal("")),
   relativeRelationship: z.string().max(100).optional(),
+  // Account linking (optional)
+  accountId: z.string().optional(),
 });
 
 type PatientFormData = z.infer<typeof patientSchema>;
@@ -73,6 +76,7 @@ export default function WalkInPage() {
     dateOfBirth: "",
     gender: "MALE" as "MALE" | "FEMALE",
     address: "",
+    identificationNumber: "",
     // Medical info
     bloodType: "",
     healthInsuranceNumber: "",
@@ -81,6 +85,8 @@ export default function WalkInPage() {
     relativeFullName: "",
     relativePhoneNumber: "",
     relativeRelationship: "",
+    // Account linking
+    accountId: "",
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
@@ -485,6 +491,17 @@ export default function WalkInPage() {
                   onChange={(e) => setPatientForm({ ...patientForm, address: e.target.value })}
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-label">Số CMND/CCCD</label>
+                <input
+                  type="text"
+                  className="input-base"
+                  placeholder="VD: 001234567890"
+                  maxLength={20}
+                  value={patientForm.identificationNumber}
+                  onChange={(e) => setPatientForm({ ...patientForm, identificationNumber: e.target.value })}
+                />
+              </div>
 
               {/* Medical Info Section */}
               <div className="col-span-2 mt-4">
@@ -585,6 +602,29 @@ export default function WalkInPage() {
                         onChange={(e) => setPatientForm({ ...patientForm, relativeRelationship: e.target.value })}
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Account Linking Section (Optional) */}
+              <div className="col-span-2 mt-2">
+                <div className="bg-gradient-to-br from-violet-50 to-white border-2 border-violet-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-4">
+                    <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                    <h4 className="font-semibold text-violet-900">Liên kết tài khoản (không bắt buộc)</h4>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-label">Account ID</label>
+                    <input
+                      type="text"
+                      className="input-base"
+                      placeholder="Để trống nếu chưa có tài khoản"
+                      value={patientForm.accountId}
+                      onChange={(e) => setPatientForm({ ...patientForm, accountId: e.target.value })}
+                    />
+                    <p className="text-xs text-gray-500">ID của tài khoản nếu bệnh nhân đã đăng ký</p>
                   </div>
                 </div>
               </div>

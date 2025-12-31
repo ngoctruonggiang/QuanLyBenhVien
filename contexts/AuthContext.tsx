@@ -140,28 +140,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("userRole", response.role);
       localStorage.setItem("userAccountId", response.accountId);
 
-      // Store IDs if present in response
-      if (response.employeeId) {
-        Cookies.set("userEmployeeId", response.employeeId, { expires: 7 });
-        if (response.role === "DOCTOR") localStorage.setItem("userEmployeeId", response.employeeId);
+      // Fetch linked entity IDs based on role
+      let employeeId: string | undefined;
+      let patientId: string | undefined;
+      let fullName = response.email; // Default to email
+
+      if (response.role === "PATIENT") {
+        // Fetch patient record by accountId
+        try {
+          const { getPatientByAccountId } = await import("@/services/patient.service");
+          const patient = await getPatientByAccountId(response.accountId);
+          if (patient) {
+            patientId = patient.id;
+            fullName = patient.fullName;
+            Cookies.set("userPatientId", patientId, { expires: 7 });
+            Cookies.set("userFullName", fullName, { expires: 7 });
+            console.log("[AuthContext] Found patient:", patientId);
+          }
+        } catch (error) {
+          console.warn("[AuthContext] Failed to fetch patient record:", error);
+        }
+      } else if (["DOCTOR", "NURSE", "RECEPTIONIST", "ADMIN"].includes(response.role)) {
+        // Fetch employee record by accountId
+        try {
+          const { hrService } = await import("@/services/hr.service");
+          const employee = await hrService.getEmployeeByAccountId(response.accountId);
+          if (employee) {
+            employeeId = employee.id;
+            fullName = employee.fullName;
+            Cookies.set("userEmployeeId", employeeId, { expires: 7 });
+            Cookies.set("userFullName", fullName, { expires: 7 });
+            if (response.role === "DOCTOR") {
+              localStorage.setItem("userEmployeeId", employeeId);
+            }
+            console.log("[AuthContext] Found employee:", employeeId);
+          }
+        } catch (error) {
+          console.warn("[AuthContext] Failed to fetch employee record:", error);
+        }
       }
-      if (response.patientId) {
-        Cookies.set("userPatientId", response.patientId, { expires: 7 });
-      }
-      
-      // Note: Real login might not return fullName/dep immediately. 
-      // We rely on subsequent /me or profile fetches, or set defaults.
-      // We will set fullName to email as fallback until profile loaded
-      const fullName = response.email; 
-      Cookies.set("userFullName", fullName, { expires: 7 });
 
       setUser({
         accountId: response.accountId,
         email: response.email,
         role: response.role,
-        fullName: fullName, 
-        employeeId: response.employeeId,
-        patientId: response.patientId,
+        fullName: fullName,
+        employeeId: employeeId,
+        patientId: patientId,
       });
 
       handleRedirect(response.role);

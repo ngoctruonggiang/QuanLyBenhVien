@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { hrService } from "@/services/hr.service";
+import { authService, Account } from "@/services/auth.service";
 import { Employee, EmployeeRequest, EmployeeRole, EmployeeStatus } from "@/interfaces/hr";
 import { AvatarUpload } from "@/components/ui/avatar-upload";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -526,6 +527,63 @@ function EmployeeForm({ employee, departments, onSuccess, onCancel }: EmployeeFo
     hiredAt: employee?.hiredAt || "",
   });
 
+  // Account search states
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(false);
+  const [accountSearch, setAccountSearch] = useState("");
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [selectedAccountEmail, setSelectedAccountEmail] = useState("");
+
+  // Fetch staff accounts on mount
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      setLoadingAccounts(true);
+      try {
+        // Get accounts with staff roles only
+        const response = await authService.getAccounts(
+          undefined,
+          ["DOCTOR", "NURSE", "RECEPTIONIST", "ADMIN"]
+        );
+        setAccounts(response.content || []);
+        // If editing, find the selected account's email
+        if (employee?.accountId) {
+          const acc = response.content?.find(a => a.id === employee.accountId);
+          if (acc) setSelectedAccountEmail(acc.email);
+        }
+      } catch (error) {
+        console.error("Failed to fetch accounts:", error);
+      } finally {
+        setLoadingAccounts(false);
+      }
+    };
+    fetchAccounts();
+  }, [employee?.accountId]);
+
+  const filteredAccounts = accounts.filter(acc => 
+    acc.email.toLowerCase().includes(accountSearch.toLowerCase())
+  );
+
+  const handleAccountSelect = (account: Account) => {
+    setFormData({ ...formData, accountId: account.id });
+    setSelectedAccountEmail(account.email);
+    setShowAccountDropdown(false);
+    setAccountSearch("");
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowAccountDropdown(false);
+    if (showAccountDropdown) {
+      document.addEventListener("click", handleClickOutside);
+    }
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [showAccountDropdown]);
+
+  const handleClearAccount = () => {
+    setFormData({ ...formData, accountId: "" });
+    setSelectedAccountEmail("");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -564,16 +622,70 @@ function EmployeeForm({ employee, departments, onSuccess, onCancel }: EmployeeFo
           />
         </div>
 
-        {/* Account ID */}
+        {/* Account (for login) */}
         <div className="col-span-2 sm:col-span-1 space-y-2">
-          <label className="text-label">Account ID</label>
-          <input
-            type="text"
-            className="input-base"
-            value={formData.accountId}
-            onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
-            placeholder="Tùy chọn"
-          />
+          <label className="text-label">Tài khoản đăng nhập</label>
+          <div className="relative">
+            {selectedAccountEmail ? (
+              <div className="input-base flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-green-600" />
+                  <span className="text-sm">{selectedAccountEmail}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearAccount}
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    className="input-base pl-10"
+                    placeholder="Tìm tài khoản theo email..."
+                    value={accountSearch}
+                    onChange={(e) => setAccountSearch(e.target.value)}
+                    onFocus={() => setShowAccountDropdown(true)}
+                  />
+                  {loadingAccounts && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                  )}
+                </div>
+                {showAccountDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {filteredAccounts.length === 0 ? (
+                      <div className="p-3 text-sm text-gray-500 text-center">
+                        {accountSearch ? "Không tìm thấy" : "Nhập để tìm kiếm"}
+                      </div>
+                    ) : (
+                      filteredAccounts.map((acc) => (
+                        <button
+                          key={acc.id}
+                          type="button"
+                          onClick={() => handleAccountSelect(acc)}
+                          className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-3 border-b last:border-b-0"
+                        >
+                          <div className="avatar w-8 h-8 text-xs">
+                            {acc.email.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{acc.email}</p>
+                            <p className="text-xs text-gray-500">{acc.role}</p>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          <p className="text-xs text-gray-500">Chọn tài khoản để nhân viên có thể đăng nhập hệ thống</p>
         </div>
 
         {/* Role */}
