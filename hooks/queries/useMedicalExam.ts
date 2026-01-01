@@ -97,11 +97,13 @@ export function useMedicalExam(id: string) {
   });
 }
 
-export function useMedicalExamByAppointment(appointmentId: string) {
+export function useMedicalExamByAppointment(appointmentId: string, enabled = true) {
   return useQuery<MedicalExam | undefined, Error>({
     queryKey: ["medical-exam", "appointment", appointmentId],
     queryFn: () => getMedicalExamByAppointment(appointmentId),
-    enabled: !!appointmentId,
+    enabled: !!appointmentId && enabled,
+    retry: false, // Don't retry - 404 is expected when no exam exists
+    staleTime: 30000, // Consider data fresh for 30s to reduce refetches
   });
 }
 

@@ -152,7 +152,7 @@ export default function EditDoctorMedicalExamPage({
           symptoms: medicalExam.symptoms || "",
           treatment: medicalExam.treatment || "",
           notes: medicalExam.notes || "",
-          followUpDate: medicalExam.followUpDate ? new Date(medicalExam.followUpDate).toISOString().split('T')[0] : undefined,
+          followUpDate: medicalExam.followUpDate ? new Date(medicalExam.followUpDate).toISOString().split('T')[0] : "",
         }}
         onSubmit={(data) => handleSubmit(data, (medicalExam.status as "PENDING" | "FINALIZED") || "PENDING")}
         onSubmitWithStatus={handleSubmit}

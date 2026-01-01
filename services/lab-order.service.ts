@@ -3,7 +3,7 @@ import api from "@/config/axios";
 // ============ Types ============
 
 export type LabOrderStatus = "ORDERED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-export type OrderPriority = "NORMAL" | "URGENT" | "STAT";
+export type OrderPriority = "NORMAL" | "URGENT";
 
 export interface LabOrderRequest {
   medicalExamId: string;
@@ -145,8 +145,7 @@ export function getOrderStatusColor(status: LabOrderStatus): string {
 export function getPriorityLabel(priority: OrderPriority): string {
   const labels: Record<OrderPriority, string> = {
     NORMAL: "Bình thường",
-    URGENT: "Khẩn",
-    STAT: "Cấp cứu",
+    URGENT: "Khẩn cấp",
   };
   return labels[priority];
 }
@@ -155,7 +154,6 @@ export function getPriorityColorOrder(priority: OrderPriority): string {
   const colors: Record<OrderPriority, string> = {
     NORMAL: "bg-gray-100 text-gray-800",
     URGENT: "bg-orange-100 text-orange-800",
-    STAT: "bg-red-100 text-red-800",
   };
   return colors[priority];
 }

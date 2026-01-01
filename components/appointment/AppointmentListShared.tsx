@@ -43,6 +43,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CancelAppointmentDialog } from "@/app/admin/appointments/_components/cancel-appointment-dialog";
 import { getAppointmentColumnsByRole } from "@/components/appointment/AppointmentColumnsShared";
 import { AppointmentScheduleView } from "@/components/appointment/AppointmentScheduleView";
+import { VitalSignsDialog } from "@/components/nurse/VitalSignsDialog";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
@@ -79,6 +80,10 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "schedule">("list");
+  
+  // Vital Signs Dialog state - lifted up to prevent re-render issues
+  const [vitalDialogOpen, setVitalDialogOpen] = useState(false);
+  const [vitalAppointment, setVitalAppointment] = useState<Appointment | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -163,15 +168,22 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
     router.push(`${basePath}/appointments/${appointment.id}/edit`);
   };
 
+  const handleVitalSignsClick = (appointment: Appointment) => {
+    setVitalAppointment(appointment);
+    setVitalDialogOpen(true);
+  };
+
   const columns = useMemo(
     () =>
       getAppointmentColumnsByRole(
         role,
         handleCancelClick,
         handleCompleteClick,
-        handleEditClick
+        handleEditClick,
+        user?.role, // Pass actual user role for nurse vital signs check
+        handleVitalSignsClick // Vital signs callback
       ),
-    [role]
+    [role, user?.role]
   );
 
   // Permission checks - PATIENT can create appointments after verification
@@ -448,6 +460,21 @@ export function AppointmentListShared({ role }: AppointmentListSharedProps) {
         }}
         isLoading={cancelMutation.isPending}
       />
+
+      {/* Vital Signs Dialog - lifted state to prevent re-render issues */}
+      {vitalAppointment && (
+        <VitalSignsDialog
+          appointmentId={vitalAppointment.id}
+          patientName={vitalAppointment.patient?.fullName || "Bệnh nhân"}
+          open={vitalDialogOpen}
+          onOpenChange={(open) => {
+            setVitalDialogOpen(open);
+            if (!open) {
+              setVitalAppointment(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -19,27 +19,32 @@ import {
   XCircle,
   ArrowUpDown,
   CheckCircle,
+  Activity,
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import React from "react";
+
 
 type UserRole = "ADMIN" | "DOCTOR" | "NURSE" | "PATIENT";
 
 interface ColumnActionsProps {
   appointment: Appointment;
   role: UserRole;
+  userRole?: string; // Actual user role from auth context
   onCancel: (appointment: Appointment) => void;
   onComplete: (appointment: Appointment) => void;
   onEdit: (appointment: Appointment) => void;
+  onVitalSigns?: (appointment: Appointment) => void;
 }
 
 function ColumnActions({
   appointment,
   role,
+  userRole,
   onCancel,
   onComplete,
   onEdit,
+  onVitalSigns,
 }: ColumnActionsProps) {
   const canEdit =
     (role === "ADMIN" || role === "NURSE") &&
@@ -48,66 +53,84 @@ function ColumnActions({
   const canComplete =
     (role === "ADMIN" || role === "DOCTOR") &&
     appointment.status === "SCHEDULED";
+  
+  // Check if user is actually a NURSE (for vital signs)
+  const isNurse = userRole === "NURSE";
 
   const basePath = role === "ADMIN" ? "/admin" : `/${role.toLowerCase()}`;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <span className="sr-only">Open menu</span>
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem asChild>
-          <Link href={`${basePath}/appointments/${appointment.id}`}>
-            <Eye className="mr-2 h-4 w-4" />
-            View Details
-          </Link>
-        </DropdownMenuItem>
-
-        {canEdit && (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(appointment);
-            }}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Edit / Reschedule
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`${basePath}/appointments/${appointment.id}`}>
+              <Eye className="mr-2 h-4 w-4" />
+              View Details
+            </Link>
           </DropdownMenuItem>
-        )}
 
-        {canComplete && (
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.stopPropagation();
-              onComplete(appointment);
-            }}
-          >
-            <CheckCircle className="mr-2 h-4 w-4" />
-            Mark as Completed
-          </DropdownMenuItem>
-        )}
-
-        {canCancel && (
-          <>
-            <DropdownMenuSeparator />
+          {canEdit && (
             <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
-                onCancel(appointment);
+                onEdit(appointment);
               }}
             >
-              <XCircle className="mr-2 h-4 w-4" />
-              Cancel
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit / Reschedule
             </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          )}
+
+          {/* Nurse: Vital Signs action */}
+          {isNurse && appointment.status === "SCHEDULED" && onVitalSigns && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onVitalSigns(appointment);
+              }}
+            >
+              <Activity className="mr-2 h-4 w-4" />
+              Điền Vital Signs
+            </DropdownMenuItem>
+          )}
+
+          {canComplete && (
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                onComplete(appointment);
+              }}
+            >
+              <CheckCircle className="mr-2 h-4 w-4" />
+              Mark as Completed
+            </DropdownMenuItem>
+          )}
+
+          {canCancel && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCancel(appointment);
+                }}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancel
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
   );
 }
 
@@ -134,7 +157,9 @@ export function getAppointmentColumnsByRole(
   role: UserRole,
   onCancel: (appointment: Appointment) => void,
   onComplete: (appointment: Appointment) => void,
-  onEdit: (appointment: Appointment) => void
+  onEdit: (appointment: Appointment) => void,
+  userRole?: string,
+  onVitalSigns?: (appointment: Appointment) => void
 ): ColumnDef<Appointment>[] {
   const columns: ColumnDef<Appointment>[] = [];
 
@@ -234,9 +259,11 @@ export function getAppointmentColumnsByRole(
           <ColumnActions
             appointment={row.original}
             role={role}
+            userRole={userRole}
             onCancel={onCancel}
             onComplete={onComplete}
             onEdit={onEdit}
+            onVitalSigns={onVitalSigns}
           />
         </div>
       ),

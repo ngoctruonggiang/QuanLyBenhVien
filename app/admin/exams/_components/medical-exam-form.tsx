@@ -349,6 +349,7 @@ export function MedicalExamForm({
                     className="max-w-xs"
                     min={new Date().toISOString().split('T')[0]}
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <p className="text-sm text-muted-foreground mt-1">

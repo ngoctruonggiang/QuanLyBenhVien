@@ -173,9 +173,7 @@ export default function NurseLabOrdersPage() {
                 <div
                   key={order.id}
                   className={`flex items-center justify-between p-4 rounded-lg border transition-colors hover:bg-muted/50 ${
-                    order.priority === "STAT"
-                      ? "border-red-300 bg-red-50"
-                      : order.priority === "URGENT"
+                    order.priority === "URGENT"
                       ? "border-orange-300 bg-orange-50"
                       : ""
                   }`}

@@ -5,6 +5,7 @@ import { MedicalExamForm } from "@/app/admin/exams/_components/medical-exam-form
 import { MedicalExamFormValues } from "@/lib/schemas/medical-exam";
 import { useCreateMedicalExam } from "@/hooks/queries/useMedicalExam";
 import { useAppointment } from "@/hooks/queries/useAppointment";
+import { useCompleteAppointment } from "@/hooks/queries/useQueue";
 import { useAuth } from "@/contexts/AuthContext";
 import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ function CreateMedicalExamPageClient() {
   const searchParams = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
   const createExamMutation = useCreateMedicalExam();
+  const completeAppointmentMutation = useCompleteAppointment();
   const [showPrescriptionPrompt, setShowPrescriptionPrompt] = useState(false);
   const [createdExamId, setCreatedExamId] = useState<string | null>(null);
 
@@ -90,6 +92,17 @@ function CreateMedicalExamPageClient() {
 
       const examId = result.id;
       toast.success("Medical exam created successfully");
+
+      // Auto-complete the appointment if it exists
+      if (appointmentId) {
+        try {
+          await completeAppointmentMutation.mutateAsync(appointmentId);
+          console.log("Appointment auto-completed:", appointmentId);
+        } catch (err) {
+          // Non-critical error, just log it
+          console.warn("Could not auto-complete appointment:", err);
+        }
+      }
 
       // Show prompt to add prescription
       setCreatedExamId(examId);

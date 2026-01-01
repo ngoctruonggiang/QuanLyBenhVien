@@ -12,7 +12,6 @@ import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useMyEmployeeProfile } from "@/hooks/queries/useHr";
 import { OrderLabTestDialog } from "@/components/lab/OrderLabTestDialog";
-import { LabResultsSection } from "@/components/lab/LabResultsSection";
 
 export default function DoctorMedicalExamDetailPage({
   params,
@@ -118,12 +117,6 @@ export default function DoctorMedicalExamDetailPage({
         userRole="DOCTOR"
         patientProfileBaseHref="/doctor/patients"
         examBaseHref="/doctor/exams"
-      />
-
-      {/* Lab Test Results Section */}
-      <LabResultsSection
-        medicalExamId={id}
-        patientName={medicalExam.patient?.fullName}
       />
     </div>
   );

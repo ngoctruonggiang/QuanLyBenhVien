@@ -94,7 +94,18 @@ export default function DoctorQueuePage() {
     }
   };
 
-  const handleStartExam = (appointment: QueueItem) => {
+  const handleStartExam = async (appointment: QueueItem) => {
+    console.log("handleStartExam called with:", appointment);
+    
+    // Complete the appointment first (backend requires COMPLETED status to create exam)
+    try {
+      await completeMutation.mutateAsync(appointment.id);
+      toast.success("Đã chuẩn bị cho khám bệnh");
+    } catch (err) {
+      console.warn("Could not complete appointment:", err);
+      // Still try to redirect, maybe it's already completed
+    }
+    
     router.push(`/doctor/exams/new?appointmentId=${appointment.id}`);
   };
 
@@ -189,21 +200,8 @@ export default function DoctorQueuePage() {
                     )}
 
                     <div className="flex gap-2">
-                      {/* IN_PROGRESS: Show only "Hoàn thành" */}
+                      {/* IN_PROGRESS: Show "Bắt đầu khám" to redirect to exam creation */}
                       {currentPatient.status === "IN_PROGRESS" && (
-                        <Button
-                          className="flex-1"
-                          variant="outline"
-                          onClick={() => handleComplete(currentPatient.id)}
-                          disabled={completeMutation.isPending}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Hoàn thành
-                        </Button>
-                      )}
-                      
-                      {/* COMPLETED: Show "Bắt đầu khám" */}
-                      {currentPatient.status === "COMPLETED" && (
                         <Button
                           className="flex-1"
                           onClick={() => handleStartExam(currentPatient)}
@@ -211,6 +209,14 @@ export default function DoctorQueuePage() {
                           <Play className="h-4 w-4 mr-2" />
                           Bắt đầu khám
                         </Button>
+                      )}
+                      
+                      {/* COMPLETED: Already examined, show info */}
+                      {currentPatient.status === "COMPLETED" && (
+                        <div className="flex-1 text-center py-2 bg-emerald-50 rounded-lg text-emerald-700">
+                          <CheckCircle className="h-4 w-4 inline mr-2" />
+                          Đã hoàn thành khám
+                        </div>
                       )}
                     </div>
                   </div>
@@ -264,7 +270,7 @@ export default function DoctorQueuePage() {
                     Sắp xếp theo mức ưu tiên và số thứ tự
                   </CardDescription>
                 </div>
-                {waitingPatients.length > 0 && !currentPatient && (
+                {waitingPatients.length > 0 && !inProgressPatient && (
                   <Button onClick={handleCallNext} disabled={callNextMutation.isPending}>
                     <Phone className="h-4 w-4 mr-2" />
                     Gọi bệnh nhân tiếp
@@ -331,7 +337,7 @@ export default function DoctorQueuePage() {
                           </div>
                         </div>
 
-                        {index === 0 && !currentPatient && (
+                        {index === 0 && !inProgressPatient && (
                           <Button size="sm" onClick={handleCallNext}>
                             Gọi
                             <ArrowRight className="h-4 w-4 ml-2" />

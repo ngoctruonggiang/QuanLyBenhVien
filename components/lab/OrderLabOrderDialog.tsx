@@ -51,8 +51,7 @@ const categoryColors: Record<LabTestCategory, string> = {
 
 const priorityOptions: { value: OrderPriority; label: string }[] = [
   { value: "NORMAL", label: "Bình thường" },
-  { value: "URGENT", label: "Khẩn" },
-  { value: "STAT", label: "Cấp cứu" },
+  { value: "URGENT", label: "Khẩn cấp" },
 ];
 
 export function OrderLabOrderDialog({
@@ -125,8 +124,8 @@ export function OrderLabOrderDialog({
           Tạo Phiếu Xét nghiệm
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5 text-teal-500" />
             Tạo Phiếu Xét nghiệm
@@ -136,118 +135,121 @@ export function OrderLabOrderDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          {/* Priority Selection */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Mức ưu tiên</Label>
-              <Select value={priority} onValueChange={(v) => setPriority(v as OrderPriority)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {priorityOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-end">
-              <div className="text-sm text-muted-foreground">
-                Đã chọn: <span className="font-bold text-foreground">{selectedTestIds.length}</span> xét nghiệm
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto py-4 min-h-0">
+          <div className="grid gap-4">
+            {/* Priority Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Mức ưu tiên</Label>
+                <Select value={priority} onValueChange={(v) => setPriority(v as OrderPriority)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priorityOptions.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <div className="text-sm text-muted-foreground">
+                  Đã chọn: <span className="font-bold text-foreground">{selectedTestIds.length}</span> xét nghiệm
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Test Selection */}
-          <div className="space-y-2">
-            <Label>Chọn xét nghiệm *</Label>
-            {isLoadingTests ? (
-              <div className="flex items-center gap-2 text-muted-foreground p-4">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Đang tải danh sách...
-              </div>
-            ) : (
-              <ScrollArea className="h-[250px] border rounded-lg p-3">
-                <div className="space-y-2">
-                  {labTests?.map((test) => (
-                    <div
-                      key={test.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                        selectedTestIds.includes(test.id)
-                          ? "bg-teal-50 border-teal-300"
-                          : "hover:bg-muted/50"
-                      }`}
-                      onClick={() => toggleTest(test.id)}
-                    >
-                      <Checkbox
-                        checked={selectedTestIds.includes(test.id)}
-                        onCheckedChange={() => toggleTest(test.id)}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{test.name}</span>
-                          <Badge className={categoryColors[test.category]} variant="secondary">
-                            {categoryLabels[test.category]}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>Mã: {test.code}</span>
-                          <span>•</span>
-                          <span className="text-teal-600 font-medium">
-                            {test.price?.toLocaleString("vi-VN")} VND
-                          </span>
+            {/* Test Selection */}
+            <div className="space-y-2">
+              <Label>Chọn xét nghiệm *</Label>
+              {isLoadingTests ? (
+                <div className="flex items-center gap-2 text-muted-foreground p-4">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang tải danh sách...
+                </div>
+              ) : (
+                <ScrollArea className="h-[200px] border rounded-lg p-3">
+                  <div className="space-y-2">
+                    {labTests?.map((test) => (
+                      <div
+                        key={test.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                          selectedTestIds.includes(test.id)
+                            ? "bg-teal-50 border-teal-300"
+                            : "hover:bg-muted/50"
+                        }`}
+                        onClick={() => toggleTest(test.id)}
+                      >
+                        <Checkbox
+                          checked={selectedTestIds.includes(test.id)}
+                          onCheckedChange={() => toggleTest(test.id)}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{test.name}</span>
+                            <Badge className={categoryColors[test.category]} variant="secondary">
+                              {categoryLabels[test.category]}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>Mã: {test.code}</span>
+                            <span>•</span>
+                            <span className="text-teal-600 font-medium">
+                              {test.price?.toLocaleString("vi-VN")} VND
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </div>
+
+            {/* Selected Tests Summary */}
+            {selectedTests.length > 0 && (
+              <div className="space-y-2">
+                <Label>Xét nghiệm đã chọn</Label>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTests.map((test) => (
+                    <Badge key={test.id} variant="secondary" className="gap-1 py-1 px-2">
+                      {test.name}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTest(test.id);
+                        }}
+                        className="ml-1 hover:text-destructive"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
                   ))}
                 </div>
-              </ScrollArea>
+                <div className="text-right text-sm">
+                  Tổng: <span className="font-bold text-teal-600">{totalPrice.toLocaleString("vi-VN")} VND</span>
+                </div>
+              </div>
             )}
-          </div>
 
-          {/* Selected Tests Summary */}
-          {selectedTests.length > 0 && (
+            {/* Notes */}
             <div className="space-y-2">
-              <Label>Xét nghiệm đã chọn</Label>
-              <div className="flex flex-wrap gap-2">
-                {selectedTests.map((test) => (
-                  <Badge key={test.id} variant="secondary" className="gap-1 py-1 px-2">
-                    {test.name}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeTest(test.id);
-                      }}
-                      className="ml-1 hover:text-destructive"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="text-right text-sm">
-                Tổng: <span className="font-bold text-teal-600">{totalPrice.toLocaleString("vi-VN")} VND</span>
-              </div>
+              <Label htmlFor="notes">Ghi chú (tùy chọn)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Nhập ghi chú cho phiếu xét nghiệm..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
             </div>
-          )}
-
-          {/* Notes */}
-          <div className="space-y-2">
-            <Label htmlFor="notes">Ghi chú (tùy chọn)</Label>
-            <Textarea
-              id="notes"
-              placeholder="Nhập ghi chú cho phiếu xét nghiệm..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={2}
-            />
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="flex-shrink-0 gap-2 border-t pt-4">
           <Button variant="ghost" onClick={handleReset} disabled={selectedTestIds.length === 0}>
             Xóa tất cả
           </Button>

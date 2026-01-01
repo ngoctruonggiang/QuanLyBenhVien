@@ -124,8 +124,16 @@ export const getMedicalExam = async (id: string) => {
 
 export const getMedicalExamByAppointment = async (appointmentId: string) => {
   if (!USE_MOCK) {
-    const response = await axiosInstance.get(`${BASE_URL_EXAMS}/by-appointment/${appointmentId}`);
-    return response.data.data;
+    try {
+      const response = await axiosInstance.get(`${BASE_URL_EXAMS}/by-appointment/${appointmentId}`);
+      return response.data.data;
+    } catch (error: any) {
+      // Return undefined for 404 (no exam found) - this is expected
+      if (error.response?.status === 404) {
+        return undefined;
+      }
+      throw error;
+    }
   }
 
   await delay(300);
