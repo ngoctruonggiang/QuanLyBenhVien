@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   FlaskConical,
   Plus,
@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   MoreHorizontal,
+  TestTube,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListPageHeader } from "@/components/ui/list-page-header";
+import { FilterPills } from "@/components/ui/filter-pills";
 import {
   useLabTests,
   useCreateLabTest,
@@ -100,6 +103,7 @@ export default function LabTestsPage() {
   const updateMutation = useUpdateLabTest();
   const deleteMutation = useDeleteLabTest();
   const labTests: LabTest[] = data?.content || [];
+  const totalTests = labTests.length;
 
   const filteredTests = labTests.filter((test) => {
     const matchesSearch =
@@ -109,6 +113,24 @@ export default function LabTestsPage() {
       categoryFilter === "ALL" || test.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Stats for FilterPills
+  const labCount = useMemo(
+    () => labTests.filter((t) => t.category === "LAB").length,
+    [labTests]
+  );
+  const imagingCount = useMemo(
+    () => labTests.filter((t) => t.category === "IMAGING").length,
+    [labTests]
+  );
+  const pathologyCount = useMemo(
+    () => labTests.filter((t) => t.category === "PATHOLOGY").length,
+    [labTests]
+  );
+  const activeCount = useMemo(
+    () => labTests.filter((t) => t.isActive).length,
+    [labTests]
+  );
 
   const handleOpenCreate = () => {
     setFormData({
@@ -161,56 +183,54 @@ export default function LabTestsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="page-header">
-          <h1>
-            <FlaskConical className="h-6 w-6 text-teal-500" />
-            Lab Test Types Management
-          </h1>
-          <p>Manage catalog of lab tests and diagnostic imaging</p>
+      {/* Enhanced Header */}
+      <ListPageHeader
+        title="Lab Test Types"
+        description="Manage catalog of lab tests and diagnostic imaging"
+        theme="teal"
+        icon={<TestTube className="h-6 w-6 text-white" />}
+        stats={[
+          { label: "Total Tests", value: totalTests },
+          { label: "Active", value: activeCount },
+          { label: "Lab Tests", value: labCount },
+          { label: "Imaging", value: imagingCount },
+        ]}
+        primaryAction={{
+          label: "Add Test Type",
+          onClick: handleOpenCreate,
+          icon: <Plus className="h-4 w-4 mr-2" />,
+        }}
+      />
+
+      {/* Quick Filter Pills */}
+      <FilterPills
+        filters={[
+          { id: "ALL", label: "All", count: totalTests },
+          { id: "LAB", label: "Laboratory", count: labCount },
+          { id: "IMAGING", label: "Imaging", count: imagingCount },
+          { id: "PATHOLOGY", label: "Pathology", count: pathologyCount },
+        ]}
+        activeFilter={categoryFilter}
+        onFilterChange={(id) =>
+          setCategoryFilter(id as LabTestCategory | "ALL")
+        }
+      />
+
+      {/* Filters Row */}
+      <div className="flex flex-wrap items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or code..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
         </div>
-        <Button onClick={handleOpenCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add test type
-        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by name or code..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Select
-              value={categoryFilter}
-              onValueChange={(v) =>
-                setCategoryFilter(v as LabTestCategory | "ALL")
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All</SelectItem>
-                <SelectItem value="LAB">Laboratory Test</SelectItem>
-                <SelectItem value="IMAGING">Diagnostic Imaging</SelectItem>
-                <SelectItem value="PATHOLOGY">Pathology</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
+      {/* Table Card */}
+      <Card className="border-2 border-slate-200 shadow-md rounded-xl">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -238,11 +258,20 @@ export default function LabTestsPage() {
                 ))
               ) : filteredTests.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={8}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    No test types found
+                  <TableCell colSpan={8} className="text-center py-12">
+                    <TestTube className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium">No test types found</h3>
+                    <p className="text-muted-foreground">
+                      {search
+                        ? "Try adjusting your search"
+                        : "Get started by adding a new test type"}
+                    </p>
+                    {!search && (
+                      <Button onClick={handleOpenCreate} className="mt-4">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Test Type
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
