@@ -129,6 +129,12 @@ const navigationGroups = [
         roles: ["NURSE", "DOCTOR", "RECEPTIONIST"],
       },
       {
+        title: "Lịch của tôi",
+        href: "/admin/my-schedule",
+        icon: NAV_ICONS.appointments,
+        roles: ["NURSE", "RECEPTIONIST"],
+      },
+      {
         title: "Nhân sự",
         href: "/admin/hr",
         icon: NAV_ICONS.hr,

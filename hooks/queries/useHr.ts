@@ -177,6 +177,51 @@ export const useDeleteEmployee = () => {
   });
 };
 
+/**
+ * Hook to fetch all employee schedules (DOCTOR, NURSE, RECEPTIONIST).
+ * For ADMIN management view - shows schedules for all staff.
+ */
+export const useAllSchedules = ({
+  departmentId,
+  employeeId,
+  startDate,
+  endDate,
+  status,
+  role,
+  page,
+  size,
+  enabled = true,
+}: {
+  departmentId?: string;
+  employeeId?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  role?: string;
+  page?: number;
+  size?: number;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: [
+      "allSchedules",
+      { departmentId, employeeId, startDate, endDate, status, role, page, size },
+    ],
+    queryFn: () =>
+      hrService.getAllSchedules({
+        departmentId,
+        employeeId,
+        startDate,
+        endDate,
+        status,
+        role,
+        page,
+        size,
+      }),
+    enabled,
+  });
+};
+
 export const useDoctorSchedules = ({
   departmentId,
   doctorId,
@@ -215,12 +260,41 @@ export const useDoctorSchedules = ({
   });
 };
 
+/**
+ * Hook to fetch the current user's own schedules.
+ * Uses the /hr/schedules/me endpoint which returns schedules for the authenticated user.
+ * Works for DOCTOR, NURSE, and RECEPTIONIST roles.
+ */
+export const useMySchedules = ({
+  startDate,
+  endDate,
+  status,
+  enabled = true,
+}: {
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  enabled?: boolean;
+}) => {
+  return useQuery({
+    queryKey: ["mySchedules", { startDate, endDate, status }],
+    queryFn: () =>
+      hrService.getMySchedules({
+        startDate: startDate!,
+        endDate: endDate!,
+        status,
+      }),
+    enabled: enabled && !!startDate && !!endDate,
+  });
+};
+
 export const useCreateSchedule = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: hrService.createSchedule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["allSchedules"] });
     },
   });
 };
@@ -236,6 +310,7 @@ export const useUpdateSchedule = () => {
     } & Partial<ScheduleRequest>) => hrService.updateSchedule(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["allSchedules"] });
       queryClient.invalidateQueries({ queryKey: ["schedule", id] });
     },
   });
@@ -247,6 +322,7 @@ export const useDeleteSchedule = () => {
     mutationFn: hrService.deleteSchedule,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+      queryClient.invalidateQueries({ queryKey: ["allSchedules"] });
     },
   });
 };

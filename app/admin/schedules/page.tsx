@@ -69,7 +69,7 @@ import {
 import ScheduleForm from "@/app/admin/hr/schedules/_components/ScheduleForm";
 import { ScheduleStatusBadge } from "@/app/admin/hr/_components/schedule-status-badge";
 import {
-  useDoctorSchedules,
+  useAllSchedules,
   useCreateSchedule,
   useUpdateSchedule,
   useDeleteSchedule,
@@ -159,11 +159,11 @@ export default function SchedulesPage() {
   const startDateStr = format(effectiveStart, "yyyy-MM-dd");
   const endDateStr = format(effectiveEnd, "yyyy-MM-dd");
 
-  const { data: schedulesData, isLoading: loadingSchedules } = useDoctorSchedules({
+  const { data: schedulesData, isLoading: loadingSchedules } = useAllSchedules({
     startDate: startDateStr,
     endDate: endDateStr,
     departmentId: activeDept !== "ALL" ? activeDept : undefined,
-    doctorId: activeEmployee !== "ALL" ? activeEmployee : undefined,
+    employeeId: activeEmployee !== "ALL" ? activeEmployee : undefined,
   });
 
   const createSchedule = useCreateSchedule();

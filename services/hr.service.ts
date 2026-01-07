@@ -473,6 +473,82 @@ export const hrService = {
     }
   },
 
+  // --- Schedules ---
+  /**
+   * Get all schedules (for ADMIN view - shows all employees: DOCTOR, NURSE, RECEPTIONIST)
+   * Uses generic /hr/schedules/all endpoint with RSQL filter support
+   */
+  getAllSchedules: async (params: {
+    departmentId?: string;
+    employeeId?: string;
+    startDate?: string;
+    endDate?: string;
+    status?: string;
+    role?: string;
+    page?: number;
+    size?: number;
+  }) => {
+    if (!USE_MOCK) {
+      const apiParams: any = {
+        page: params.page && params.page > 0 ? params.page - 1 : 0,
+        size: params.size || 100,
+        sort: "workDate,asc",
+      };
+      
+      // Build RSQL filter
+      const filters: string[] = [];
+      if (params.startDate) {
+        filters.push(`workDate>=${params.startDate}`);
+      }
+      if (params.endDate) {
+        filters.push(`workDate<=${params.endDate}`);
+      }
+      if (params.employeeId) {
+        filters.push(`employeeId==${params.employeeId}`);
+      }
+      if (params.status && params.status !== "ALL") {
+        filters.push(`status==${params.status}`);
+      }
+      
+      if (filters.length > 0) {
+        apiParams.filter = filters.join(";");
+      }
+      
+      console.log("[HR Service] getAllSchedules API params:", apiParams);
+      const response = await axiosInstance.get("/hr/schedules/all", { params: apiParams });
+      return response.data.data;
+    }
+
+    await delay(500);
+    let filtered = [...scheduleData];
+    const { startDate, endDate } = params;
+    if (startDate) {
+      filtered = filtered.filter((s) => s.workDate >= startDate);
+    }
+    if (endDate) {
+      filtered = filtered.filter((s) => s.workDate <= endDate);
+    }
+    if (params.departmentId) {
+      filtered = filtered.filter(
+        (s) => (s as any).departmentId === params.departmentId,
+      );
+    }
+    if (params.employeeId) {
+      filtered = filtered.filter((s) => s.employeeId === params.employeeId);
+    }
+    if (params.status) {
+      filtered = filtered.filter((s) => s.status === params.status);
+    }
+
+    return {
+      content: filtered,
+      totalPages: 1,
+      totalElements: filtered.length,
+      size: params.size || 100,
+      number: params.page || 0,
+    };
+  },
+
   getDoctorSchedules: async (params: {
     departmentId?: string;
     doctorId?: string;
