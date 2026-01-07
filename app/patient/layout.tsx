@@ -45,35 +45,35 @@ import { cn } from "@/lib/utils";
 
 const navigationGroups = [
   {
-    label: "Healthcare Services",
+    label: "Dịch vụ y tế",
     items: [
       {
-        title: "Appointments",
+        title: "Lịch hẹn",
         href: "/patient/appointments",
         icon: CalendarDays,
       },
     ],
   },
   {
-    label: "Medical Data",
+    label: "Dữ liệu y tế",
     items: [
       {
-        title: "Medical Records",
+        title: "Hồ sơ bệnh án",
         href: "/patient/medical-records",
         icon: FileText,
       },
       {
-        title: "Lab Orders",
+        title: "Yêu cầu XN",
         href: "/patient/lab-orders",
         icon: ClipboardList,
       },
     ],
   },
   {
-    label: "Account",
+    label: "Tài khoản",
     items: [
-      { title: "Billing", href: "/patient/billing", icon: CreditCard },
-      { title: "Profile", href: "/patient/profile", icon: User },
+      { title: "Thanh toán", href: "/patient/billing", icon: CreditCard },
+      { title: "Hồ sơ", href: "/patient/profile", icon: User },
     ],
   },
 ];
@@ -110,31 +110,45 @@ export default function PatientLayout({
       <SidebarProvider>
         <div className="bg-slate-50 text-foreground flex min-h-screen w-screen">
           <Sidebar className="border-r-0" collapsible="offcanvas">
-            {/* Sidebar with gradient background - Emerald theme for Patient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900" />
+            {/* Premium multi-layer background - VIOLET theme for Patient */}
+            <div className="absolute inset-0 bg-[#0f0a14]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-violet-950/80 via-transparent to-slate-950/90" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(139,92,246,0.15),transparent)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_120%,rgba(168,85,247,0.1),transparent)]" />
+            
+            {/* Animated floating orbs */}
+            <div className="absolute top-20 left-1/2 w-32 h-32 bg-violet-500/25 rounded-full blur-3xl animate-pulse" />
+            <div className="absolute top-1/3 -right-10 w-24 h-24 bg-purple-400/20 rounded-full blur-2xl animate-pulse" style={{ animationDelay: "0.5s" }} />
+            <div className="absolute bottom-1/4 -left-10 w-28 h-28 bg-fuchsia-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
 
-            <SidebarHeader className="relative z-10 gap-3 px-4 py-5 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="bg-gradient-to-br from-emerald-400 to-teal-500 text-white grid h-10 w-10 place-items-center rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
+            {/* Subtle grid pattern */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+            <SidebarHeader className="relative z-10 px-4 py-5 border-b border-white/[0.04]">
+              <div className="flex items-center gap-3.5">
+                {/* Logo */}
+                <div className="bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-500 text-white grid h-12 w-12 place-items-center rounded-xl text-base font-black shadow-2xl shadow-violet-500/30 border border-white/20">
                   HMS
                 </div>
-                <div className="leading-tight group-data-[collapsible=icon]:hidden">
-                  <p className="text-sm font-semibold text-white">
-                    Patient Portal
+                <div className="group-data-[collapsible=icon]:hidden">
+                  <p className="text-base font-bold text-white tracking-wide">
+                    Cổng Bệnh nhân
                   </p>
                   <p className="text-xs text-slate-400">HMS Healthcare</p>
                 </div>
               </div>
             </SidebarHeader>
 
-            <SidebarContent className="relative z-10">
+            <SidebarContent className="relative z-10 py-3 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-violet-800/50 [&::-webkit-scrollbar-thumb]:rounded-full">
               {navigationGroups.map((group) => (
-                <SidebarGroup key={group.label}>
-                  <SidebarGroupLabel className="text-slate-400 text-xs uppercase tracking-wider px-4 mb-2">
-                    {group.label}
+                <SidebarGroup key={group.label} className="mb-2">
+                  <SidebarGroupLabel className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] font-bold px-5 mb-3 mt-4">
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-700/50 to-transparent" />
+                    <span className="text-slate-500 whitespace-nowrap">{group.label}</span>
+                    <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-700/50 to-transparent" />
                   </SidebarGroupLabel>
                   <SidebarGroupContent>
-                    <SidebarMenu className="px-2 space-y-1">
+                    <SidebarMenu className="px-3 space-y-1">
                       {group.items.map((item) => {
                         const Icon = item.icon;
                         const isActive = pathname.startsWith(item.href);
@@ -144,22 +158,54 @@ export default function PatientLayout({
                               asChild
                               isActive={isActive}
                               className={cn(
-                                "h-10 rounded-lg px-3 py-2.5 font-medium transition-all duration-200",
+                                "relative h-11 rounded-xl px-3 font-medium transition-all duration-300 ease-out group/item overflow-hidden",
                                 isActive
-                                  ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-white border-l-2 border-emerald-400 shadow-sm"
-                                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                  ? "text-white"
+                                  : "text-slate-400 hover:text-white"
                               )}
                             >
                               <Link href={item.href}>
-                                <Icon
-                                  className={cn(
-                                    "size-4 transition-colors",
-                                    isActive
-                                      ? "text-emerald-400"
-                                      : "text-slate-400"
-                                  )}
-                                />
-                                <span>{item.title}</span>
+                                {/* Active background gradient */}
+                                {isActive && (
+                                  <>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-violet-500/25 via-purple-500/20 to-fuchsia-500/15" />
+                                    <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] to-transparent" />
+                                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-gradient-to-b from-violet-400 to-purple-400 shadow-lg shadow-violet-400/50" />
+                                    <div className="absolute inset-[1px] rounded-[10px] border border-white/10" />
+                                  </>
+                                )}
+                                
+                                {/* Hover background */}
+                                {!isActive && (
+                                  <div className="absolute inset-0 bg-white/[0.04] opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
+                                )}
+                                
+                                <div className={cn(
+                                  "relative flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-300",
+                                  isActive 
+                                    ? "bg-gradient-to-br from-violet-400/30 to-purple-400/20 shadow-lg shadow-violet-500/20" 
+                                    : "group-hover/item:bg-white/[0.06]"
+                                )}>
+                                  <Icon
+                                    className={cn(
+                                      "size-[18px] transition-all duration-300",
+                                      isActive 
+                                        ? "text-violet-400 drop-shadow-[0_0_10px_rgba(139,92,246,0.6)]" 
+                                        : "text-slate-500 group-hover/item:text-slate-300 group-hover/item:scale-110"
+                                    )}
+                                  />
+                                </div>
+                                <span className={cn(
+                                  "relative transition-all duration-300 text-sm",
+                                  isActive ? "text-white font-semibold" : "group-hover/item:translate-x-0.5"
+                                )}>
+                                  {item.title}
+                                </span>
+                                {isActive && (
+                                  <div className="relative ml-auto flex items-center gap-1.5">
+                                    <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse shadow-lg shadow-violet-400/80" />
+                                  </div>
+                                )}
                               </Link>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
@@ -171,20 +217,33 @@ export default function PatientLayout({
               ))}
             </SidebarContent>
 
-            <SidebarFooter className="relative z-10 px-3 pb-4 border-t border-white/10 pt-4">
+            <SidebarFooter className="relative z-10 px-4 pb-5 pt-4 border-t border-white/[0.04] mt-auto">
               <div className="space-y-3">
-                {/* User profile card */}
-                <div className="flex items-center gap-3 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 px-3 py-2.5 group-data-[collapsible=icon]:justify-center">
-                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-                    {(user?.fullName || user?.email || "P")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </div>
-                  <div className="group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-medium text-white truncate max-w-[120px]">
-                      {user?.fullName || user?.email}
-                    </p>
-                    <p className="text-xs text-slate-400">Patient</p>
+                {/* User card */}
+                <div className="relative group rounded-xl overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-500/10 via-purple-500/10 to-fuchsia-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="relative flex items-center gap-3 bg-white/[0.02] backdrop-blur-xl border border-white/[0.05] px-3 py-3.5 group-data-[collapsible=icon]:justify-center">
+                    <div className="relative">
+                      <div className="h-11 w-11 rounded-full bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-500 flex items-center justify-center text-white font-bold text-sm shadow-xl ring-2 ring-slate-900">
+                        {(user?.fullName || user?.email || "P")
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                      {/* Online indicator */}
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-slate-900 flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+                      </div>
+                    </div>
+                    <div className="group-data-[collapsible=icon]:hidden">
+                      <p className="text-sm font-semibold text-white truncate max-w-[120px]">
+                        {user?.fullName || user?.email}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border border-violet-500/20 uppercase tracking-wide font-medium">
+                          Bệnh nhân
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -193,11 +252,11 @@ export default function PatientLayout({
                   onClick={logout}
                   variant="ghost"
                   size="sm"
-                  className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10 group-data-[collapsible=icon]:justify-center"
+                  className="w-full justify-start text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-300 rounded-xl group-data-[collapsible=icon]:justify-center border border-transparent hover:border-rose-500/20"
                 >
                   <LogOut className="size-4 mr-2 group-data-[collapsible=icon]:mr-0" />
-                  <span className="group-data-[collapsible=icon]:hidden">
-                    Logout
+                  <span className="group-data-[collapsible=icon]:hidden text-sm">
+                    Đăng xuất
                   </span>
                 </Button>
               </div>
